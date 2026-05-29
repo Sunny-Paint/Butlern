@@ -20,6 +20,9 @@
       #auth-overlay p{margin:0 0 18px;color:#c0b8e0;font-size:14px;line-height:1.5}
       #auth-overlay input{width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:10px 12px;margin:6px 0;font-size:14px;font-family:inherit}
       #auth-overlay input:focus{outline:none;border-color:#a89fff}
+      #auth-overlay input.pw-masked{-webkit-text-security:disc;text-security:disc;font-family:text-security-disc,inherit;letter-spacing:.15em}
+      #auth-overlay .pw-wrap{position:relative;width:100%}
+      #auth-overlay .pw-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;color:#c0b8e0;font-size:18px;cursor:pointer;width:auto;margin:0;padding:4px 8px}
       #auth-overlay button{width:100%;background:#fff;color:#1a1238;border:none;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:10px}
       #auth-overlay button:hover{background:#e8e4ff}
       #auth-overlay button.secondary{background:transparent;color:#c0b8e0;border:1px solid rgba(255,255,255,.2);font-weight:500;margin-top:6px}
@@ -40,10 +43,13 @@
     div.innerHTML = `
       <div class="auth-card">
         <h2>🔒 Privat</h2>
-        <p>Logga in för att se dina anteckningar.</p>
-        <form id="auth-form" autocomplete="off" data-google-disabled>
-          <input type="text" id="auth-email" placeholder="E-post" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" required>
-          <input type="password" id="auth-pw" placeholder="Lösenord" autocomplete="off" required>
+        <p>Logga in med <b>e-post och lösenord</b>.<br><span style="font-size:12px;color:#9d93c4">(Ignorera webbläsarens ”Logga in med Google”-förslag — det fungerar inte här.)</span></p>
+        <form id="auth-form" autocomplete="off" data-google-disabled novalidate>
+          <input type="text" id="auth-email" placeholder="E-post" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" name="x-mail" required>
+          <div class="pw-wrap">
+            <input type="text" id="auth-pw" class="pw-masked" placeholder="Lösenord" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" name="x-pin" required>
+            <button type="button" class="pw-toggle" id="auth-pw-toggle" aria-label="Visa lösenord">👁</button>
+          </div>
           <button type="submit" id="auth-submit">Logga in</button>
           <button type="button" id="auth-signup" class="secondary">Skapa konto (första gången)</button>
           <button type="button" id="auth-reset" class="secondary">Glömt lösenord?</button>
@@ -56,6 +62,10 @@
     document.getElementById("auth-form").addEventListener("submit", signIn);
     document.getElementById("auth-signup").addEventListener("click", signUp);
     document.getElementById("auth-reset").addEventListener("click", resetPassword);
+    document.getElementById("auth-pw-toggle").addEventListener("click", () => {
+      const pw = document.getElementById("auth-pw");
+      pw.classList.toggle("pw-masked");
+    });
 
     const logoutBtn = document.createElement("button");
     logoutBtn.id = "auth-logout";
