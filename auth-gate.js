@@ -43,8 +43,8 @@
     div.innerHTML = `
       <div class="auth-card">
         <h2>🔒 Privat</h2>
-        <p>Logga in med <b>e-post och lösenord</b>.<br><span style="font-size:12px;color:#9d93c4">(Ignorera webbläsarens ”Logga in med Google”-förslag — det fungerar inte här.)</span></p>
-        <form id="auth-form" autocomplete="off" data-google-disabled novalidate>
+        <p>Logga in med din e-post och ditt lösenord.</p>
+        <form id="auth-form" autocomplete="off" novalidate>
           <input type="text" id="auth-email" placeholder="E-post" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" name="x-mail" required>
           <div class="pw-wrap">
             <input type="text" id="auth-pw" class="pw-masked" placeholder="Lösenord" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" name="x-pin" required>
