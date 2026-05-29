@@ -142,6 +142,20 @@
     }
     if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig);
 
+    // Rensa rester av tidigare Google/SAML-redirect-försök som ger
+    // "Unable to process request due to missing initial state"
+    try {
+      Object.keys(sessionStorage).forEach(k => {
+        if (/firebase|firebaseui|google|redirect/i.test(k)) sessionStorage.removeItem(k);
+      });
+    } catch(e){}
+    try { firebase.auth().getRedirectResult().catch(() => {}); } catch(e){}
+    // Svälj felmeddelandet ifall det ändå dyker upp som ohanterat fel
+    window.addEventListener("unhandledrejection", ev => {
+      const msg = (ev.reason && (ev.reason.message || ev.reason.code)) || "";
+      if (/missing initial state|auth\/missing-initial-state/i.test(msg)) ev.preventDefault();
+    });
+
     injectStyles();
     injectOverlay();
 
