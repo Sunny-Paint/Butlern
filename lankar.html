@@ -129,7 +129,7 @@ input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--a
   <form class="add" id="addForm" autocomplete="off">
     <div class="field">
       <label>Titel</label>
-      <input type="text" id="l_title" placeholder="T.ex. Snui Tuition" required>
+      <input type="text" id="l_title" placeholder="T.ex. Min favoritsida" required>
     </div>
     <div class="field">
       <label>URL</label>
@@ -153,7 +153,7 @@ input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--a
 <script>
 const statusEl = document.getElementById("status");
 const SEED_LINKS = [
-  { title: "Snui Tuition Programme", url: "https://snui.org.uk/tuition-programme" }
+  { title: "Google Maps", url: "https://www.google.com/maps" }
 ];
 let links = [];
 let db = null;
@@ -232,17 +232,6 @@ document.getElementById("addForm").addEventListener("submit", e => {
     document.getElementById("addForm").reset();
   }).catch(err => alert("Fel: " + err.message));
 });
-
-function seedIfEmpty() {
-  if (seeded || !db) return;
-  seeded = true;
-  const batch = db.batch();
-  SEED_LINKS.forEach(l => {
-    const ref = db.collection("lankar").doc();
-    batch.set(ref, { ...l, createdAt: Date.now() });
-  });
-  batch.commit().catch(err => { seeded = false; console.error("Seed-fel:", err); });
-}
 
 render();
 </script>
