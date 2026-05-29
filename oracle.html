@@ -19,9 +19,9 @@
   --ink:#f0eaff;
   --muted:#a89cd0;
   --line:#3d2e6e;
-  --accent:#e8c674;
+  --gold:#e8c674;
+  --gold-dark:#c9a850;
   --accent-soft:#3d2e6e;
-  --accent-dark:#c9a850;
   --shadow:0 4px 20px rgba(0,0,0,.35);
   --radius:14px;
 }
@@ -30,84 +30,98 @@ html,body{margin:0;padding:0}
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   background:var(--bg-grad);background-attachment:fixed;
-  color:var(--ink);line-height:1.45;
+  color:var(--ink);line-height:1.5;
   padding:24px 16px 60px;min-height:100vh;
 }
-.wrap{max-width:620px;margin:0 auto}
-h1{margin:0 0 4px;font-size:30px;font-weight:600;letter-spacing:0.02em}
-.subtitle{margin:0 0 22px;color:var(--muted);font-size:14px}
-.subtitle a{color:var(--accent);text-decoration:none}
+.wrap{max-width:720px;margin:0 auto}
+h1{margin:0 0 4px;font-size:30px;font-weight:600;letter-spacing:0.02em;text-align:center}
+.subtitle{margin:0 0 22px;color:var(--muted);font-size:14px;text-align:center}
+.subtitle a{color:var(--gold);text-decoration:none}
 .subtitle a:hover{text-decoration:underline}
 
-.card{
+.section{
   background:var(--card);
   border:1px solid var(--line);
   border-radius:var(--radius);
   padding:18px 20px;
-  margin-bottom:16px;
+  margin-bottom:18px;
   box-shadow:var(--shadow);
 }
-.card h2{margin:0 0 12px;font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)}
+.section h2{margin:0 0 12px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);text-align:center}
 
-.intro-card{
-  background:linear-gradient(135deg,#2a1a4a,#3d2e6e);
-  text-align:center;padding:22px 20px;
-}
-.intro-icon{font-size:44px;margin-bottom:4px}
-.intro-main{font-size:18px;font-weight:500;margin:0;color:var(--ink)}
-.intro-sub{color:var(--accent);font-size:12px;letter-spacing:0.08em;text-transform:uppercase;margin:6px 0 0}
-
-form input[type=date],form input[type=text],form textarea{
-  width:100%;padding:10px 12px;
-  border:1px solid var(--line);border-radius:8px;
+.spreads{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.spread-btn{
   background:var(--card-soft);color:var(--ink);
-  font-family:inherit;font-size:14px;
+  border:1px solid var(--line);border-radius:10px;
+  padding:10px 14px;font-family:inherit;font-size:13px;cursor:pointer;
+  transition:all .15s;
 }
-form input:focus,form textarea:focus{
-  outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
-}
-form textarea{min-height:60px;resize:vertical}
-.field{margin-bottom:12px}
-.field-label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em}
+.spread-btn:hover{border-color:var(--gold);color:var(--gold)}
+.spread-btn.active{background:var(--gold);color:#1a1238;border-color:var(--gold);font-weight:600}
 
-.btn{
-  padding:11px 18px;border:none;border-radius:10px;
-  background:var(--accent);color:#1a1238;
-  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;
+.draw-area{text-align:center}
+.draw-btn{
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+  color:#1a1238;border:none;border-radius:14px;
+  padding:16px 36px;font-family:inherit;font-size:16px;font-weight:600;
+  letter-spacing:0.05em;cursor:pointer;
+  box-shadow:0 4px 16px rgba(232,198,116,.25);
+  transition:transform .15s, box-shadow .15s;
 }
-.btn:hover{background:var(--accent-dark)}
-.btn-secondary{background:var(--card-soft);color:var(--ink);border:1px solid var(--line)}
-.btn-secondary:hover{background:var(--accent-soft)}
-.btn-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.draw-btn:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(232,198,116,.4)}
+.draw-btn:active{transform:translateY(0)}
+.draw-btn:disabled{opacity:.5;cursor:not-allowed}
 
-.log-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-.log-item{
-  background:var(--card-soft);border:1px solid var(--line);
-  border-radius:10px;padding:12px 14px;
-}
-.log-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
-.log-date{font-weight:600;font-size:13px;color:var(--accent)}
-.log-spread{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em}
-.log-cards{font-size:15px;font-weight:500;margin:0 0 6px;color:var(--ink)}
-.log-question{font-size:13px;color:var(--muted);font-style:italic;margin:0 0 6px}
-.log-question::before{content:"❔ "}
-.log-notes{font-size:13px;color:var(--ink);white-space:pre-wrap;word-break:break-word;margin:0}
-.log-actions{display:flex;gap:6px;margin-top:8px;justify-content:flex-end}
-.log-actions button{
-  background:transparent;border:1px solid var(--line);color:var(--muted);
-  padding:3px 9px;border-radius:5px;font-size:12px;cursor:pointer;line-height:1.4;
-}
-.log-actions button:hover{color:var(--ink);border-color:var(--accent)}
+.spread-info{font-size:13px;color:var(--muted);margin:10px 0 0;font-style:italic}
 
-.muted{color:var(--muted);font-size:13px;margin:8px 0;text-align:center}
-.status{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px}
+.cards-grid{
+  display:grid;gap:14px;margin-top:18px;
+  grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+}
+.cards-grid.celtic{
+  grid-template-columns:repeat(4,1fr);
+  max-width:560px;margin-left:auto;margin-right:auto;
+}
+.tcard{
+  background:linear-gradient(135deg,#2a1f55,#1a1238);
+  border:1px solid var(--gold);border-radius:12px;
+  padding:14px 10px;text-align:center;
+  min-height:170px;display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;
+  opacity:0;transform:translateY(10px);
+  animation:cardIn .5s ease-out forwards;
+  box-shadow:0 4px 14px rgba(0,0,0,.35), inset 0 0 20px rgba(232,198,116,.08);
+}
+@keyframes cardIn{to{opacity:1;transform:translateY(0)}}
+.tcard .pos{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold);margin-bottom:8px}
+.tcard .glyph{font-size:34px;line-height:1;margin:6px 0}
+.tcard .name{font-size:14px;font-weight:600;margin:6px 0 4px;color:var(--ink)}
+.tcard .kw{font-size:11px;color:var(--muted);font-style:italic;line-height:1.3}
+
+.reading{
+  background:linear-gradient(180deg,rgba(232,198,116,.05),transparent);
+  border:1px solid var(--gold);border-radius:12px;
+  padding:18px 20px;margin-top:18px;
+  font-size:14px;line-height:1.7;
+}
+.reading p{margin:0 0 12px}
+.reading p:last-child{margin-bottom:0}
+.reading b{color:var(--gold);font-weight:600}
+.reading em{color:var(--muted);font-style:italic}
+.reading .opener{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;text-align:center}
+.reading .closer{font-size:13px;color:var(--muted);font-style:italic;text-align:center;margin-top:14px}
+
+.empty{text-align:center;color:var(--muted);font-style:italic;padding:30px 10px}
 
 @media (max-width:720px){
   body{padding:14px 10px 60px}
   h1{font-size:24px}
-  .intro-icon{font-size:36px}
-  .intro-main{font-size:16px}
-  .card{padding:14px}
+  .section{padding:14px}
+  .cards-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .cards-grid.celtic{grid-template-columns:repeat(2,1fr)}
+  .tcard{min-height:150px;padding:10px 6px}
+  .tcard .glyph{font-size:28px}
+  .tcard .name{font-size:13px}
 }
 </style>
 </head>
@@ -118,228 +132,250 @@ form textarea{min-height:60px;resize:vertical}
 <h1>🔮 Oracle</h1>
 <p class="subtitle"><a href="butlern.html">← Butlern</a></p>
 
-<div class="card intro-card">
-  <div class="intro-icon">✨</div>
-  <p class="intro-main">Logga dina tarot- och orakelkort</p>
-  <p class="intro-sub" id="introCount">0 dragningar</p>
+<div class="section">
+  <h2>Välj läggning</h2>
+  <div class="spreads" id="spreads"></div>
+  <p class="spread-info" id="spreadInfo"></p>
 </div>
 
-<div class="card">
-  <h2 id="formTitle">Ny dragning</h2>
-  <form id="oracleForm">
-    <div class="field">
-      <label class="field-label" for="oDate">Datum</label>
-      <input type="date" id="oDate" required>
-    </div>
-
-    <div class="field">
-      <label class="field-label" for="oCards">Kort</label>
-      <input type="text" id="oCards" placeholder="t.ex. The Moon, Three of Cups, The Star" required>
-    </div>
-
-    <div class="field">
-      <label class="field-label" for="oSpread">Spread / lek (valfritt)</label>
-      <input type="text" id="oSpread" placeholder="t.ex. 3-kort: dåtid/nutid/framtid · Rider-Waite">
-    </div>
-
-    <div class="field">
-      <label class="field-label" for="oQuestion">Fråga / intention (valfri)</label>
-      <input type="text" id="oQuestion" placeholder="Vad behöver jag veta idag?">
-    </div>
-
-    <div class="field">
-      <label class="field-label" for="oNotes">Tolkning / känsla</label>
-      <textarea id="oNotes" placeholder="Vad sa korten dig?"></textarea>
-    </div>
-
-    <div class="btn-row">
-      <button type="submit" class="btn" id="saveBtn">Spara</button>
-      <button type="button" class="btn btn-secondary" id="resetBtn">Rensa</button>
-      <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none">Avbryt redigering</button>
-    </div>
-    <p class="status" id="status">Ansluter...</p>
-  </form>
+<div class="section draw-area">
+  <button class="draw-btn" id="drawBtn">✨ Dra kort ✨</button>
 </div>
 
-<div class="card">
-  <h2>Tidigare dragningar</h2>
-  <ul id="logList" class="log-list"></ul>
-  <p class="muted" id="logEmpty">Inga dragningar än.</p>
-</div>
+<div id="result"></div>
 
 </div>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
-        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
-        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
-<script src="auth-gate.js"></script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
-  authDomain: "sommarplanering-d4300.firebaseapp.com",
-  projectId: "sommarplanering-d4300",
-  storageBucket: "sommarplanering-d4300.firebasestorage.app",
-  messagingSenderId: "261517602417",
-  appId: "1:261517602417:web:11b754c758c92cc33735d0"
+/* ============================================================
+   DECK — Rider-Waite-Smith, 78 kort, nyckelord på svenska
+   ============================================================ */
+const MAJOR = [
+  { n:"Dåren",                glyph:"🌀", kw:["nya början","oskuld","språng i mörker","tro"] },
+  { n:"Magikern",             glyph:"🪄", kw:["vilja","skapande","manifestation","handling"] },
+  { n:"Översteprästinnan",    glyph:"🌙", kw:["intuition","mysterium","tystnad","det dolda"] },
+  { n:"Kejsarinnan",          glyph:"🌹", kw:["fertilitet","mjukhet","överflöd","moder"] },
+  { n:"Kejsaren",             glyph:"♛", kw:["struktur","auktoritet","trygghet","gränser"] },
+  { n:"Översteprästen",       glyph:"🗝️", kw:["tradition","vägledning","lärdom","tro"] },
+  { n:"De Älskande",          glyph:"💞", kw:["kärlek","val","förening","sanning"] },
+  { n:"Vagnen",               glyph:"🏇", kw:["framdrift","seger","viljekraft","riktning"] },
+  { n:"Styrkan",              glyph:"🦁", kw:["mod","sakta lugn","inre kraft","mildhet"] },
+  { n:"Eremiten",             glyph:"🕯️", kw:["inåtvändhet","sökande","ensam visdom","ljus"] },
+  { n:"Lyckohjulet",          glyph:"☸️", kw:["öde","vändpunkt","cykler","flöde"] },
+  { n:"Rättvisan",            glyph:"⚖️", kw:["sanning","balans","konsekvens","klarhet"] },
+  { n:"Den Hängde",           glyph:"🙃", kw:["pause","nytt perspektiv","överlåtelse","väntan"] },
+  { n:"Döden",                glyph:"💀", kw:["slut","förvandling","släppa","nyfödd"] },
+  { n:"Måttlighet",           glyph:"🌗", kw:["balans","blandning","tålamod","alkemi"] },
+  { n:"Djävulen",             glyph:"🪤", kw:["bindning","skugga","begär","illusion"] },
+  { n:"Tornet",               glyph:"⚡", kw:["omvälvning","sanning bryter fram","frigörelse","chock"] },
+  { n:"Stjärnan",             glyph:"⭐", kw:["hopp","läkning","ny tro","klarhet"] },
+  { n:"Månen",                glyph:"🌖", kw:["drömmar","osäkerhet","det undermedvetna","mysterium"] },
+  { n:"Solen",                glyph:"☀️", kw:["glädje","framgång","klarhet","värme"] },
+  { n:"Domen",                glyph:"📯", kw:["uppvaknande","kall","befrielse","återfödelse"] },
+  { n:"Världen",              glyph:"🌍", kw:["fullbordan","helhet","framgång","cirkel sluten"] }
+];
+
+const SUITS = [
+  { name:"Stavar",  el:"eld",     glyph:"🔥", themes:["passion","skapande","handling","viljan"] },
+  { name:"Bägare",  el:"vatten",  glyph:"💧", themes:["känslor","kärlek","relationer","intuition"] },
+  { name:"Svärd",   el:"luft",    glyph:"⚔️", themes:["tankar","sanning","konflikt","beslut"] },
+  { name:"Mynt",    el:"jord",    glyph:"🌿", themes:["kropp","arbete","pengar","det jordiska"] }
+];
+
+const NUMBER_KW = {
+  1:  ["fröet","gnistan","ny möjlighet","första impulsen"],
+  2:  ["balans","val","möte","spegling"],
+  3:  ["växt","skapelse","tre samverkar","första frukten"],
+  4:  ["stabilitet","grund","vila","befästning"],
+  5:  ["utmaning","kris","brytning","prövning"],
+  6:  ["harmoni","gåva","minne","flöde"],
+  7:  ["reflektion","mysterium","val","prövning av tron"],
+  8:  ["rörelse","mästerskap","fokus","ihärdighet"],
+  9:  ["fullbordan nära","integration","mognad","ensam styrka"],
+  10: ["fullbordan","cykel sluten","tyngd eller överflöd","slut+början"]
 };
 
-const $ = id => document.getElementById(id);
-const statusEl = $("status");
-const dateEl = $("oDate");
-const cardsEl = $("oCards");
-const spreadEl = $("oSpread");
-const questionEl = $("oQuestion");
-const notesEl = $("oNotes");
-const formEl = $("oracleForm");
-const saveBtn = $("saveBtn");
-const cancelBtn = $("cancelBtn");
-const formTitle = $("formTitle");
-const introCount = $("introCount");
-const logList = $("logList");
-const logEmpty = $("logEmpty");
+const COURT_KW = {
+  "Page":     ["budbärare","ungt mod","lärande","oskuld"],
+  "Riddare":  ["aktion","strävan","ihärdighet","resa"],
+  "Drottning":["mognad","omsorg","mästerskap","inre styrka"],
+  "Kung":     ["auktoritet","behärskning","ledarskap","fullkomning"]
+};
 
-let db = null;
-let draws = [];
-let editingId = null;
-
-function todayStr() {
-  const d = new Date();
-  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
-}
-
-function resetForm() {
-  editingId = null;
-  formEl.reset();
-  dateEl.value = todayStr();
-  formTitle.textContent = "Ny dragning";
-  saveBtn.textContent = "Spara";
-  cancelBtn.style.display = "none";
-}
-
-function startEdit(id) {
-  const d = draws.find(x => x.id === id);
-  if (!d) return;
-  editingId = id;
-  dateEl.value = d.date || todayStr();
-  cardsEl.value = d.cards || "";
-  spreadEl.value = d.spread || "";
-  questionEl.value = d.question || "";
-  notesEl.value = d.notes || "";
-  formTitle.textContent = "Redigera dragning";
-  saveBtn.textContent = "Spara ändringar";
-  cancelBtn.style.display = "";
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function render() {
-  introCount.textContent = draws.length + (draws.length === 1 ? " dragning" : " dragningar");
-  logList.innerHTML = "";
-  if (!draws.length) { logEmpty.style.display = ""; return; }
-  logEmpty.style.display = "none";
-  draws.slice().sort((a,b) => (b.date||"").localeCompare(a.date||"")).forEach(d => {
-    const li = document.createElement("li");
-    li.className = "log-item";
-    const head = document.createElement("div");
-    head.className = "log-head";
-    const date = document.createElement("span");
-    date.className = "log-date";
-    date.textContent = d.date || "";
-    head.appendChild(date);
-    if (d.spread) {
-      const sp = document.createElement("span");
-      sp.className = "log-spread";
-      sp.textContent = d.spread;
-      head.appendChild(sp);
+function buildDeck() {
+  const deck = MAJOR.slice();
+  SUITS.forEach(suit => {
+    for (let n=1; n<=10; n++) {
+      const name = (n===1?"Ess":n) + " av " + suit.name;
+      const kw = NUMBER_KW[n].slice(0,2).concat(suit.themes.slice(0,2));
+      deck.push({ n:name, glyph:suit.glyph, kw });
     }
-    li.appendChild(head);
-
-    const cards = document.createElement("p");
-    cards.className = "log-cards";
-    cards.textContent = d.cards || "";
-    li.appendChild(cards);
-
-    if (d.question) {
-      const q = document.createElement("p");
-      q.className = "log-question";
-      q.textContent = d.question;
-      li.appendChild(q);
-    }
-    if (d.notes) {
-      const n = document.createElement("p");
-      n.className = "log-notes";
-      n.textContent = d.notes;
-      li.appendChild(n);
-    }
-
-    const actions = document.createElement("div");
-    actions.className = "log-actions";
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "Redigera";
-    editBtn.addEventListener("click", () => startEdit(d.id));
-    const delBtn = document.createElement("button");
-    delBtn.textContent = "Ta bort";
-    delBtn.addEventListener("click", () => removeDraw(d.id));
-    actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
-    li.appendChild(actions);
-
-    logList.appendChild(li);
+    ["Page","Riddare","Drottning","Kung"].forEach(rank => {
+      const name = rank + " av " + suit.name;
+      const kw = COURT_KW[rank].slice(0,2).concat(suit.themes.slice(0,2));
+      deck.push({ n:name, glyph:suit.glyph, kw });
+    });
   });
+  return deck;
 }
+const DECK = buildDeck();  // 78 kort
 
-formEl.addEventListener("submit", e => {
-  e.preventDefault();
-  if (!db) { alert("Ansluter..."); return; }
-  const data = {
-    date: dateEl.value || todayStr(),
-    cards: cardsEl.value.trim(),
-    spread: spreadEl.value.trim(),
-    question: questionEl.value.trim(),
-    notes: notesEl.value.trim(),
-    updated: Date.now()
-  };
-  if (!data.cards) { alert("Skriv minst ett kort"); return; }
-  const op = editingId
-    ? db.collection("oracle").doc(editingId).set(data)
-    : db.collection("oracle").add(data);
-  op.then(() => resetForm())
-    .catch(err => alert("Fel: " + err.message));
-});
-
-cancelBtn.addEventListener("click", resetForm);
-$("resetBtn").addEventListener("click", resetForm);
-
-function removeDraw(id) {
-  if (!db) return;
-  if (!confirm("Ta bort dragningen?")) return;
-  db.collection("oracle").doc(id).delete().catch(err => alert("Fel: " + err.message));
-}
-
-function initFirebase(attempt) {
-  attempt = attempt || 0;
-  if (typeof firebase === "undefined") {
-    if (attempt > 50) { statusEl.textContent = "Firebase laddades aldrig"; return; }
-    return setTimeout(() => initFirebase(attempt+1), 100);
+/* ============================================================
+   SPREADS
+   ============================================================ */
+const SPREADS = [
+  {
+    id:"daily", name:"Dagens kort", info:"Ett kort för dagen — det som söker din uppmärksamhet just nu.",
+    positions:["Idag"]
+  },
+  {
+    id:"yesno", name:"Ja / Nej", info:"Ett kort. Drag ett kort med ditt jadagsfrågande i tanken.",
+    positions:["Svaret"], yesno:true
+  },
+  {
+    id:"past", name:"Dåtid · Nutid · Framtid", info:"Tre kort — flödet genom tiden.",
+    positions:["Dåtid","Nutid","Framtid"]
+  },
+  {
+    id:"mind", name:"Sinne · Kropp · Själ", info:"Tre kort — det som rör sig på dina tre nivåer.",
+    positions:["Sinne","Kropp","Själ"]
+  },
+  {
+    id:"sit", name:"Situation · Utmaning · Råd", info:"Tre kort — för en specifik fråga.",
+    positions:["Situation","Utmaning","Råd"]
+  },
+  {
+    id:"celtic", name:"Keltiskt kors", info:"Tio kort — den djupa läggningen.",
+    positions:["Nuet","Korsande utmaning","Grunden","Det förflutna","Mål","Framtid nära","Du själv","Omgivning","Hopp & rädsla","Resultat"],
+    celtic:true
   }
-  try {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-  } catch(e) { statusEl.textContent = "Init-fel: " + e.message; return; }
+];
 
-  db.collection("oracle").onSnapshot(snap => {
-    draws = [];
-    snap.forEach(d => draws.push({ id:d.id, ...d.data() }));
-    statusEl.textContent = draws.length + " dragningar" + (snap.metadata.fromCache ? " (cache)" : "");
-    render();
-  }, err => { statusEl.textContent = "Firestore-fel: " + err.message; });
+/* ============================================================
+   MEDIUM-RÖST — öppningar och uttryck per position
+   ============================================================ */
+const OPENERS = [
+  "Anden lyssnar… korten har vänts.",
+  "Slöjan dras åt sidan. Detta ser jag.",
+  "Tystnaden talar — så här viskar korten.",
+  "Jag känner energierna stilla sig. Detta uppenbarar sig.",
+  "Andetagen blir djupa. Korten talar nu."
+];
+const CLOSERS = [
+  "Lita på det som rör sig inom dig. Korten har sagt sitt.",
+  "Bär detta med dig i tystnad en stund.",
+  "Det viktigaste är vad du känner när du läser detta igen.",
+  "Korten är bara speglar — du är seendet."
+];
+const POS_PHRASES = {
+  "Idag":            ["Idag möter dig", "Dagen bär med sig", "Det som väntar idag är"],
+  "Svaret":          ["Korten viskar", "Svaret som flyter upp är", "Det jag hör är"],
+  "Dåtid":           ["I dåtid lägger sig", "Bakom dig vilar", "Det förflutna bär"],
+  "Nutid":           ["I nuet uppenbarar sig", "Just nu står", "I detta ögonblick rör sig"],
+  "Framtid":         ["Framåt ser jag", "Det som kommer är", "I framtiden formar sig"],
+  "Sinne":           ["I ditt sinne pulserar", "Tankarna bär", "Mentalt rör sig"],
+  "Kropp":           ["I din kropp vilar", "Kroppen viskar om", "Det fysiska bär"],
+  "Själ":            ["Själen kallar på", "Djupast inne lyser", "I anden vilar"],
+  "Situation":       ["Situationen bär", "Här ser jag", "Det som är i centrum är"],
+  "Utmaning":        ["Utmaningen som korsar är", "Det som testar dig är", "Hindret är"],
+  "Råd":             ["Korten råder", "Vägen framåt är", "Anden viskar"],
+  "Nuet":            ["I centrum vilar", "Just nu står", "Här och nu rör sig"],
+  "Korsande utmaning":["Det som korsar dig är", "Spänningen ligger i", "Motkraften är"],
+  "Grunden":         ["Grunden är", "Under allt vilar", "Roten är"],
+  "Det förflutna":   ["Bakom dig finns", "Det som varit är", "Från det förflutna ekar"],
+  "Mål":             ["Det möjliga målet är", "Ovanför svävar", "Drömmen pekar mot"],
+  "Framtid nära":    ["Snart anländer", "Strax framöver visar sig", "Det nära kommande är"],
+  "Du själv":        ["Du själv just nu är", "I dig vibrerar", "Ditt nu är"],
+  "Omgivning":       ["Omkring dig finns", "Andra människor bär", "Världen runt dig är"],
+  "Hopp & rädsla":   ["I ditt hopp och din rädsla bor", "Inom dig brinner", "Det du både önskar och fruktar är"],
+  "Resultat":        ["Slutligen formar sig", "Som ändpunkt visar sig", "Det som blir är"]
+};
+
+/* ============================================================
+   STATE + RENDER
+   ============================================================ */
+let currentSpread = SPREADS[0];
+
+const spreadsEl = document.getElementById("spreads");
+const spreadInfoEl = document.getElementById("spreadInfo");
+const drawBtn = document.getElementById("drawBtn");
+const resultEl = document.getElementById("result");
+
+SPREADS.forEach((s, i) => {
+  const b = document.createElement("button");
+  b.className = "spread-btn" + (i===0 ? " active" : "");
+  b.textContent = s.name;
+  b.dataset.id = s.id;
+  b.addEventListener("click", () => {
+    currentSpread = s;
+    document.querySelectorAll(".spread-btn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    spreadInfoEl.textContent = s.info;
+  });
+  spreadsEl.appendChild(b);
+});
+spreadInfoEl.textContent = currentSpread.info;
+
+function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+function drawCards(n) {
+  const idx = new Set();
+  while (idx.size < n) idx.add(Math.floor(Math.random()*DECK.length));
+  return [...idx].map(i => DECK[i]);
 }
 
-resetForm();
-window.firebaseConfig = firebaseConfig;
-requireAuth(() => initFirebase());
+function makeYesNo(card) {
+  // Använd kortets keywords för att avgöra ton; randomisera lätt
+  const positives = ["solen","stjärnan","världen","kejsarinnan","de älskande","styrkan","måttlighet","magikern","domen"];
+  const negatives = ["tornet","döden","djävulen","månen","den hängde","eremiten"];
+  const name = card.n.toLowerCase();
+  if (positives.some(p => name.includes(p))) return "✨ Ja";
+  if (negatives.some(p => name.includes(p))) return "⚠️ Nej — eller inte just nu";
+  // Annars baserat på första nyckelordet
+  return Math.random() < 0.55 ? "🌒 Kanske — lyssna inåt" : "🌓 Tveksamt";
+}
+
+function buildReading(spread, cards) {
+  const lines = [];
+  lines.push(`<p class="opener">${pick(OPENERS)}</p>`);
+  spread.positions.forEach((pos, i) => {
+    const c = cards[i];
+    const phrase = pick(POS_PHRASES[pos] || ["Här lägger sig"]);
+    const kw = c.kw.slice(0,3).join(", ");
+    lines.push(`<p>${phrase} <b>${c.n}</b> — <em>${kw}</em>.</p>`);
+  });
+  if (spread.yesno) {
+    lines.push(`<p style="text-align:center;font-size:18px;margin-top:14px"><b>${makeYesNo(cards[0])}</b></p>`);
+  }
+  lines.push(`<p class="closer">${pick(CLOSERS)}</p>`);
+  return lines.join("");
+}
+
+function renderCards(spread, cards) {
+  const gridClass = spread.celtic ? "cards-grid celtic" : "cards-grid";
+  let html = `<div class="section"><h2>${spread.name}</h2><div class="${gridClass}">`;
+  spread.positions.forEach((pos, i) => {
+    const c = cards[i];
+    html += `
+      <div class="tcard" style="animation-delay:${i*120}ms">
+        <div class="pos">${pos}</div>
+        <div class="glyph">${c.glyph}</div>
+        <div>
+          <div class="name">${c.n}</div>
+          <div class="kw">${c.kw.slice(0,2).join(" · ")}</div>
+        </div>
+      </div>`;
+  });
+  html += `</div></div>`;
+  html += `<div class="section"><h2>Tolkning</h2><div class="reading">${buildReading(spread, cards)}</div></div>`;
+  resultEl.innerHTML = html;
+  resultEl.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+drawBtn.addEventListener("click", () => {
+  const cards = drawCards(currentSpread.positions.length);
+  renderCards(currentSpread, cards);
+});
 </script>
 </body>
 </html>
