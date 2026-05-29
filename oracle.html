@@ -151,28 +151,50 @@ h1{margin:0 0 4px;font-size:30px;font-weight:600;letter-spacing:0.02em;text-alig
    DECK — Rider-Waite-Smith, 78 kort, nyckelord på svenska
    ============================================================ */
 const MAJOR = [
-  { n:"Dåren",                glyph:"🌀", kw:["nya början","oskuld","språng i mörker","tro"] },
-  { n:"Magikern",             glyph:"🪄", kw:["vilja","skapande","manifestation","handling"] },
-  { n:"Översteprästinnan",    glyph:"🌙", kw:["intuition","mysterium","tystnad","det dolda"] },
-  { n:"Kejsarinnan",          glyph:"🌹", kw:["fertilitet","mjukhet","överflöd","moder"] },
-  { n:"Kejsaren",             glyph:"♛", kw:["struktur","auktoritet","trygghet","gränser"] },
-  { n:"Översteprästen",       glyph:"🗝️", kw:["tradition","vägledning","lärdom","tro"] },
-  { n:"De Älskande",          glyph:"💞", kw:["kärlek","val","förening","sanning"] },
-  { n:"Vagnen",               glyph:"🏇", kw:["framdrift","seger","viljekraft","riktning"] },
-  { n:"Styrkan",              glyph:"🦁", kw:["mod","sakta lugn","inre kraft","mildhet"] },
-  { n:"Eremiten",             glyph:"🕯️", kw:["inåtvändhet","sökande","ensam visdom","ljus"] },
-  { n:"Lyckohjulet",          glyph:"☸️", kw:["öde","vändpunkt","cykler","flöde"] },
-  { n:"Rättvisan",            glyph:"⚖️", kw:["sanning","balans","konsekvens","klarhet"] },
-  { n:"Den Hängde",           glyph:"🙃", kw:["pause","nytt perspektiv","överlåtelse","väntan"] },
-  { n:"Döden",                glyph:"💀", kw:["slut","förvandling","släppa","nyfödd"] },
-  { n:"Måttlighet",           glyph:"🌗", kw:["balans","blandning","tålamod","alkemi"] },
-  { n:"Djävulen",             glyph:"🪤", kw:["bindning","skugga","begär","illusion"] },
-  { n:"Tornet",               glyph:"⚡", kw:["omvälvning","sanning bryter fram","frigörelse","chock"] },
-  { n:"Stjärnan",             glyph:"⭐", kw:["hopp","läkning","ny tro","klarhet"] },
-  { n:"Månen",                glyph:"🌖", kw:["drömmar","osäkerhet","det undermedvetna","mysterium"] },
-  { n:"Solen",                glyph:"☀️", kw:["glädje","framgång","klarhet","värme"] },
-  { n:"Domen",                glyph:"📯", kw:["uppvaknande","kall","befrielse","återfödelse"] },
-  { n:"Världen",              glyph:"🌍", kw:["fullbordan","helhet","framgång","cirkel sluten"] }
+  { n:"Dåren",                glyph:"🌀", kw:["nya början","oskuld","språng i mörker","tro"],
+    msg:"Du står på klippkanten med uppspilade ögon. Språnget i det okända kallar — våga lita på flödet utan att veta vart det bär." },
+  { n:"Magikern",             glyph:"🪄", kw:["vilja","skapande","manifestation","handling"],
+    msg:"Allt du behöver ligger framför dig på bordet. Det är dags att samla viljan och skapa det du burit som dröm." },
+  { n:"Översteprästinnan",    glyph:"🌙", kw:["intuition","mysterium","tystnad","det dolda"],
+    msg:"Sänk rösten och lyssna inåt. Svaret du söker viskar i tystnaden, inte i orden." },
+  { n:"Kejsarinnan",          glyph:"🌹", kw:["fertilitet","mjukhet","överflöd","moder"],
+    msg:"Något inom dig vill växa — låt det. Mjukhet, fertilitet och omsorg är din väg just nu." },
+  { n:"Kejsaren",             glyph:"♛", kw:["struktur","auktoritet","trygghet","gränser"],
+    msg:"Bygg ramen, sätt gränser, ta plats. Strukturen är inte ofrihet — den är det som låter livet bli stadigt." },
+  { n:"Översteprästen",       glyph:"🗝️", kw:["tradition","vägledning","lärdom","tro"],
+    msg:"Sök vägledning hos något äldre än dig själv — en lärare, en tradition, en inre kompass." },
+  { n:"De Älskande",          glyph:"💞", kw:["kärlek","val","förening","sanning"],
+    msg:"Ett val står framför dig som rör hjärtat. Välj det som är sant, inte det som är bekvämt." },
+  { n:"Vagnen",               glyph:"🏇", kw:["framdrift","seger","viljekraft","riktning"],
+    msg:"Tygla dina krafter och rikta dem mot ett mål. Segern är möjlig om du håller fokus." },
+  { n:"Styrkan",              glyph:"🦁", kw:["mod","sakta lugn","inre kraft","mildhet"],
+    msg:"Den verkliga kraften ligger i mildheten. Möt det vilda inom dig med tålamod, inte med våld." },
+  { n:"Eremiten",             glyph:"🕯️", kw:["inåtvändhet","sökande","ensam visdom","ljus"],
+    msg:"Dra dig undan en stund. Det inre ljuset behöver tystnad för att lysa klart." },
+  { n:"Lyckohjulet",          glyph:"☸️", kw:["öde","vändpunkt","cykler","flöde"],
+    msg:"Hjulet vrider sig — det du inte styr över är i rörelse. Lita på cykeln." },
+  { n:"Rättvisan",            glyph:"⚖️", kw:["sanning","balans","konsekvens","klarhet"],
+    msg:"Sanningen vägs nu. Det du sått återvänder, varken mer eller mindre." },
+  { n:"Den Hängde",           glyph:"🙃", kw:["pause","nytt perspektiv","överlåtelse","väntan"],
+    msg:"Pausa. Vänd allt upp och ner och se vad som visar sig från en ny vinkel." },
+  { n:"Döden",                glyph:"💀", kw:["slut","förvandling","släppa","nyfödd"],
+    msg:"Något måste sluta för att något annat ska kunna börja. Släpp det som inte längre är ditt." },
+  { n:"Måttlighet",           glyph:"🌗", kw:["balans","blandning","tålamod","alkemi"],
+    msg:"Blanda långsamt och tålmodigt. Det är i mellanrummet, i flödet mellan motsatser, som magin sker." },
+  { n:"Djävulen",             glyph:"🪤", kw:["bindning","skugga","begär","illusion"],
+    msg:"Vad binder dig? Kedjan du bär är ofta lösare än du tror — du behöver bara våga se den." },
+  { n:"Tornet",               glyph:"⚡", kw:["omvälvning","sanning bryter fram","frigörelse","chock"],
+    msg:"Något raseras med ett blixtnedslag. Det som faller var aldrig sant — och därför är fallet en gåva." },
+  { n:"Stjärnan",             glyph:"⭐", kw:["hopp","läkning","ny tro","klarhet"],
+    msg:"Efter mörkret kommer hopp. Drick av den klara källan, du läks." },
+  { n:"Månen",                glyph:"🌖", kw:["drömmar","osäkerhet","det undermedvetna","mysterium"],
+    msg:"Inget är som det ser ut. Det undermedvetna talar i drömmar och oro — gå försiktigt och lyssna." },
+  { n:"Solen",                glyph:"☀️", kw:["glädje","framgång","klarhet","värme"],
+    msg:"Allt klarnar. Värme, glädje och enkelhet vill möta dig — släpp in den." },
+  { n:"Domen",                glyph:"📯", kw:["uppvaknande","kall","befrielse","återfödelse"],
+    msg:"Ett kall ljuder. Något i dig vaknar och får inte längre sova — svara." },
+  { n:"Världen",              glyph:"🌍", kw:["fullbordan","helhet","framgång","cirkel sluten"],
+    msg:"Cirkeln är sluten, fullbordan är nådd. Andas in det och låt en ny cykel börja." }
 ];
 
 const SUITS = [
@@ -195,11 +217,38 @@ const NUMBER_KW = {
   10: ["fullbordan","cykel sluten","tyngd eller överflöd","slut+början"]
 };
 
+const NUMBER_MSG = {
+  1:  "Fröet planteras — något nytt vill födas",
+  2:  "Två krafter möts — balans eller spänning söker sin form",
+  3:  "Det första uttrycket — något börjar bära frukt",
+  4:  "Grunden vilar stadigt — strukturen är lagd",
+  5:  "Förändring rycker — det säkra skakar och prövas",
+  6:  "Harmoni återvänder — ett flöde av gåvor och minnen",
+  7:  "Reflektionens tid — tron och visionen prövas",
+  8:  "Rörelsen accelererar — mästerskap formas genom fokus",
+  9:  "Fullbordan närmar sig — mognad inom räckhåll",
+  10: "Cirkeln sluts — ett slut och en ny början möts"
+};
+
 const COURT_KW = {
   "Page":     ["budbärare","ungt mod","lärande","oskuld"],
   "Riddare":  ["aktion","strävan","ihärdighet","resa"],
   "Drottning":["mognad","omsorg","mästerskap","inre styrka"],
   "Kung":     ["auktoritet","behärskning","ledarskap","fullkomning"]
+};
+
+const COURT_MSG = {
+  "Page":     "En ung budbärare — något nyfiket och oskuldsfullt rör sig",
+  "Riddare":  "En kraft i rörelse — det handlar, söker och strävar framåt",
+  "Drottning":"Den mogna kraften — närvaro, omsorg och inre mästerskap",
+  "Kung":     "Fullkomnandet — auktoritet, ansvar och behärskning"
+};
+
+const SUIT_DOMAIN = {
+  "Stavar": "i din skapande gnista, i passionens och viljans rike",
+  "Bägare": "i hjärtats vatten, i känslans och relationens flöde",
+  "Svärd":  "i tankens vassa luft, i sanningens och beslutens rike",
+  "Mynt":   "i kroppens och det jordiskas mark, i det materiellas grund"
 };
 
 function buildDeck() {
@@ -208,12 +257,14 @@ function buildDeck() {
     for (let n=1; n<=10; n++) {
       const name = (n===1?"Ess":n) + " av " + suit.name;
       const kw = NUMBER_KW[n].slice(0,2).concat(suit.themes.slice(0,2));
-      deck.push({ n:name, glyph:suit.glyph, kw });
+      const msg = NUMBER_MSG[n] + " " + SUIT_DOMAIN[suit.name] + ".";
+      deck.push({ n:name, glyph:suit.glyph, kw, msg });
     }
     ["Page","Riddare","Drottning","Kung"].forEach(rank => {
       const name = rank + " av " + suit.name;
       const kw = COURT_KW[rank].slice(0,2).concat(suit.themes.slice(0,2));
-      deck.push({ n:name, glyph:suit.glyph, kw });
+      const msg = COURT_MSG[rank] + " " + SUIT_DOMAIN[suit.name] + ".";
+      deck.push({ n:name, glyph:suit.glyph, kw, msg });
     });
   });
   return deck;
@@ -342,7 +393,7 @@ function buildReading(spread, cards) {
     const c = cards[i];
     const phrase = pick(POS_PHRASES[pos] || ["Här lägger sig"]);
     const kw = c.kw.slice(0,3).join(", ");
-    lines.push(`<p>${phrase} <b>${c.n}</b> — <em>${kw}</em>.</p>`);
+    lines.push(`<p>${phrase} <b>${c.n}</b> — <em>${kw}</em>.<br>${c.msg || ""}</p>`);
   });
   if (spread.yesno) {
     lines.push(`<p style="text-align:center;font-size:18px;margin-top:14px"><b>${makeYesNo(cards[0])}</b></p>`);
