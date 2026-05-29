@@ -1,7 +1,8 @@
 /* Auth-gate: kräver inloggning med tillåten e-post + lösenord. */
 (function(){
   const ALLOWED_EMAILS = [
-    "sanoriah@gmail.com"
+    "sanoriah@gmail.com",
+    "sanna.hagenas@gmail.com"
   ];
 
   let onReadyCallback = null;
