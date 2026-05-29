@@ -41,9 +41,9 @@
       <div class="auth-card">
         <h2>🔒 Privat</h2>
         <p>Logga in för att se dina anteckningar.</p>
-        <form id="auth-form" autocomplete="on">
-          <input type="email" id="auth-email" placeholder="E-post" autocomplete="username" required>
-          <input type="password" id="auth-pw" placeholder="Lösenord" autocomplete="current-password" required>
+        <form id="auth-form" autocomplete="off" data-google-disabled>
+          <input type="text" id="auth-email" placeholder="E-post" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" required>
+          <input type="password" id="auth-pw" placeholder="Lösenord" autocomplete="off" required>
           <button type="submit" id="auth-submit">Logga in</button>
           <button type="button" id="auth-signup" class="secondary">Skapa konto (första gången)</button>
           <button type="button" id="auth-reset" class="secondary">Glömt lösenord?</button>
