@@ -411,6 +411,13 @@ form.add input[type=text]:focus{
   font-family:inherit;
 }
 .todos form button:hover{background:#967422}
+.todos-done{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;padding-top:10px;border-top:1px dashed #f0e5c4}
+.todos-done-label{flex:1 1 100%;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#b8902a;margin-bottom:2px;font-weight:600}
+.todo-chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 10px;border-radius:999px;background:#f3edd9;color:#8a7a4a}
+.todo-chip .chip-text{text-decoration:line-through}
+.todo-chip input[type=checkbox]{accent-color:#b8902a;width:14px;height:14px;cursor:pointer;margin:0;flex:0 0 auto}
+.todo-chip button{background:none;border:none;color:#b8902a;cursor:pointer;font-size:13px;padding:0 0 0 2px;opacity:.6}
+.todo-chip button:hover{opacity:1}
 
 /* Edit-läge */
 .form-card.editing{outline:2px solid var(--accent);outline-offset:-1px}
@@ -435,7 +442,13 @@ form.add input[type=text]:focus{
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-sheet h3{margin:0 0 4px;font-size:18px}
 .modal-sheet .modal-sub{font-size:13px;color:var(--muted);margin:0 0 14px}
-.modal-sheet .modal-entries{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.modal-sheet .modal-entries{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+.modal-entry-wrap{display:flex;flex-direction:column;gap:8px;padding:10px;background:#fafaf6;border:1px solid var(--line);border-radius:10px}
+.modal-entry-actions{display:flex;gap:8px}
+.modal-entry-actions button{flex:1;padding:12px;font-size:14px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;font-family:inherit}
+.modal-entry-edit{color:var(--accent);background:var(--accent-soft)!important;border-color:var(--accent-soft)!important}
+.modal-entry-delete{color:var(--warn);background:#fdecea!important;border-color:#f0c8c2!important}
+.modal-sheet .modal-entries .entry{margin:0}
 .modal-sheet .modal-entries .entry{
   font-size:14px;padding:10px 12px;border-radius:8px;
   display:flex;align-items:center;gap:8px;
@@ -612,7 +625,9 @@ form.add input[type=text]:focus{
     </fieldset>
     <div class="form-row">
       <input type="date" id="start" min="2026-06-01" max="2026-08-31" required>
+      <input type="time" id="startTime" class="shrink" title="Starttid (valfri)" style="flex:0 0 110px">
       <input type="date" id="end"   min="2026-06-01" max="2026-08-31" required>
+      <input type="time" id="endTime" class="shrink" title="Sluttid (valfri)" style="flex:0 0 110px">
       <select id="symbol" class="symbol-select shrink" title="Symbol">
         <option value="">—</option>
         <option value="☀️">☀️ Sol</option>
@@ -679,6 +694,12 @@ const holidays = {
 
 let editingId = null;   // id på post som redigeras (null = ny post)
 
+function timeRange(en) {
+  if (!en.startTime) return "";
+  if (en.endTime && en.endTime !== en.startTime) return en.startTime + "–" + en.endTime + " ";
+  return en.startTime + " ";
+}
+
 function setFormMode(editing) {
   document.getElementById("submitBtn").innerText = editing ? "Spara ändringar" : "Lägg till";
   document.getElementById("cancelEditBtn").style.display = editing ? "" : "none";
@@ -695,6 +716,8 @@ function startEdit(id) {
   });
   document.getElementById("start").value = en.start || "";
   document.getElementById("end").value   = en.end   || "";
+  document.getElementById("startTime").value = en.startTime || "";
+  document.getElementById("endTime").value   = en.endTime   || "";
   document.getElementById("type").value  = en.type  || "";
   document.getElementById("color").value = en.color || "#3f7fff";
   document.getElementById("symbol").value = en.symbol || "";
@@ -708,6 +731,8 @@ function cancelEdit() {
   document.querySelectorAll('#personBox input[name="person"]').forEach(c => c.checked = false);
   document.getElementById("color").value = "#3f7fff";
   document.getElementById("symbol").value = "";
+  document.getElementById("startTime").value = "";
+  document.getElementById("endTime").value = "";
   setFormMode(false);
 }
 document.getElementById("cancelEditBtn").addEventListener("click", cancelEdit);
@@ -721,6 +746,8 @@ document.getElementById("addForm").addEventListener("submit", e => {
   ).map(c => c.value);
   const start = document.getElementById("start").value;
   const end   = document.getElementById("end").value || start;
+  const startTime = document.getElementById("startTime").value;
+  const endTime   = document.getElementById("endTime").value;
   const type  = document.getElementById("type").value;
   const color = document.getElementById("color").value;
   const symbol = document.getElementById("symbol").value;
@@ -728,7 +755,7 @@ document.getElementById("addForm").addEventListener("submit", e => {
   if (persons.length === 0 || !start) { alert("Välj minst en person och startdatum"); return; }
   if (end < start) { alert("Slutdatum är före startdatum"); return; }
 
-  const data = { persons, start, end, type, color, symbol };
+  const data = { persons, start, end, startTime, endTime, type, color, symbol };
   const op = editingId
     ? db.collection("semester").doc(editingId).set(data)
     : db.collection("semester").add(data);
@@ -739,6 +766,8 @@ document.getElementById("addForm").addEventListener("submit", e => {
       document.querySelectorAll('#personBox input[name="person"]').forEach(c => c.checked = false);
       document.getElementById("color").value = "#3f7fff";
       document.getElementById("symbol").value = "";
+      document.getElementById("startTime").value = "";
+      document.getElementById("endTime").value = "";
       setFormMode(false);
     })
     .catch(err => alert("Fel vid sparning: " + err.message));
@@ -871,7 +900,8 @@ function render() {
           }
           const label = document.createElement("span");
           const symbolPrefix = en.symbol ? `<span class="entry-symbol">${en.symbol}</span> ` : "";
-          const textPart = (nameText + (en.type ? " " + en.type : "")).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+          const tPrefix = timeRange(en);
+          const textPart = (tPrefix + nameText + (en.type ? " " + en.type : "")).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
           label.innerHTML = symbolPrefix + `<span class="entry-text">${textPart}</span>`;
           el.appendChild(label);
           const editBtn = document.createElement("button");
@@ -905,11 +935,12 @@ function render() {
     const monthTodos = todos
       .filter(t => t.month === month)
       .sort((a,b) =>
-        (a.done?1:0) - (b.done?1:0) ||
         (prioRank[a.prio||""] - prioRank[b.prio||""]) ||
         (a.createdAt||0) - (b.createdAt||0)
       );
-    monthTodos.forEach(t => {
+    const activeTodos = monthTodos.filter(t => !t.done);
+    const doneTodos = monthTodos.filter(t => t.done);
+    activeTodos.forEach(t => {
       const li = document.createElement("li");
       if (t.done) li.className = "done";
       const cb = document.createElement("input");
@@ -1020,6 +1051,39 @@ function render() {
     };
     todoBox.appendChild(tForm);
 
+    if (doneTodos.length) {
+      const doneWrap = document.createElement("div");
+      doneWrap.className = "todos-done";
+      const lbl = document.createElement("div");
+      lbl.className = "todos-done-label";
+      lbl.textContent = "Klart (" + doneTodos.length + ")";
+      doneWrap.appendChild(lbl);
+      doneTodos.forEach(t => {
+        const chip = document.createElement("span");
+        chip.className = "todo-chip";
+        const cb = document.createElement("input");
+        cb.type = "checkbox"; cb.checked = true;
+        cb.onchange = () => toggleTodo(t.id, false);
+        chip.appendChild(cb);
+        if (t.symbol) {
+          const s = document.createElement("span");
+          s.textContent = t.symbol;
+          chip.appendChild(s);
+        }
+        const txt = document.createElement("span");
+        txt.className = "chip-text";
+        txt.textContent = t.text + (t.assignee ? " (" + t.assignee + ")" : "");
+        chip.appendChild(txt);
+        const x = document.createElement("button");
+        x.textContent = "✕";
+        x.title = "Ta bort";
+        x.onclick = () => removeTodo(t.id);
+        chip.appendChild(x);
+        doneWrap.appendChild(chip);
+      });
+      todoBox.appendChild(doneWrap);
+    }
+
     mDiv.appendChild(todoBox);
     container.appendChild(mDiv);
   });
@@ -1034,7 +1098,7 @@ render();
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore (CDN blockerad?)'"></script>
-<script src="auth-gate.js?v=7"></script>
+<script src="auth-gate.js?v=8"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
@@ -1176,24 +1240,31 @@ requireAuth(() => initFirebase());
 
         const label = document.createElement("span");
         const sym = en.symbol ? `<span class="entry-symbol">${escape(en.symbol)}</span> ` : "";
-        label.innerHTML = sym + escape(nameText + (en.type ? " " + en.type : ""));
+        label.innerHTML = sym + escape(timeRange(en) + nameText + (en.type ? " " + en.type : ""));
         el.appendChild(label);
 
+        const actions = document.createElement("div");
+        actions.className = "modal-entry-actions";
+
         const editBtn = document.createElement("button");
-        editBtn.textContent = "✎";
-        editBtn.title = "Redigera";
+        editBtn.className = "modal-entry-edit";
+        editBtn.textContent = "✎ Redigera";
         editBtn.onclick = () => { close(); startEdit(en.id); };
-        el.appendChild(editBtn);
+        actions.appendChild(editBtn);
 
         const delBtn = document.createElement("button");
-        delBtn.textContent = "x";
-        delBtn.title = "Ta bort";
+        delBtn.className = "modal-entry-delete";
+        delBtn.textContent = "✕ Ta bort";
         delBtn.onclick = () => {
           if (confirm("Ta bort denna post?")) { removeEntry(en.id); close(); }
         };
-        el.appendChild(delBtn);
+        actions.appendChild(delBtn);
 
-        entriesEl.appendChild(el);
+        const wrap = document.createElement("div");
+        wrap.className = "modal-entry-wrap";
+        wrap.appendChild(el);
+        wrap.appendChild(actions);
+        entriesEl.appendChild(wrap);
       });
     }
 

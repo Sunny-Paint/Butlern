@@ -173,13 +173,10 @@ svg.mood-chart{display:block;width:100%;height:auto;max-width:100%}
     </div>
 
     <div class="field">
-      <label>Hur mår du just nu?</label>
-      <div class="mood-row" id="moodRow">
-        <div class="mood-option" data-mood="1"><span class="emoji">😞</span>Dålig</div>
-        <div class="mood-option" data-mood="2"><span class="emoji">😕</span>Trött</div>
-        <div class="mood-option" data-mood="3"><span class="emoji">😐</span>Okej</div>
-        <div class="mood-option" data-mood="4"><span class="emoji">🙂</span>Bra</div>
-        <div class="mood-option" data-mood="5"><span class="emoji">😄</span>Toppen</div>
+      <label>Hur mår du just nu? (1–10)</label>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" id="d_mood" min="1" max="10" value="5" style="flex:1;accent-color:var(--accent)">
+        <span id="moodVal" style="display:inline-flex;align-items:center;gap:6px;min-width:120px;font-weight:600;background:var(--accent-soft);border-radius:8px;padding:6px 10px"><span id="moodEmojiEl" style="font-size:22px">😐</span><span id="moodLabelEl">Okej</span></span>
       </div>
     </div>
 
@@ -249,13 +246,13 @@ svg.mood-chart{display:block;width:100%;height:auto;max-width:100%}
 
 <script>
 const statusEl = document.getElementById("status");
-const moodLabels = {1:"Dålig",2:"Trött",3:"Okej",4:"Bra",5:"Toppen"};
-const moodEmoji  = {1:"😞",2:"😕",3:"😐",4:"🙂",5:"😄"};
+const moodLabels = {1:"Hemsk",2:"Dålig",3:"Trött",4:"Nedstämd",5:"Okej",6:"Hyfsad",7:"Bra",8:"Glad",9:"Toppen",10:"Fantastisk"};
+const moodEmoji  = {1:"😭",2:"😞",3:"😕",4:"😟",5:"😐",6:"🙂",7:"😊",8:"😄",9:"🤩",10:"🥳"};
 
 let diary = [];
 let db = null;
 let editingId = null;
-let selectedMood = null;
+let selectedMood = 5;
 
 function setDefaultWhen() {
   const d = new Date();
@@ -264,13 +261,17 @@ function setDefaultWhen() {
 }
 setDefaultWhen();
 
-document.querySelectorAll(".mood-option").forEach(opt => {
-  opt.addEventListener("click", () => {
-    document.querySelectorAll(".mood-option").forEach(o => o.classList.remove("selected"));
-    opt.classList.add("selected");
-    selectedMood = parseInt(opt.dataset.mood, 10);
-  });
-});
+const moodEl = document.getElementById("d_mood");
+const moodEmojiEl = document.getElementById("moodEmojiEl");
+const moodLabelEl = document.getElementById("moodLabelEl");
+function syncMoodUI(){
+  const v = parseInt(moodEl.value, 10);
+  selectedMood = v;
+  moodEmojiEl.textContent = moodEmoji[v] || "";
+  moodLabelEl.textContent = moodLabels[v] || "";
+}
+moodEl.addEventListener("input", syncMoodUI);
+syncMoodUI();
 
 const energyEl = document.getElementById("d_energy");
 const energyVal = document.getElementById("energyVal");
@@ -280,13 +281,13 @@ document.getElementById("rangeSel").addEventListener("change", renderChart);
 
 function resetForm() {
   editingId = null;
-  selectedMood = null;
   document.getElementById("formTitle").textContent = "Ny notering";
   document.getElementById("saveBtn").textContent = "Spara";
   document.getElementById("cancelBtn").style.display = "none";
   document.getElementById("diaryForm").reset();
   setDefaultWhen();
-  document.querySelectorAll(".mood-option").forEach(o => o.classList.remove("selected"));
+  moodEl.value = 5;
+  syncMoodUI();
   energyVal.textContent = "5";
 }
 
@@ -295,7 +296,6 @@ document.getElementById("cancelBtn").addEventListener("click", resetForm);
 document.getElementById("diaryForm").addEventListener("submit", e => {
   e.preventDefault();
   if (!db) { alert("Ansluter till molnet, vänta..."); return; }
-  if (!selectedMood) { alert("Välj humör"); return; }
 
   const whenLocal = document.getElementById("d_when").value;
   if (!whenLocal) { alert("Välj tidpunkt"); return; }
@@ -337,10 +337,8 @@ function startEdit(id) {
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   document.getElementById("d_when").value = d.toISOString().slice(0,16);
 
-  selectedMood = en.mood || null;
-  document.querySelectorAll(".mood-option").forEach(o => {
-    o.classList.toggle("selected", parseInt(o.dataset.mood,10) === selectedMood);
-  });
+  moodEl.value = en.mood || 5;
+  syncMoodUI();
   energyEl.value = en.energy || 5;
   energyVal.textContent = energyEl.value;
   document.getElementById("d_tags").value = (en.tags || []).join(", ");
@@ -479,13 +477,15 @@ function renderChart() {
   const span = Math.max(tMax - tMin, 1);
 
   function x(t) { return padL + ((t - tMin) / span) * innerW; }
-  function y(m) { return padT + (1 - (m - 1) / 4) * innerH; }
+  function y(m) { return padT + (1 - (m - 1) / 9) * innerH; }
 
   let g = "";
-  for (let m = 1; m <= 5; m++) {
+  for (let m = 1; m <= 10; m++) {
     const yy = y(m);
-    g += `<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="#e6e1d4" stroke-width="1"/>`;
-    g += `<text x="${padL-8}" y="${yy+4}" text-anchor="end" font-size="11" fill="#7a7e87">${moodEmoji[m]}</text>`;
+    g += `<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="#efe9d8" stroke-width="1"/>`;
+    if (m === 1 || m === 5 || m === 10 || m % 2 === 1) {
+      g += `<text x="${padL-8}" y="${yy+4}" text-anchor="end" font-size="11" fill="#7a7e87">${moodEmoji[m]}</text>`;
+    }
   }
 
   function fmtX(t) {
@@ -518,7 +518,7 @@ function render() {
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
-<script src="auth-gate.js?v=7"></script>
+<script src="auth-gate.js?v=8"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
