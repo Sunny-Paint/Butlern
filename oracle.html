@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Oracle">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1238">
+<title>Oracle</title>
+
+<style>
+:root{
+  --bg-grad:linear-gradient(180deg,#0f0a24 0%,#1a1238 50%,#2a1a4a 100%);
+  --card:#1f1640;
+  --card-soft:#2a1f55;
+  --ink:#f0eaff;
+  --muted:#a89cd0;
+  --line:#3d2e6e;
+  --accent:#e8c674;
+  --accent-soft:#3d2e6e;
+  --accent-dark:#c9a850;
+  --shadow:0 4px 20px rgba(0,0,0,.35);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg-grad);background-attachment:fixed;
+  color:var(--ink);line-height:1.45;
+  padding:24px 16px 60px;min-height:100vh;
+}
+.wrap{max-width:620px;margin:0 auto}
+h1{margin:0 0 4px;font-size:30px;font-weight:600;letter-spacing:0.02em}
+.subtitle{margin:0 0 22px;color:var(--muted);font-size:14px}
+.subtitle a{color:var(--accent);text-decoration:none}
+.subtitle a:hover{text-decoration:underline}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+.card h2{margin:0 0 12px;font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)}
+
+.intro-card{
+  background:linear-gradient(135deg,#2a1a4a,#3d2e6e);
+  text-align:center;padding:22px 20px;
+}
+.intro-icon{font-size:44px;margin-bottom:4px}
+.intro-main{font-size:18px;font-weight:500;margin:0;color:var(--ink)}
+.intro-sub{color:var(--accent);font-size:12px;letter-spacing:0.08em;text-transform:uppercase;margin:6px 0 0}
+
+form input[type=date],form input[type=text],form textarea{
+  width:100%;padding:10px 12px;
+  border:1px solid var(--line);border-radius:8px;
+  background:var(--card-soft);color:var(--ink);
+  font-family:inherit;font-size:14px;
+}
+form input:focus,form textarea:focus{
+  outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
+}
+form textarea{min-height:60px;resize:vertical}
+.field{margin-bottom:12px}
+.field-label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em}
+
+.btn{
+  padding:11px 18px;border:none;border-radius:10px;
+  background:var(--accent);color:#1a1238;
+  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;
+}
+.btn:hover{background:var(--accent-dark)}
+.btn-secondary{background:var(--card-soft);color:var(--ink);border:1px solid var(--line)}
+.btn-secondary:hover{background:var(--accent-soft)}
+.btn-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+
+.log-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.log-item{
+  background:var(--card-soft);border:1px solid var(--line);
+  border-radius:10px;padding:12px 14px;
+}
+.log-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
+.log-date{font-weight:600;font-size:13px;color:var(--accent)}
+.log-spread{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em}
+.log-cards{font-size:15px;font-weight:500;margin:0 0 6px;color:var(--ink)}
+.log-question{font-size:13px;color:var(--muted);font-style:italic;margin:0 0 6px}
+.log-question::before{content:"❔ "}
+.log-notes{font-size:13px;color:var(--ink);white-space:pre-wrap;word-break:break-word;margin:0}
+.log-actions{display:flex;gap:6px;margin-top:8px;justify-content:flex-end}
+.log-actions button{
+  background:transparent;border:1px solid var(--line);color:var(--muted);
+  padding:3px 9px;border-radius:5px;font-size:12px;cursor:pointer;line-height:1.4;
+}
+.log-actions button:hover{color:var(--ink);border-color:var(--accent)}
+
+.muted{color:var(--muted);font-size:13px;margin:8px 0;text-align:center}
+.status{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px}
+
+@media (max-width:720px){
+  body{padding:14px 10px 60px}
+  h1{font-size:24px}
+  .intro-icon{font-size:36px}
+  .intro-main{font-size:16px}
+  .card{padding:14px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>🔮 Oracle</h1>
+<p class="subtitle"><a href="butlern.html">← Butlern</a></p>
+
+<div class="card intro-card">
+  <div class="intro-icon">✨</div>
+  <p class="intro-main">Logga dina tarot- och orakelkort</p>
+  <p class="intro-sub" id="introCount">0 dragningar</p>
+</div>
+
+<div class="card">
+  <h2 id="formTitle">Ny dragning</h2>
+  <form id="oracleForm">
+    <div class="field">
+      <label class="field-label" for="oDate">Datum</label>
+      <input type="date" id="oDate" required>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="oCards">Kort</label>
+      <input type="text" id="oCards" placeholder="t.ex. The Moon, Three of Cups, The Star" required>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="oSpread">Spread / lek (valfritt)</label>
+      <input type="text" id="oSpread" placeholder="t.ex. 3-kort: dåtid/nutid/framtid · Rider-Waite">
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="oQuestion">Fråga / intention (valfri)</label>
+      <input type="text" id="oQuestion" placeholder="Vad behöver jag veta idag?">
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="oNotes">Tolkning / känsla</label>
+      <textarea id="oNotes" placeholder="Vad sa korten dig?"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button type="submit" class="btn" id="saveBtn">Spara</button>
+      <button type="button" class="btn btn-secondary" id="resetBtn">Rensa</button>
+      <button type="button" class="btn btn-secondary" id="cancelBtn" style="display:none">Avbryt redigering</button>
+    </div>
+    <p class="status" id="status">Ansluter...</p>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Tidigare dragningar</h2>
+  <ul id="logList" class="log-list"></ul>
+  <p class="muted" id="logEmpty">Inga dragningar än.</p>
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
+<script src="auth-gate.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
+  authDomain: "sommarplanering-d4300.firebaseapp.com",
+  projectId: "sommarplanering-d4300",
+  storageBucket: "sommarplanering-d4300.firebasestorage.app",
+  messagingSenderId: "261517602417",
+  appId: "1:261517602417:web:11b754c758c92cc33735d0"
+};
+
+const $ = id => document.getElementById(id);
+const statusEl = $("status");
+const dateEl = $("oDate");
+const cardsEl = $("oCards");
+const spreadEl = $("oSpread");
+const questionEl = $("oQuestion");
+const notesEl = $("oNotes");
+const formEl = $("oracleForm");
+const saveBtn = $("saveBtn");
+const cancelBtn = $("cancelBtn");
+const formTitle = $("formTitle");
+const introCount = $("introCount");
+const logList = $("logList");
+const logEmpty = $("logEmpty");
+
+let db = null;
+let draws = [];
+let editingId = null;
+
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+
+function resetForm() {
+  editingId = null;
+  formEl.reset();
+  dateEl.value = todayStr();
+  formTitle.textContent = "Ny dragning";
+  saveBtn.textContent = "Spara";
+  cancelBtn.style.display = "none";
+}
+
+function startEdit(id) {
+  const d = draws.find(x => x.id === id);
+  if (!d) return;
+  editingId = id;
+  dateEl.value = d.date || todayStr();
+  cardsEl.value = d.cards || "";
+  spreadEl.value = d.spread || "";
+  questionEl.value = d.question || "";
+  notesEl.value = d.notes || "";
+  formTitle.textContent = "Redigera dragning";
+  saveBtn.textContent = "Spara ändringar";
+  cancelBtn.style.display = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function render() {
+  introCount.textContent = draws.length + (draws.length === 1 ? " dragning" : " dragningar");
+  logList.innerHTML = "";
+  if (!draws.length) { logEmpty.style.display = ""; return; }
+  logEmpty.style.display = "none";
+  draws.slice().sort((a,b) => (b.date||"").localeCompare(a.date||"")).forEach(d => {
+    const li = document.createElement("li");
+    li.className = "log-item";
+    const head = document.createElement("div");
+    head.className = "log-head";
+    const date = document.createElement("span");
+    date.className = "log-date";
+    date.textContent = d.date || "";
+    head.appendChild(date);
+    if (d.spread) {
+      const sp = document.createElement("span");
+      sp.className = "log-spread";
+      sp.textContent = d.spread;
+      head.appendChild(sp);
+    }
+    li.appendChild(head);
+
+    const cards = document.createElement("p");
+    cards.className = "log-cards";
+    cards.textContent = d.cards || "";
+    li.appendChild(cards);
+
+    if (d.question) {
+      const q = document.createElement("p");
+      q.className = "log-question";
+      q.textContent = d.question;
+      li.appendChild(q);
+    }
+    if (d.notes) {
+      const n = document.createElement("p");
+      n.className = "log-notes";
+      n.textContent = d.notes;
+      li.appendChild(n);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "log-actions";
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "Redigera";
+    editBtn.addEventListener("click", () => startEdit(d.id));
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "Ta bort";
+    delBtn.addEventListener("click", () => removeDraw(d.id));
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+    li.appendChild(actions);
+
+    logList.appendChild(li);
+  });
+}
+
+formEl.addEventListener("submit", e => {
+  e.preventDefault();
+  if (!db) { alert("Ansluter..."); return; }
+  const data = {
+    date: dateEl.value || todayStr(),
+    cards: cardsEl.value.trim(),
+    spread: spreadEl.value.trim(),
+    question: questionEl.value.trim(),
+    notes: notesEl.value.trim(),
+    updated: Date.now()
+  };
+  if (!data.cards) { alert("Skriv minst ett kort"); return; }
+  const op = editingId
+    ? db.collection("oracle").doc(editingId).set(data)
+    : db.collection("oracle").add(data);
+  op.then(() => resetForm())
+    .catch(err => alert("Fel: " + err.message));
+});
+
+cancelBtn.addEventListener("click", resetForm);
+$("resetBtn").addEventListener("click", resetForm);
+
+function removeDraw(id) {
+  if (!db) return;
+  if (!confirm("Ta bort dragningen?")) return;
+  db.collection("oracle").doc(id).delete().catch(err => alert("Fel: " + err.message));
+}
+
+function initFirebase(attempt) {
+  attempt = attempt || 0;
+  if (typeof firebase === "undefined") {
+    if (attempt > 50) { statusEl.textContent = "Firebase laddades aldrig"; return; }
+    return setTimeout(() => initFirebase(attempt+1), 100);
+  }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  } catch(e) { statusEl.textContent = "Init-fel: " + e.message; return; }
+
+  db.collection("oracle").onSnapshot(snap => {
+    draws = [];
+    snap.forEach(d => draws.push({ id:d.id, ...d.data() }));
+    statusEl.textContent = draws.length + " dragningar" + (snap.metadata.fromCache ? " (cache)" : "");
+    render();
+  }, err => { statusEl.textContent = "Firestore-fel: " + err.message; });
+}
+
+resetForm();
+window.firebaseConfig = firebaseConfig;
+requireAuth(() => initFirebase());
+</script>
+</body>
+</html>
