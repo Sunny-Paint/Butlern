@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Butlern">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#7a4fb0">
+<title>Butlern</title>
+
+<style>
+:root{
+  --bg:#f6f1e7;
+  --bg-grad:linear-gradient(180deg,#fef9ee 0%,#f1e9d6 100%);
+  --card:#ffffff;
+  --ink:#2b2d33;
+  --muted:#7a7e87;
+  --line:#e6e1d4;
+  --accent:#2b6cb0;
+  --accent-soft:#e8f0fb;
+  --warn:#c0392b;
+  --today:#fff3c4;
+  --weekend:#fafafa;
+  --holiday:#ffe9e9;
+  --todo-bg:#fffaec;
+  --todo-border:#f3e7c4;
+  --shadow:0 1px 2px rgba(20,20,20,.04), 0 4px 16px rgba(20,20,20,.06);
+  --radius:14px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg-grad);
+  color:var(--ink);
+  line-height:1.4;
+  padding:24px 16px 80px;
+  min-height:100vh;
+}
+
+.wrap{max-width:1400px;margin:0 auto}
+
+h1{
+  font-size:32px;
+  font-weight:700;
+  letter-spacing:-0.02em;
+  margin:0 0 4px;
+}
+.subtitle{color:var(--muted);font-size:14px;margin:0 0 24px}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin-bottom:20px;
+  box-shadow:var(--shadow);
+  width:100%;
+  display:block;
+}
+.card h2{
+  margin:0 0 14px;
+  font-size:22px;
+  font-weight:600;
+  letter-spacing:-0.01em;
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+}
+.card h2 .count{
+  font-size:12px;
+  font-weight:500;
+  color:var(--muted);
+  background:var(--accent-soft);
+  padding:2px 8px;
+  border-radius:999px;
+}
+
+/* === Formulär === */
+.form-card h3{
+  margin:0 0 12px;
+  font-size:15px;
+  font-weight:600;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+}
+form.add{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.form-row{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:end;
+}
+.form-row > *{flex:1;min-width:0}
+.form-row .grow{flex:2}
+.form-row .shrink{flex:0 0 auto}
+form.add fieldset{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:10px 14px;
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin:0;
+}
+form.add legend{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  color:var(--muted);
+  padding:0 6px;
+}
+form.add label{font-size:14px;cursor:pointer;user-select:none}
+form.add input[type=checkbox]{accent-color:var(--accent);margin-right:4px}
+form.add input[type=date],
+form.add input[type=text]{
+  padding:9px 12px;
+  font-size:14px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  font-family:inherit;
+  color:var(--ink);
+  transition:border-color .15s, box-shadow .15s;
+}
+form.add input[type=date]:focus,
+form.add input[type=text]:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft);
+}
+.color-pick{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:13px;
+  color:var(--muted);
+}
+.color-pick input[type=color]{
+  width:36px;
+  height:36px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  cursor:pointer;
+  padding:2px;
+}
+.btn{
+  padding:10px 18px;
+  font-size:14px;
+  font-weight:600;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-family:inherit;
+  transition:transform .05s, background .15s, box-shadow .15s;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#22588d}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.btn-ghost:hover{background:#f5f3ee}
+.btn-danger{background:#fff;color:var(--warn);border:1px solid #f0c8c2}
+.btn-danger:hover{background:#fdecea}
+
+.status{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.status::before{
+  content:"";
+  width:8px;height:8px;
+  border-radius:50%;
+  background:#9bcf72;
+  display:inline-block;
+}
+
+/* === Kalender === */
+.grid{
+  display:grid;
+  grid-template-columns:34px repeat(7,minmax(0,1fr));
+  gap:6px;
+}
+.week-num{
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:600;color:var(--muted);
+  background:transparent;
+}
+.week-num.week-head{font-size:10px;text-transform:uppercase;letter-spacing:0.05em}
+.weekday{
+  font-size:11px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  color:var(--muted);
+  text-align:center;
+  padding:4px 0;
+}
+.day{
+  border:1px solid var(--line);
+  border-radius:8px;
+  min-height:78px;
+  padding:5px;
+  background:#fff;
+  font-size:12px;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  transition:background .15s;
+}
+.day.weekend{background:var(--weekend)}
+.day.holiday{background:var(--holiday)}
+.day.today{background:var(--today);border-color:#e5c84a;box-shadow:0 0 0 2px #e5c84a inset}
+.day:hover{background:#fbf9f3}
+.day.weekend:hover{background:#f3f1ec}
+
+.date{
+  font-weight:700;
+  font-size:13px;
+  color:var(--ink);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.holiday-name{font-size:10px;color:#b04a4a;font-style:italic}
+
+/* === Poster === */
+.Sanna{background:#3f7fff;color:#fff}
+.Johan{background:#7f3fff;color:#fff}
+.Eira{background:#2ecc71;color:#fff}
+.Elian{background:#f39c12;color:#fff}
+.Alla{background:#4a5160;color:#fff}
+
+.entry{
+  padding:3px 6px;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:500;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:4px;
+  line-height:1.3;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);
+}
+.entry span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entry button{
+  background:rgba(255,255,255,.25);
+  border:none;
+  color:#fff;
+  cursor:pointer;
+  border-radius:4px;
+  font-size:10px;
+  padding:1px 5px;
+  line-height:1;
+  transition:background .15s;
+}
+.entry button:hover{background:rgba(255,255,255,.45)}
+
+/* === Att göra-lista === */
+.todos{
+  margin-top:18px;
+  background:var(--todo-bg);
+  border:1px solid var(--todo-border);
+  border-radius:12px;
+  padding:14px 16px;
+}
+.todos h3{
+  margin:0 0 10px;
+  font-size:13px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  color:#8a6d2a;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.todos h3::before{content:"☀";font-size:16px}
+.todos ul{list-style:none;padding:0;margin:0}
+.todos li{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 0;
+  font-size:14px;
+  border-bottom:1px dashed #f0e5c4;
+}
+.todos li:last-child{border-bottom:none}
+.todos li input[type=checkbox]{accent-color:#b8902a;width:16px;height:16px;cursor:pointer;flex:0 0 auto}
+.todos li.done .todo-title,.todos li.done .todo-comment{text-decoration:line-through;color:#bdb39a}
+.todos li .todo-main{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.todos li .todo-title{font-weight:600;color:#3a2f10}
+.todos li .todo-comment{font-size:12px;color:#8a6d2a;font-style:italic}
+.todo-assignee{
+  flex:0 0 auto;
+  font-size:11px;
+  font-weight:600;
+  padding:2px 8px;
+  border-radius:999px;
+  background:#ece4cf;
+  color:#5a4818;
+}
+.todo-symbol-display{
+  flex:0 0 auto;
+  font-size:18px;
+  line-height:1;
+}
+.prio-badge{
+  flex:0 0 auto;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+  padding:2px 8px;
+  border-radius:999px;
+  color:#fff;
+}
+.prio-badge.prio-hog{background:#d64545}
+.prio-badge.prio-mellan{background:#e08a1f}
+.prio-badge.prio-lag{background:#5a9e4b}
+.todos li button{
+  background:none;
+  border:none;
+  color:#b8902a;
+  cursor:pointer;
+  font-size:14px;
+  padding:2px 6px;
+  border-radius:4px;
+  opacity:0;
+  transition:opacity .15s, background .15s;
+}
+.todos li:hover button{opacity:1}
+.todos li button:hover{background:#f3e7c4}
+.todos form{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.todos form input,.todos form select{
+  padding:8px 12px;
+  font-size:14px;
+  border:1px solid var(--todo-border);
+  border-radius:8px;
+  background:#fff;
+  font-family:inherit;
+}
+.todos form .todo-prio{flex:0 0 110px}
+.todos form .todo-assignee-input{flex:0 0 130px}
+.todos form .todo-symbol{flex:0 0 80px;font-size:18px}
+.todos form .todo-title-input{flex:1 1 180px;min-width:0}
+.todos form .todo-comment-input{flex:2 1 240px;min-width:0}
+.todos form input:focus,.todos form select:focus{outline:none;border-color:#b8902a;box-shadow:0 0 0 3px #fef0c4}
+.todos form button{
+  padding:8px 14px;
+  background:#b8902a;
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:600;
+  font-family:inherit;
+}
+.todos form button:hover{background:#967422}
+
+/* Edit-läge */
+.form-card.editing{outline:2px solid var(--accent);outline-offset:-1px}
+
+.view-toggle{display:none}
+
+/* === Dag-modal (mobil månadsvy) === */
+.modal-backdrop{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);
+  display:none;align-items:flex-end;justify-content:center;
+  z-index:1000;padding:0;
+}
+.modal-backdrop.open{display:flex}
+.modal-sheet{
+  background:#fff;width:100%;max-width:560px;
+  border-radius:16px 16px 0 0;
+  padding:18px 18px 24px;
+  max-height:85vh;overflow-y:auto;
+  box-shadow:0 -4px 24px rgba(0,0,0,.2);
+  animation:slideUp .2s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-sheet h3{margin:0 0 4px;font-size:18px}
+.modal-sheet .modal-sub{font-size:13px;color:var(--muted);margin:0 0 14px}
+.modal-sheet .modal-entries{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.modal-sheet .modal-entries .entry{
+  font-size:14px;padding:10px 12px;border-radius:8px;
+  display:flex;align-items:center;gap:8px;
+  box-shadow:0 1px 2px rgba(0,0,0,.08);
+}
+.modal-sheet .modal-entries .entry span{
+  flex:1;font-size:14px;white-space:normal;word-break:break-word;line-height:1.35;
+  overflow:visible;text-overflow:clip;
+}
+.modal-sheet .modal-entries .entry button{
+  display:inline-block;font-size:13px;padding:5px 10px;line-height:1;
+  background:rgba(255,255,255,.3);border:none;color:#fff;
+  border-radius:5px;cursor:pointer;opacity:1;
+}
+.modal-sheet .modal-empty{color:var(--muted);font-style:italic;margin:0 0 14px;font-size:14px}
+.modal-sheet .modal-actions{display:flex;gap:8px}
+.modal-sheet .modal-actions button{
+  flex:1;padding:11px;font-size:14px;border-radius:8px;
+  border:1px solid var(--line);background:#fff;cursor:pointer;font-family:inherit;
+}
+.modal-sheet .modal-actions .modal-add{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+
+@media (min-width:721px){
+  .modal-backdrop{align-items:center}
+  .modal-sheet{border-radius:14px;max-width:520px;animation:none}
+}
+
+/* === Mobil === */
+@media (max-width:720px){
+  body{padding:12px 8px 60px}
+  h1{font-size:24px}
+  .card{padding:14px;border-radius:12px}
+  .card h2{font-size:18px;flex-wrap:wrap}
+  .form-row{gap:8px}
+  form.add fieldset{gap:10px;padding:8px 10px}
+  form.add label{font-size:13px}
+
+  /* Standardvy mobil: HELA MÅNADEN (kompakt 7-kolumners rutnät) */
+  .grid{gap:3px;grid-template-columns:22px repeat(7,minmax(0,1fr))}
+  .week-num{font-size:9px}
+  .weekday{font-size:9px;padding:2px 0;letter-spacing:0}
+  .day{
+    min-height:54px;
+    padding:3px;
+    border-radius:7px;
+    gap:2px;
+  }
+  .date{font-size:11px}
+  .holiday-name{display:none}
+  .entry{
+    padding:2px 3px;
+    font-size:9px;
+    border-radius:4px;
+    line-height:1.2;
+    box-shadow:none;
+    gap:2px;
+    min-height:11px;
+  }
+  .entry span{font-size:9px}
+  .entry .entry-symbol{margin-right:1px}
+  .entry .entry-text{font-size:9px;white-space:normal;word-break:break-word;line-height:1.2;overflow:hidden}
+  body.view-month .day{cursor:pointer}
+  body.view-month .entry{pointer-events:none}
+  body.view-month .entry button{display:none}
+
+  /* Agenda-vy: 1 kolumn, varje dag i full bredd (aktiveras via toggle) */
+  body.view-agenda .grid{grid-template-columns:1fr;gap:8px}
+  body.view-agenda .weekday{display:none}
+  body.view-agenda .week-num{display:none}
+  body.view-agenda .grid > div:empty{display:none}
+  body.view-agenda .day:not(:has(.entry)):not(.today):not(.holiday){display:none}
+  body.view-agenda .day{
+    min-height:auto;
+    padding:10px 12px;
+    font-size:14px;
+    border-radius:10px;
+    flex-direction:row;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px;
+  }
+  body.view-agenda .date{flex:0 0 40px;font-size:18px;font-weight:700}
+  body.view-agenda .holiday-name{display:block;flex:1 1 100%;font-size:12px;margin:-4px 0 2px}
+  body.view-agenda .entry{flex:1 1 100%;font-size:14px;padding:8px 12px;gap:8px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  body.view-agenda .entry span{font-size:14px;white-space:normal;word-break:break-word;line-height:1.35}
+  body.view-agenda .entry .entry-text{display:inline}
+  body.view-agenda .entry button{display:inline-block;font-size:13px;padding:4px 9px;opacity:1;background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:4px;cursor:pointer}
+
+  .view-toggle{display:flex;gap:6px;margin:-6px 0 14px}
+  .view-toggle button{
+    flex:1;
+    padding:8px 10px;
+    font-size:13px;
+    font-weight:600;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:8px;
+    cursor:pointer;
+    color:var(--muted);
+    font-family:inherit;
+  }
+  .view-toggle button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  .todos{padding:10px 12px;margin-top:14px}
+  .todos form{gap:6px}
+  .todos form .todo-prio,
+  .todos form .todo-assignee-input,
+  .todos form .todo-symbol,
+  .todos form .todo-title-input,
+  .todos form .todo-comment-input{
+    flex:1 1 100%;
+  }
+  .todos form button{flex:1 1 100%}
+  .todos li{flex-wrap:wrap;gap:6px}
+  .todos li .todo-main{flex:1 1 100%;order:5}
+  .todos li button{opacity:1}
+  .btn{padding:9px 14px;font-size:13px}
+}
+.symbol-select{
+  padding:9px 12px;
+  font-size:18px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  font-family:inherit;
+  cursor:pointer;
+  min-width:70px;
+}
+.symbol-select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.entry .entry-symbol{margin-right:3px}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<h1>🎩 Butlern</h1>
+<p class="subtitle">Planering · <a href="loggbok.html" style="color:var(--accent)">Logg</a> · <a href="tacksamhet.html" style="color:var(--accent)">Reflektion</a> · <a href="moon.html" style="color:var(--accent)">The Moon</a></p>
+
+<div class="view-toggle" id="viewToggle">
+  <button type="button" data-view="month" class="active">📅 Månad</button>
+  <button type="button" data-view="agenda">📋 Agenda</button>
+</div>
+
+<div class="modal-backdrop" id="dayModal">
+  <div class="modal-sheet" role="dialog" aria-modal="true">
+    <h3 id="dayModalTitle">Dag</h3>
+    <p class="modal-sub" id="dayModalSub"></p>
+    <div class="modal-entries" id="dayModalEntries"></div>
+    <div class="modal-actions">
+      <button type="button" id="dayModalAdd" class="modal-add">+ Lägg till</button>
+      <button type="button" id="dayModalClose">Stäng</button>
+    </div>
+  </div>
+</div>
+
+<div class="card form-card" id="formCard">
+  <h3>Lägg till semester / aktivitet</h3>
+  <form class="add" id="addForm">
+    <fieldset id="personBox">
+      <legend>Personer</legend>
+      <label><input type="checkbox" name="person" value="Johan"> Johan</label>
+      <label><input type="checkbox" name="person" value="Sanna"> Sanna</label>
+      <label><input type="checkbox" name="person" value="Eira"> Eira</label>
+      <label><input type="checkbox" name="person" value="Elian"> Elian</label>
+      <label><input type="checkbox" name="person" value="Alla"> Alla</label>
+    </fieldset>
+    <div class="form-row">
+      <input type="date" id="start" min="2026-06-01" max="2026-08-31" required>
+      <input type="date" id="end"   min="2026-06-01" max="2026-08-31" required>
+      <select id="symbol" class="symbol-select shrink" title="Symbol">
+        <option value="">—</option>
+        <option value="☀️">☀️ Sol</option>
+        <option value="🏖️">🏖️ Strand</option>
+        <option value="✈️">✈️ Flyg</option>
+        <option value="🚗">🚗 Bil</option>
+        <option value="🚆">🚆 Tåg</option>
+        <option value="⛵">⛵ Båt</option>
+        <option value="🏕️">🏕️ Camping</option>
+        <option value="🎉">🎉 Fest</option>
+        <option value="🎂">🎂 Födelsedag</option>
+        <option value="💍">💍 Bröllop</option>
+        <option value="🎓">🎓 Avslutning</option>
+        <option value="🏠">🏠 Hemma</option>
+        <option value="👵">👵 Mormor/Farmor</option>
+        <option value="🎁">🎁 Present</option>
+        <option value="🏊">🏊 Bad</option>
+        <option value="⚽">⚽ Sport</option>
+        <option value="🎵">🎵 Musik</option>
+        <option value="🍔">🍔 Mat</option>
+        <option value="🌳">🌳 Natur</option>
+      </select>
+      <label class="color-pick shrink">Färg <input type="color" id="color" value="#3f7fff"></label>
+    </div>
+    <div class="form-row">
+      <input type="text" id="type" class="grow" placeholder="Vad händer len?">
+      <button type="submit" id="submitBtn" class="btn btn-primary shrink">Lägg till</button>
+      <button type="button" id="cancelEditBtn" class="btn btn-ghost shrink" style="display:none">Avbryt</button>
+    </div>
+  </form>
+  <div class="status" id="status">Laddar...</div>
+</div>
+
+<div id="calendar"></div>
+
+</div><!-- /.wrap -->
+
+<!-- STEG 1: Rendera direkt från localStorage (ingen Firebase, ingen väntan) -->
+<script>
+const CACHE_KEY = "sommar2026_entries";
+const TODO_CACHE_KEY = "sommar2026_todos";
+const statusEl  = document.getElementById("status");
+let entries     = [];
+let todos       = [];
+let db          = null;   // sätts när Firebase är laddat
+
+try {
+  entries = JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
+} catch(e) { entries = []; }
+try {
+  todos = JSON.parse(localStorage.getItem(TODO_CACHE_KEY) || "[]");
+} catch(e) { todos = []; }
+
+statusEl.textContent = entries.length
+  ? "Visar " + entries.length + " poster (cache) — synkar med molnet..."
+  : "Laddar...";
+
+/* Helgdagar */
+const holidays = {
+  "2026-06-06":"Nationaldagen",
+  "2026-06-19":"Midsommarafton",
+  "2026-06-20":"Midsommardagen"
+};
+
+let editingId = null;   // id på post som redigeras (null = ny post)
+
+function setFormMode(editing) {
+  document.getElementById("submitBtn").innerText = editing ? "Spara ändringar" : "Lägg till";
+  document.getElementById("cancelEditBtn").style.display = editing ? "" : "none";
+  document.getElementById("formCard").classList.toggle("editing", editing);
+}
+
+function startEdit(id) {
+  const en = entries.find(x => x.id === id);
+  if (!en) return;
+  editingId = id;
+  const personList = en.persons || (en.person ? [en.person] : []);
+  document.querySelectorAll('#personBox input[name="person"]').forEach(c => {
+    c.checked = personList.includes(c.value);
+  });
+  document.getElementById("start").value = en.start || "";
+  document.getElementById("end").value   = en.end   || "";
+  document.getElementById("type").value  = en.type  || "";
+  document.getElementById("color").value = en.color || "#3f7fff";
+  document.getElementById("symbol").value = en.symbol || "";
+  setFormMode(true);
+  document.getElementById("addForm").scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function cancelEdit() {
+  editingId = null;
+  document.getElementById("addForm").reset();
+  document.querySelectorAll('#personBox input[name="person"]').forEach(c => c.checked = false);
+  document.getElementById("color").value = "#3f7fff";
+  document.getElementById("symbol").value = "";
+  setFormMode(false);
+}
+document.getElementById("cancelEditBtn").addEventListener("click", cancelEdit);
+
+/* Lägg till */
+document.getElementById("addForm").addEventListener("submit", e => {
+  e.preventDefault();
+  if (!db) { alert("Ansluter till molnet, vänta några sekunder..."); return; }
+  const persons = Array.from(
+    document.querySelectorAll('#personBox input[name="person"]:checked')
+  ).map(c => c.value);
+  const start = document.getElementById("start").value;
+  const end   = document.getElementById("end").value || start;
+  const type  = document.getElementById("type").value;
+  const color = document.getElementById("color").value;
+  const symbol = document.getElementById("symbol").value;
+
+  if (persons.length === 0 || !start) { alert("Välj minst en person och startdatum"); return; }
+  if (end < start) { alert("Slutdatum är före startdatum"); return; }
+
+  const data = { persons, start, end, type, color, symbol };
+  const op = editingId
+    ? db.collection("semester").doc(editingId).set(data)
+    : db.collection("semester").add(data);
+
+  op.then(() => {
+      editingId = null;
+      e.target.reset();
+      document.querySelectorAll('#personBox input[name="person"]').forEach(c => c.checked = false);
+      document.getElementById("color").value = "#3f7fff";
+      document.getElementById("symbol").value = "";
+      setFormMode(false);
+    })
+    .catch(err => alert("Fel vid sparning: " + err.message));
+});
+
+/* Ta bort */
+function removeEntry(id) {
+  if (!id) return;
+  if (!db) { alert("Ansluter till molnet, vänta..."); return; }
+  if (!confirm("Ta bort posten?")) return;
+  db.collection("semester").doc(id).delete()
+    .catch(err => alert("Fel vid borttagning: " + err.message));
+}
+
+/* === Att göra-lista === */
+function addTodo(month, text, prio, comment, assignee, symbol) {
+  if (!text.trim()) return;
+  if (!db) { alert("Ansluter till molnet, vänta..."); return; }
+  db.collection("todos").add({
+    month,
+    text: text.trim(),
+    prio: prio || "",
+    comment: (comment || "").trim(),
+    assignee: assignee || "",
+    symbol: symbol || "",
+    done: false,
+    createdAt: Date.now()
+  }).catch(err => alert("Fel: " + err.message));
+}
+function toggleTodo(id, done) {
+  if (!db) return;
+  db.collection("todos").doc(id).update({ done }).catch(err => console.error(err));
+}
+function removeTodo(id) {
+  if (!db) return;
+  db.collection("todos").doc(id).delete().catch(err => console.error(err));
+}
+
+/* Kalender */
+function render() {
+  const container = document.getElementById("calendar");
+  container.innerHTML = "";
+
+  const all = entries;
+  const today = new Date();
+  const todayStr = today.getFullYear() + "-" +
+    String(today.getMonth()+1).padStart(2,'0') + "-" +
+    String(today.getDate()).padStart(2,'0');
+
+  [6,7,8].forEach(month => {
+    const mDiv = document.createElement("div");
+    mDiv.className = "card";
+
+    const monthEntries = entries.filter(en =>
+      en.start && en.start.startsWith(`2026-${String(month).padStart(2,'0')}`) ||
+      en.end   && en.end.startsWith(`2026-${String(month).padStart(2,'0')}`)
+    );
+    const monthTodoCount = todos.filter(t => t.month === month).length;
+
+    const title = document.createElement("h2");
+    const monthName = ["Juni","Juli","Augusti"][month-6];
+    title.innerHTML = monthName +
+      `<span class="count">${monthEntries.length} händelser · ${monthTodoCount} att göra</span>`;
+    mDiv.appendChild(title);
+
+    const grid = document.createElement("div");
+    grid.className = "grid";
+
+    ["Mån","Tis","Ons","Tor","Fre","Lör","Sön"].forEach(d => {
+      const h = document.createElement("div");
+      h.className = "weekday";
+      h.innerText = d;
+      grid.appendChild(h);
+    });
+
+    const days = new Date(2026, month, 0).getDate();
+
+    // Tomma celler innan månadens första dag (måndag först)
+    const first = new Date(2026, month-1, 1).getDay(); // 0=sön
+    const offset = (first + 6) % 7;
+    for (let i=0; i<offset; i++) {
+      grid.appendChild(document.createElement("div"));
+    }
+
+    for (let d=1; d<=days; d++) {
+      const dateStr = "2026-" + String(month).padStart(2,'0') + "-" + String(d).padStart(2,'0');
+      const dow = new Date(2026, month-1, d).getDay(); // 0=sön, 6=lör
+
+      const cell = document.createElement("div");
+      cell.className = "day";
+      cell.dataset.date = dateStr;
+      if (dow === 0 || dow === 6) cell.classList.add("weekend");
+      if (holidays[dateStr]) cell.classList.add("holiday");
+      if (dateStr === todayStr) cell.classList.add("today");
+
+      const dateRow = document.createElement("div");
+      dateRow.className = "date";
+      dateRow.innerText = d;
+      cell.appendChild(dateRow);
+
+      if (holidays[dateStr]) {
+        const h = document.createElement("div");
+        h.className = "holiday-name";
+        h.innerText = holidays[dateStr];
+        cell.appendChild(h);
+      }
+
+      all.forEach(en => {
+        if (dateStr >= en.start && dateStr <= en.end) {
+          // stöd både gammalt (person) och nytt (persons: [])
+          const personList = en.persons || (en.person ? [en.person] : []);
+          if (personList.length === 0) return;
+
+          // Förkortningar i kalendervyn
+          const shortName = n => ({Sanna:"S", Johan:"J", Elian:"Eli", Eira:"Eira"}[n] || n);
+          const shortList = personList.map(shortName);
+
+          // Slå ihop namn: "S", "S och Eli", "S, Eli och Eira"
+          let nameText;
+          if (shortList.length === 1) nameText = shortList[0];
+          else if (shortList.length === 2) nameText = shortList.join(" och ");
+          else nameText = shortList.slice(0,-1).join(", ") + " och " + shortList.slice(-1);
+
+          const el = document.createElement("div");
+          // Färg: vald färg, annars första personens klassfärg
+          el.className = "entry " + personList[0];
+          if (en.color) {
+            el.style.background = en.color;
+            el.style.color = "white";
+          }
+          const label = document.createElement("span");
+          const symbolPrefix = en.symbol ? `<span class="entry-symbol">${en.symbol}</span> ` : "";
+          const textPart = (nameText + (en.type ? " " + en.type : "")).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+          label.innerHTML = symbolPrefix + `<span class="entry-text">${textPart}</span>`;
+          el.appendChild(label);
+          const editBtn = document.createElement("button");
+          editBtn.innerText = "✎";
+          editBtn.title = "Redigera";
+          editBtn.onclick = () => startEdit(en.id);
+          el.appendChild(editBtn);
+          const btn = document.createElement("button");
+          btn.innerText = "x";
+          btn.onclick = () => removeEntry(en.id);
+          el.appendChild(btn);
+          cell.appendChild(el);
+        }
+      });
+
+      grid.appendChild(cell);
+    }
+
+    mDiv.appendChild(grid);
+
+    /* Att göra-lista för månaden */
+    const todoBox = document.createElement("div");
+    todoBox.className = "todos";
+    const tTitle = document.createElement("h3");
+    tTitle.innerText = "Att göra – " + ["Juni","Juli","Augusti"][month-6];
+    todoBox.appendChild(tTitle);
+
+    const ul = document.createElement("ul");
+    const prioRank = { hog:0, mellan:1, lag:2, "":3 };
+    const prioLabel = { hog:"Hög", mellan:"Mellan", lag:"Låg" };
+    const monthTodos = todos
+      .filter(t => t.month === month)
+      .sort((a,b) =>
+        (a.done?1:0) - (b.done?1:0) ||
+        (prioRank[a.prio||""] - prioRank[b.prio||""]) ||
+        (a.createdAt||0) - (b.createdAt||0)
+      );
+    monthTodos.forEach(t => {
+      const li = document.createElement("li");
+      if (t.done) li.className = "done";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!t.done;
+      cb.onchange = () => toggleTodo(t.id, cb.checked);
+      li.appendChild(cb);
+
+      if (t.prio && prioLabel[t.prio]) {
+        const badge = document.createElement("span");
+        badge.className = "prio-badge prio-" + t.prio;
+        badge.innerText = prioLabel[t.prio];
+        li.appendChild(badge);
+      }
+
+      if (t.symbol) {
+        const sym = document.createElement("span");
+        sym.className = "todo-symbol-display";
+        sym.innerText = t.symbol;
+        li.appendChild(sym);
+      }
+
+      if (t.assignee) {
+        const a = document.createElement("span");
+        a.className = "todo-assignee";
+        a.innerText = t.assignee;
+        li.appendChild(a);
+      }
+
+      const main = document.createElement("div");
+      main.className = "todo-main";
+      const title = document.createElement("span");
+      title.className = "todo-title";
+      title.innerText = t.text;
+      main.appendChild(title);
+      if (t.comment) {
+        const c = document.createElement("span");
+        c.className = "todo-comment";
+        c.innerText = t.comment;
+        main.appendChild(c);
+      }
+      li.appendChild(main);
+
+      const x = document.createElement("button");
+      x.innerText = "✕";
+      x.title = "Ta bort";
+      x.onclick = () => removeTodo(t.id);
+      li.appendChild(x);
+      ul.appendChild(li);
+    });
+    todoBox.appendChild(ul);
+
+    const tForm = document.createElement("form");
+    const tPrio = document.createElement("select");
+    tPrio.className = "todo-prio";
+    [["","Prio"],["hog","Hög"],["mellan","Mellan"],["lag","Låg"]].forEach(([v,l]) => {
+      const o = document.createElement("option");
+      o.value = v; o.innerText = l;
+      tPrio.appendChild(o);
+    });
+    const tAssignee = document.createElement("select");
+    tAssignee.className = "todo-assignee-input";
+    ["Vem?","Johan","Sanna","Eira","Elian","Alla"].forEach((name,i) => {
+      const o = document.createElement("option");
+      o.value = i === 0 ? "" : name;
+      o.innerText = name;
+      tAssignee.appendChild(o);
+    });
+    const tSymbol = document.createElement("select");
+    tSymbol.className = "todo-symbol";
+    const symbolOptions = [
+      ["","—"],["☀️","☀️"],["🏖️","🏖️"],["✈️","✈️"],["🚗","🚗"],
+      ["🚆","🚆"],["⛵","⛵"],["🏕️","🏕️"],["🎉","🎉"],["🎂","🎂"],
+      ["💍","💍"],["🎓","🎓"],["🏠","🏠"],["🎁","🎁"],["🏊","🏊"],
+      ["⚽","⚽"],["🎵","🎵"],["🍔","🍔"],["🌳","🌳"],["🛒","🛒"],
+      ["🧹","🧹"],["📞","📞"],["📦","📦"],["💰","💰"],["✅","✅"]
+    ];
+    symbolOptions.forEach(([v,l]) => {
+      const o = document.createElement("option");
+      o.value = v; o.innerText = l;
+      tSymbol.appendChild(o);
+    });
+    const tInput = document.createElement("input");
+    tInput.type = "text";
+    tInput.className = "todo-title-input";
+    tInput.placeholder = "Titel...";
+    const tComment = document.createElement("input");
+    tComment.type = "text";
+    tComment.className = "todo-comment-input";
+    tComment.placeholder = "Kommentar (valfri)";
+    const tBtn = document.createElement("button");
+    tBtn.type = "submit";
+    tBtn.innerText = "+";
+    tForm.appendChild(tPrio);
+    tForm.appendChild(tAssignee);
+    tForm.appendChild(tSymbol);
+    tForm.appendChild(tInput);
+    tForm.appendChild(tComment);
+    tForm.appendChild(tBtn);
+    tForm.onsubmit = ev => {
+      ev.preventDefault();
+      addTodo(month, tInput.value, tPrio.value, tComment.value, tAssignee.value, tSymbol.value);
+      tInput.value = "";
+      tComment.value = "";
+      tPrio.value = "";
+      tAssignee.value = "";
+      tSymbol.value = "";
+    };
+    todoBox.appendChild(tForm);
+
+    mDiv.appendChild(todoBox);
+    container.appendChild(mDiv);
+  });
+}
+
+render();
+</script>
+
+<!-- STEG 2: Firebase laddas i bakgrunden -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app (CDN blockerad?)'"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore (CDN blockerad?)'"></script>
+<script src="auth-gate.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
+  authDomain: "sommarplanering-d4300.firebaseapp.com",
+  projectId: "sommarplanering-d4300",
+  storageBucket: "sommarplanering-d4300.firebasestorage.app",
+  messagingSenderId: "261517602417",
+  appId: "1:261517602417:web:11b754c758c92cc33735d0"
+};
+
+function initFirebase(attempt) {
+  attempt = attempt || 0;
+  if (typeof firebase === "undefined") {
+    if (attempt > 50) {
+      statusEl.textContent = "Firebase laddades aldrig — kontrollera Network-fliken";
+      return;
+    }
+    return setTimeout(() => initFirebase(attempt + 1), 100);
+  }
+
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  } catch (e) {
+    statusEl.textContent = "Init-fel: " + e.message;
+    return;
+  }
+
+  const timeout = setTimeout(() => {
+    if (statusEl.textContent === "Laddar...") {
+      statusEl.textContent = "Firestore svarar inte (4s). Kolla Console.";
+    }
+  }, 4000);
+
+  db.collection("semester").onSnapshot(snap => {
+    clearTimeout(timeout);
+    entries = [];
+    snap.forEach(d => entries.push({ id:d.id, ...d.data() }));
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify(entries)); } catch(e) {}
+    statusEl.textContent = entries.length + " poster" + (snap.metadata.fromCache ? " (cache)" : "");
+    render();
+  }, err => {
+    clearTimeout(timeout);
+    console.error("Firestore-fel:", err);
+    statusEl.textContent = "Firestore-fel: " + err.code + " — " + err.message;
+  });
+
+  db.collection("todos").onSnapshot(snap => {
+    todos = [];
+    snap.forEach(d => todos.push({ id:d.id, ...d.data() }));
+    try { localStorage.setItem(TODO_CACHE_KEY, JSON.stringify(todos)); } catch(e) {}
+    render();
+  }, err => console.error("Todos-fel:", err));
+}
+
+window.firebaseConfig = firebaseConfig;
+requireAuth(() => initFirebase());
+
+// === Mobil vy-växel: Månad / Agenda ===
+(function(){
+  const KEY = "butlern.mobileView";
+  const saved = (function(){ try { return localStorage.getItem(KEY); } catch(e){ return null; } })() || "month";
+  document.body.classList.toggle("view-agenda", saved === "agenda");
+  document.body.classList.toggle("view-month", saved === "month");
+  const toggle = document.getElementById("viewToggle");
+  if (!toggle) return;
+  toggle.querySelectorAll("button").forEach(b => {
+    b.classList.toggle("active", b.dataset.view === saved);
+    b.addEventListener("click", () => {
+      const v = b.dataset.view;
+      document.body.classList.toggle("view-agenda", v === "agenda");
+      document.body.classList.toggle("view-month", v === "month");
+      toggle.querySelectorAll("button").forEach(x => x.classList.toggle("active", x === b));
+      try { localStorage.setItem(KEY, v); } catch(e){}
+    });
+  });
+})();
+
+// === Dag-modal: klick på dag i månadsvy öppnar redigeringssheet ===
+(function(){
+  const modal = document.getElementById("dayModal");
+  if (!modal) return;
+  const titleEl   = document.getElementById("dayModalTitle");
+  const subEl     = document.getElementById("dayModalSub");
+  const entriesEl = document.getElementById("dayModalEntries");
+  const addBtn    = document.getElementById("dayModalAdd");
+  const closeBtn  = document.getElementById("dayModalClose");
+  let currentDate = null;
+
+  const mq = window.matchMedia("(max-width:720px)");
+  const shortName = n => ({Sanna:"S", Johan:"J", Elian:"Eli", Eira:"Eira"}[n] || n);
+  const escape = s => String(s).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+
+  function close(){ modal.classList.remove("open"); currentDate = null; }
+  closeBtn.addEventListener("click", close);
+  modal.addEventListener("click", e => { if (e.target === modal) close(); });
+
+  addBtn.addEventListener("click", () => {
+    if (!currentDate) return;
+    document.getElementById("start").value = currentDate;
+    document.getElementById("end").value   = currentDate;
+    close();
+    document.getElementById("addForm").scrollIntoView({ behavior:"smooth", block:"start" });
+  });
+
+  function open(dateStr){
+    currentDate = dateStr;
+    const dateObj = new Date(dateStr + "T00:00");
+    const dayName = ["Söndag","Måndag","Tisdag","Onsdag","Torsdag","Fredag","Lördag"][dateObj.getDay()];
+    const monthName = ["januari","februari","mars","april","maj","juni","juli","augusti","september","oktober","november","december"][dateObj.getMonth()];
+    titleEl.textContent = dayName + " " + dateObj.getDate() + " " + monthName;
+    subEl.textContent = (typeof holidays !== "undefined" && holidays[dateStr]) ? holidays[dateStr] : "";
+    subEl.style.display = subEl.textContent ? "block" : "none";
+
+    entriesEl.innerHTML = "";
+    const list = (typeof entries !== "undefined" ? entries : []).filter(en => {
+      const a = en.start, b = en.end || en.start;
+      return dateStr >= a && dateStr <= b;
+    });
+
+    if (list.length === 0) {
+      const p = document.createElement("p");
+      p.className = "modal-empty";
+      p.textContent = "Inga händelser denna dag.";
+      entriesEl.appendChild(p);
+    } else {
+      list.forEach(en => {
+        const personList = en.persons || (en.person ? [en.person] : []);
+        const shortList = personList.map(shortName);
+        let nameText;
+        if (shortList.length === 0) nameText = "";
+        else if (shortList.length === 1) nameText = shortList[0];
+        else if (shortList.length === 2) nameText = shortList.join(" och ");
+        else nameText = shortList.slice(0,-1).join(", ") + " och " + shortList.slice(-1);
+
+        const el = document.createElement("div");
+        el.className = "entry " + (personList[0] || "");
+        if (en.color) { el.style.background = en.color; el.style.color = "#fff"; }
+
+        const label = document.createElement("span");
+        const sym = en.symbol ? `<span class="entry-symbol">${escape(en.symbol)}</span> ` : "";
+        label.innerHTML = sym + escape(nameText + (en.type ? " " + en.type : ""));
+        el.appendChild(label);
+
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "✎";
+        editBtn.title = "Redigera";
+        editBtn.onclick = () => { close(); startEdit(en.id); };
+        el.appendChild(editBtn);
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "x";
+        delBtn.title = "Ta bort";
+        delBtn.onclick = () => {
+          if (confirm("Ta bort denna post?")) { removeEntry(en.id); close(); }
+        };
+        el.appendChild(delBtn);
+
+        entriesEl.appendChild(el);
+      });
+    }
+
+    modal.classList.add("open");
+  }
+
+  document.addEventListener("click", e => {
+    if (!mq.matches) return;
+    if (!document.body.classList.contains("view-month")) return;
+    const day = e.target.closest(".day");
+    if (!day || !day.dataset.date) return;
+    open(day.dataset.date);
+  });
+})();
+</script>
+
+</body>
+</html>

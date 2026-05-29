@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="The Moon">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1238">
+<title>The Moon</title>
+
+<style>
+:root{
+  --bg-grad:linear-gradient(180deg,#0f0a24 0%,#1a1238 50%,#2a1a4a 100%);
+  --card:#1f1640;
+  --card-soft:#2a1f55;
+  --ink:#f0eaff;
+  --muted:#a89cd0;
+  --line:#3d2e6e;
+  --accent:#c4a8ff;
+  --accent-soft:#3d2e6e;
+  --accent-dark:#9a7ee0;
+  --gold:#e8c674;
+  --shadow:0 4px 20px rgba(0,0,0,.35);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg-grad);background-attachment:fixed;
+  color:var(--ink);line-height:1.45;
+  padding:24px 16px 60px;min-height:100vh;
+}
+.wrap{max-width:620px;margin:0 auto}
+h1{margin:0 0 4px;font-size:30px;font-weight:600;letter-spacing:0.02em}
+.subtitle{margin:0 0 22px;color:var(--muted);font-size:14px}
+.subtitle a{color:var(--accent);text-decoration:none}
+.subtitle a:hover{text-decoration:underline}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+.card h2{margin:0 0 12px;font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)}
+
+.today-card{
+  background:linear-gradient(135deg,#2a1a4a,#3d2e6e);
+  text-align:center;padding:24px 20px;
+}
+.today-icon{font-size:48px;margin-bottom:4px}
+.today-main{font-size:22px;font-weight:600;margin:0 0 4px}
+.today-sub{color:var(--gold);font-size:13px;letter-spacing:0.05em;text-transform:uppercase;margin:0 0 14px}
+.today-stats{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.today-stats b{color:var(--ink);font-size:20px;display:block;font-weight:600}
+
+form input[type=date],form textarea{
+  width:100%;padding:10px 12px;
+  border:1px solid var(--line);border-radius:8px;
+  background:var(--card-soft);color:var(--ink);
+  font-family:inherit;font-size:14px;
+}
+form input:focus,form textarea:focus{
+  outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
+}
+form textarea{min-height:50px;resize:vertical}
+.field{margin-bottom:12px}
+.field-label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.05em}
+
+.mood-pick{display:flex;gap:6px;justify-content:space-between}
+.mood-pick label{
+  flex:1;text-align:center;font-size:24px;
+  padding:10px 4px;border-radius:8px;
+  border:1px solid var(--line);background:var(--card-soft);
+  cursor:pointer;
+}
+.mood-pick label:has(input:checked){background:var(--accent-soft);border-color:var(--accent)}
+.mood-pick input{display:none}
+
+.btn{
+  padding:11px 18px;border:none;border-radius:10px;
+  background:var(--accent);color:#1a1238;
+  font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;
+}
+.btn:hover{background:var(--accent-dark)}
+.btn-secondary{background:var(--card-soft);color:var(--ink);border:1px solid var(--line)}
+.btn-secondary:hover{background:var(--accent-soft)}
+.btn-row{display:flex;gap:8px;margin-top:8px}
+
+.log-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.log-item{
+  background:var(--card-soft);border:1px solid var(--line);
+  border-radius:10px;padding:10px 14px;
+  display:flex;gap:12px;align-items:flex-start;
+}
+.log-item .log-date{flex:0 0 70px;font-weight:600;font-size:13px;color:var(--gold)}
+.log-item .log-mood{font-size:22px;flex:0 0 auto;line-height:1}
+.log-item .log-body{flex:1;font-size:13px;color:var(--muted);font-style:italic;min-width:0;word-break:break-word}
+.log-item .log-actions{display:flex;gap:4px}
+.log-item .log-actions button{
+  background:transparent;border:1px solid var(--line);color:var(--muted);
+  padding:3px 7px;border-radius:5px;font-size:12px;cursor:pointer;line-height:1;
+}
+.log-item .log-actions button:hover{color:var(--ink);border-color:var(--accent)}
+
+.cycle-history{display:flex;flex-direction:column;gap:6px}
+.cycle-row{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--card-soft);border:1px solid var(--line);border-radius:8px;
+  padding:8px 12px;font-size:13px;
+}
+.cycle-row .c-len{color:var(--gold);font-weight:600}
+
+.muted{color:var(--muted);font-size:13px;margin:8px 0}
+.status{font-size:12px;color:var(--muted);margin-top:8px;min-height:16px}
+
+@media (max-width:720px){
+  body{padding:14px 10px 60px}
+  h1{font-size:24px}
+  .today-icon{font-size:40px}
+  .today-main{font-size:18px}
+  .today-stats{gap:14px;font-size:12px}
+  .today-stats b{font-size:18px}
+  .card{padding:14px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>🌙 The Moon</h1>
+<p class="subtitle"><a href="butlern.html">← Butlern</a></p>
+
+<div class="card today-card">
+  <div class="today-icon" id="todayIcon">🌑</div>
+  <p class="today-main" id="todayMain">Ingen Moon loggad än</p>
+  <p class="today-sub" id="todaySub">Logga första dagen nedan</p>
+  <div class="today-stats" id="todayStats"></div>
+</div>
+
+<div class="card">
+  <h2 id="formTitle">Logga Moon</h2>
+  <form id="moonForm">
+    <div class="field">
+      <label class="field-label" for="dDate">Datum</label>
+      <input type="date" id="dDate" required>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Humör</label>
+      <div class="mood-pick">
+        <label><input type="radio" name="mood" value="1">😞</label>
+        <label><input type="radio" name="mood" value="2">😕</label>
+        <label><input type="radio" name="mood" value="3" checked>😐</label>
+        <label><input type="radio" name="mood" value="4">🙂</label>
+        <label><input type="radio" name="mood" value="5">😄</label>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="dNotes">Anteckning (valfri)</label>
+      <textarea id="dNotes" placeholder="Något du vill minnas?"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button type="submit" class="btn" id="saveBtn">Spara</button>
+      <button type="button" class="btn btn-secondary" id="resetBtn">Idag</button>
+    </div>
+    <p class="status" id="status">Ansluter...</p>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Tidigare cykler</h2>
+  <div id="cycleHistory" class="cycle-history">
+    <p class="muted">Logga minst en Moon-dag för att se cykler.</p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Senaste loggar</h2>
+  <ul id="logList" class="log-list"></ul>
+  <p class="muted" id="logEmpty">Inga loggar än.</p>
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
+<script src="auth-gate.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
+  authDomain: "sommarplanering-d4300.firebaseapp.com",
+  projectId: "sommarplanering-d4300",
+  storageBucket: "sommarplanering-d4300.firebasestorage.app",
+  messagingSenderId: "261517602417",
+  appId: "1:261517602417:web:11b754c758c92cc33735d0"
+};
+
+const statusEl = document.getElementById("status");
+let db = null;
+let logs = []; // { id (=date), date, mood, notes }
+
+const todayStr = (() => {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+})();
+
+const moodIcon = { 1:"😞", 2:"😕", 3:"😐", 4:"🙂", 5:"😄" };
+
+function initFirebase(attempt) {
+  attempt = attempt || 0;
+  if (typeof firebase === "undefined") {
+    if (attempt < 50) return setTimeout(() => initFirebase(attempt+1), 100);
+    statusEl.textContent = "Kunde inte ladda Firebase";
+    return;
+  }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    statusEl.textContent = "Ansluten · sparas i molnet";
+  } catch (err) {
+    statusEl.textContent = "Fel: " + err.message;
+    return;
+  }
+
+  db.collection("moon").onSnapshot(snap => {
+    logs = [];
+    snap.forEach(d => logs.push({ id:d.id, ...d.data() }));
+    logs.sort((a,b) => b.date.localeCompare(a.date));
+    render();
+  }, err => statusEl.textContent = "Firestore-fel: " + err.message);
+}
+
+document.getElementById("moonForm").addEventListener("submit", e => {
+  e.preventDefault();
+  if (!db) { statusEl.textContent = "Inte ansluten ännu"; return; }
+  const date = document.getElementById("dDate").value;
+  if (!date) return;
+  const mood = +(document.querySelector('input[name="mood"]:checked') || {}).value || null;
+  const notes = document.getElementById("dNotes").value.trim();
+  const data = { date, mood, notes, updated: Date.now() };
+  db.collection("moon").doc(date).set(data, { merge:true })
+    .then(() => { statusEl.textContent = "Sparat ✓"; resetForm(); })
+    .catch(err => statusEl.textContent = "Fel: " + err.message);
+});
+
+function loadIntoForm(log) {
+  document.getElementById("dDate").value = log.date;
+  document.querySelectorAll('input[name="mood"]').forEach(r => r.checked = (+r.value === +log.mood));
+  document.getElementById("dNotes").value = log.notes || "";
+  document.getElementById("formTitle").textContent = "Redigerar " + formatDate(log.date);
+  document.querySelector(".today-card").scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function resetForm() {
+  document.getElementById("moonForm").reset();
+  document.getElementById("dDate").value = todayStr;
+  document.querySelector('input[name="mood"][value="3"]').checked = true;
+  document.getElementById("formTitle").textContent = "Logga Moon";
+}
+document.getElementById("resetBtn").addEventListener("click", resetForm);
+
+// === Cykler ===
+function detectCycles() {
+  // Grupperar loggade dagar i sammanhängande Moon-perioder.
+  // Upp till 2 dagars uppehåll räknas som samma cykel.
+  const dates = logs.map(l => l.date).sort();
+  const groups = [];
+  let cur = null;
+  for (const d of dates) {
+    if (!cur) { cur = { start:d, end:d }; continue; }
+    const diff = daysBetween(cur.end, d);
+    if (diff <= 2) cur.end = d;
+    else { groups.push(cur); cur = { start:d, end:d }; }
+  }
+  if (cur) groups.push(cur);
+  return groups;
+}
+
+function daysBetween(a, b) {
+  return Math.round((new Date(b+"T00:00") - new Date(a+"T00:00")) / 86400000);
+}
+
+function avgCycleLength(groups) {
+  if (groups.length < 2) return null;
+  const lens = [];
+  for (let i=1; i<groups.length; i++) {
+    lens.push(daysBetween(groups[i-1].start, groups[i].start));
+  }
+  const recent = lens.slice(-6);
+  return Math.round(recent.reduce((s,n)=>s+n,0) / recent.length);
+}
+
+function render() {
+  renderToday();
+  renderHistory();
+  renderLogs();
+}
+
+function renderToday() {
+  const iconEl = document.getElementById("todayIcon");
+  const mainEl = document.getElementById("todayMain");
+  const subEl = document.getElementById("todaySub");
+  const statsEl = document.getElementById("todayStats");
+
+  const groups = detectCycles();
+  if (groups.length === 0) {
+    iconEl.textContent = "🌑";
+    mainEl.textContent = "Ingen Moon loggad än";
+    subEl.textContent = "Logga första dagen nedan";
+    statsEl.innerHTML = "";
+    return;
+  }
+
+  const last = groups[groups.length - 1];
+  const daysSinceStart = daysBetween(last.start, todayStr);
+  const cycleLen = avgCycleLength(groups);
+  const inProgress = daysBetween(last.end, todayStr) <= 1;
+
+  if (inProgress) {
+    iconEl.textContent = "🌕";
+    mainEl.textContent = "Dag " + (daysSinceStart + 1) + " av Moon";
+    subEl.textContent = "Pågående";
+  } else {
+    iconEl.textContent = "🌖";
+    mainEl.textContent = daysSinceStart + " dgr sedan senaste Moon";
+    if (cycleLen) {
+      const daysToNext = cycleLen - daysSinceStart;
+      if (daysToNext > 0) subEl.textContent = "≈ " + daysToNext + " dgr till nästa";
+      else if (daysToNext === 0) subEl.textContent = "Väntad idag";
+      else subEl.textContent = Math.abs(daysToNext) + " dgr sen";
+    } else {
+      subEl.textContent = "Logga fler för att se snittcykel";
+    }
+  }
+
+  const parts = [];
+  parts.push(`<div><b>${groups.length}</b>cykler loggade</div>`);
+  if (cycleLen) parts.push(`<div><b>${cycleLen}</b>dgr snittcykel</div>`);
+  statsEl.innerHTML = parts.join("");
+}
+
+function renderHistory() {
+  const box = document.getElementById("cycleHistory");
+  const groups = detectCycles();
+  if (groups.length === 0) {
+    box.innerHTML = '<p class="muted">Logga minst en Moon-dag för att se cykler.</p>';
+    return;
+  }
+  const items = [];
+  for (let i = groups.length - 1; i >= 0; i--) {
+    const g = groups[i];
+    const len = daysBetween(g.start, g.end) + 1;
+    let info = "";
+    if (i > 0) {
+      const cl = daysBetween(groups[i-1].start, g.start);
+      info = ` · ${cl} dgr cykel`;
+    }
+    const range = g.start === g.end
+      ? formatDate(g.start)
+      : formatDate(g.start) + " – " + formatDate(g.end);
+    items.push(`<div class="cycle-row">
+      <span>${range}</span>
+      <span class="c-len">${len} dgr${info}</span>
+    </div>`);
+  }
+  box.innerHTML = items.join("");
+}
+
+function renderLogs() {
+  const ul = document.getElementById("logList");
+  const empty = document.getElementById("logEmpty");
+  ul.innerHTML = "";
+  if (logs.length === 0) { empty.style.display = "block"; return; }
+  empty.style.display = "none";
+
+  logs.slice(0, 60).forEach(l => {
+    const li = document.createElement("li");
+    li.className = "log-item";
+    li.innerHTML = `
+      <div class="log-date">${formatDateShort(l.date)}</div>
+      <div class="log-mood">${l.mood ? moodIcon[l.mood] : "·"}</div>
+      <div class="log-body">${l.notes ? escapeHtml(l.notes) : ""}</div>
+      <div class="log-actions">
+        <button data-act="edit">✎</button>
+        <button data-act="del">🗑</button>
+      </div>
+    `;
+    li.querySelector('[data-act="edit"]').onclick = () => loadIntoForm(l);
+    li.querySelector('[data-act="del"]').onclick = () => {
+      if (confirm("Ta bort " + l.date + "?")) {
+        db.collection("moon").doc(l.id).delete().catch(err => alert("Fel: " + err.message));
+      }
+    };
+    ul.appendChild(li);
+  });
+}
+
+function formatDate(s) {
+  const d = new Date(s + "T00:00");
+  return d.getDate() + " " + ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"][d.getMonth()] + " " + d.getFullYear();
+}
+function formatDateShort(s) {
+  const d = new Date(s + "T00:00");
+  return d.getDate() + "/" + (d.getMonth()+1);
+}
+function escapeHtml(s) {
+  return String(s).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+}
+
+resetForm();
+window.firebaseConfig = firebaseConfig;
+requireAuth(() => initFirebase());
+</script>
+
+</body>
+</html>

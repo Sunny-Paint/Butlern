@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Butlern">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#7a4fb0">
+<title>Min loggbok</title>
+
+<style>
+:root{
+  --bg-grad:linear-gradient(180deg,#fef9ee 0%,#f1e9d6 100%);
+  --card:#ffffff;
+  --ink:#2b2d33;
+  --muted:#7a7e87;
+  --line:#e6e1d4;
+  --accent:#7a4fb0;
+  --accent-soft:#f0e8fb;
+  --warn:#c0392b;
+  --shadow:0 1px 2px rgba(20,20,20,.04), 0 4px 16px rgba(20,20,20,.06);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg-grad);
+  color:var(--ink);
+  line-height:1.4;
+  padding:24px 16px 80px;
+  min-height:100vh;
+}
+.wrap{max-width:840px;margin:0 auto}
+h1{font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 4px}
+.subtitle{color:var(--muted);font-size:14px;margin:0 0 24px}
+.subtitle a{color:var(--accent);text-decoration:none;margin-right:14px}
+.subtitle a:hover{text-decoration:underline}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:20px;
+  margin-bottom:20px;
+  box-shadow:var(--shadow);
+}
+.card h2,.card h3{margin-top:0}
+
+form.diary{display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);font-weight:600}
+input[type=date],input[type=datetime-local],input[type=text],input[type=number],textarea,select{
+  padding:10px 12px;font-size:14px;border:1px solid var(--line);border-radius:10px;
+  background:#fff;font-family:inherit;color:var(--ink);
+  transition:border-color .15s, box-shadow .15s;
+}
+input:focus,textarea:focus,select:focus{
+  outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
+}
+textarea{resize:vertical;min-height:60px}
+
+.mood-row{display:flex;gap:10px;flex-wrap:wrap}
+.mood-option{
+  flex:1 1 auto;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:12px 8px;border:2px solid var(--line);border-radius:12px;background:#fff;
+  cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;min-width:60px;
+}
+.mood-option:hover{border-color:var(--accent-soft);background:#fafafa}
+.mood-option.selected{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);font-weight:600}
+.mood-option .emoji{font-size:28px;line-height:1}
+
+.btn{
+  padding:10px 18px;font-size:14px;font-weight:600;
+  border:none;border-radius:10px;cursor:pointer;font-family:inherit;
+  transition:transform .05s, background .15s;
+}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#603d8c}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.btn-ghost:hover{background:#f5f3ee}
+
+.status{font-size:12px;color:var(--muted);margin-top:10px}
+
+.chart-wrap{
+  background:#fafaf6;border:1px solid var(--line);border-radius:12px;
+  padding:14px;overflow-x:auto;
+}
+.chart-controls{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
+.chart-controls select{padding:6px 10px;font-size:13px}
+svg.mood-chart{display:block;width:100%;height:auto;max-width:100%}
+
+.entry-list{display:flex;flex-direction:column;gap:12px}
+.entry-item{
+  border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;
+}
+.entry-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.entry-date{font-weight:700;font-size:14px}
+.entry-time{font-size:12px;color:var(--muted)}
+.entry-mood{font-size:22px;line-height:1}
+.entry-spacer{flex:1}
+.entry-tags{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.entry-tag{
+  font-size:11px;padding:2px 8px;border-radius:999px;
+  background:var(--accent-soft);color:var(--accent);font-weight:600;
+}
+.entry-block{margin-top:8px}
+.entry-block .lbl{
+  font-size:10px;text-transform:uppercase;letter-spacing:0.05em;
+  color:var(--muted);font-weight:700;margin-bottom:2px;
+}
+.entry-block .txt{font-size:14px;white-space:pre-wrap;color:#3a2f10}
+.entry-actions{display:flex;gap:6px;margin-left:auto}
+.icon-btn{
+  background:none;border:none;cursor:pointer;
+  font-size:14px;padding:4px 8px;border-radius:6px;color:var(--muted);
+}
+.icon-btn:hover{background:#f5f3ee;color:var(--ink)}
+
+.privacy-note{
+  background:#fff8e7;border:1px solid #f3e2a8;color:#7a5a10;
+  padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:16px;
+}
+
+@media (max-width:720px){
+  body{padding:12px 8px 60px}
+  h1{font-size:24px}
+  .card{padding:14px}
+  .mood-option{flex:1 1 18%;padding:10px 4px;font-size:11px;min-width:50px}
+  .mood-option .emoji{font-size:24px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>📓 Min loggbok</h1>
+<p class="subtitle">
+  <a href="butlern.html">← Kalendern</a>
+  <a href="tacksamhet.html">🙏 Tacksamhet</a>
+</p>
+
+<div class="privacy-note">🔒 Inget sparas lokalt på den här datorn — allt går direkt till molnet.</div>
+
+<div class="card">
+  <h3 id="formTitle">Ny notering</h3>
+  <form class="diary" id="diaryForm" autocomplete="off">
+    <div class="field">
+      <label>Tidpunkt</label>
+      <input type="datetime-local" id="d_when" required>
+    </div>
+
+    <div class="field">
+      <label>Hur mår du just nu?</label>
+      <div class="mood-row" id="moodRow">
+        <div class="mood-option" data-mood="1"><span class="emoji">😞</span>Dålig</div>
+        <div class="mood-option" data-mood="2"><span class="emoji">😕</span>Trött</div>
+        <div class="mood-option" data-mood="3"><span class="emoji">😐</span>Okej</div>
+        <div class="mood-option" data-mood="4"><span class="emoji">🙂</span>Bra</div>
+        <div class="mood-option" data-mood="5"><span class="emoji">😄</span>Toppen</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Energi (1–10)</label>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="range" id="d_energy" min="1" max="10" value="5" style="flex:1;accent-color:var(--accent)">
+        <span id="energyVal" style="min-width:32px;text-align:center;font-weight:700;background:var(--accent-soft);border-radius:8px;padding:4px 8px">5</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Taggar (komma-separerade)</label>
+      <input type="text" id="d_tags" placeholder="träning, jobb, familj..." autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label>Tankar</label>
+      <textarea id="d_thoughts" placeholder="Vad snurrar i huvudet? Reflektioner, känslor..." autocomplete="off"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Roliga idéer</label>
+      <textarea id="d_ideas" placeholder="Idéer, drömmar, saker att testa..." autocomplete="off"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Anteckning</label>
+      <textarea id="d_note" placeholder="Vad hände? Korta noteringar." autocomplete="off"></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button type="submit" id="saveBtn" class="btn btn-primary">Spara</button>
+      <button type="button" id="cancelBtn" class="btn btn-ghost" style="display:none">Avbryt</button>
+    </div>
+  </form>
+  <div class="status" id="status">Ansluter till molnet...</div>
+</div>
+
+<div class="card">
+  <h3>Humörkurva</h3>
+  <div class="chart-wrap">
+    <div class="chart-controls">
+      <label>Period:</label>
+      <select id="rangeSel">
+        <option value="7">Senaste 7 dagar</option>
+        <option value="14">Senaste 14 dagar</option>
+        <option value="30" selected>Senaste 30 dagar</option>
+        <option value="90">Senaste 90 dagar</option>
+        <option value="all">Allt</option>
+      </select>
+    </div>
+    <svg class="mood-chart" id="chart" viewBox="0 0 800 240" preserveAspectRatio="none"></svg>
+    <div id="chartEmpty" style="text-align:center;color:var(--muted);font-size:13px;padding:20px;display:none">
+      Inga noteringar i perioden än.
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Tidigare noteringar</h3>
+  <div class="entry-list" id="entryList"></div>
+  <div id="emptyMsg" style="color:var(--muted);font-size:14px;display:none">Inga noteringar än — skapa din första ovan!</div>
+</div>
+
+</div>
+
+<script>
+const statusEl = document.getElementById("status");
+const moodLabels = {1:"Dålig",2:"Trött",3:"Okej",4:"Bra",5:"Toppen"};
+const moodEmoji  = {1:"😞",2:"😕",3:"😐",4:"🙂",5:"😄"};
+
+let diary = [];
+let db = null;
+let editingId = null;
+let selectedMood = null;
+
+function setDefaultWhen() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  document.getElementById("d_when").value = d.toISOString().slice(0,16);
+}
+setDefaultWhen();
+
+document.querySelectorAll(".mood-option").forEach(opt => {
+  opt.addEventListener("click", () => {
+    document.querySelectorAll(".mood-option").forEach(o => o.classList.remove("selected"));
+    opt.classList.add("selected");
+    selectedMood = parseInt(opt.dataset.mood, 10);
+  });
+});
+
+const energyEl = document.getElementById("d_energy");
+const energyVal = document.getElementById("energyVal");
+energyEl.addEventListener("input", () => energyVal.textContent = energyEl.value);
+
+document.getElementById("rangeSel").addEventListener("change", renderChart);
+
+function resetForm() {
+  editingId = null;
+  selectedMood = null;
+  document.getElementById("formTitle").textContent = "Ny notering";
+  document.getElementById("saveBtn").textContent = "Spara";
+  document.getElementById("cancelBtn").style.display = "none";
+  document.getElementById("diaryForm").reset();
+  setDefaultWhen();
+  document.querySelectorAll(".mood-option").forEach(o => o.classList.remove("selected"));
+  energyVal.textContent = "5";
+}
+
+document.getElementById("cancelBtn").addEventListener("click", resetForm);
+
+document.getElementById("diaryForm").addEventListener("submit", e => {
+  e.preventDefault();
+  if (!db) { alert("Ansluter till molnet, vänta..."); return; }
+  if (!selectedMood) { alert("Välj humör"); return; }
+
+  const whenLocal = document.getElementById("d_when").value;
+  if (!whenLocal) { alert("Välj tidpunkt"); return; }
+  const whenTs = new Date(whenLocal).getTime();
+  const date = whenLocal.slice(0,10);
+
+  const energy = parseInt(energyEl.value, 10);
+  const tagsRaw = document.getElementById("d_tags").value;
+  const tags = tagsRaw.split(",").map(t => t.trim()).filter(Boolean);
+  const thoughts = document.getElementById("d_thoughts").value.trim();
+  const ideas    = document.getElementById("d_ideas").value.trim();
+  const note     = document.getElementById("d_note").value.trim();
+
+  const data = {
+    date, when: whenTs,
+    mood: selectedMood, energy,
+    tags, thoughts, ideas, note,
+    updatedAt: Date.now()
+  };
+  if (!editingId) data.createdAt = Date.now();
+
+  const op = editingId
+    ? db.collection("dagbok").doc(editingId).set(data, { merge:true })
+    : db.collection("dagbok").add(data);
+
+  op.then(resetForm).catch(err => alert("Fel: " + err.message));
+});
+
+function startEdit(id) {
+  const en = diary.find(x => x.id === id);
+  if (!en) return;
+  editingId = id;
+  document.getElementById("formTitle").textContent = "Redigera notering";
+  document.getElementById("saveBtn").textContent = "Spara ändringar";
+  document.getElementById("cancelBtn").style.display = "";
+
+  const when = en.when || (en.date ? new Date(en.date+"T12:00:00").getTime() : Date.now());
+  const d = new Date(when);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  document.getElementById("d_when").value = d.toISOString().slice(0,16);
+
+  selectedMood = en.mood || null;
+  document.querySelectorAll(".mood-option").forEach(o => {
+    o.classList.toggle("selected", parseInt(o.dataset.mood,10) === selectedMood);
+  });
+  energyEl.value = en.energy || 5;
+  energyVal.textContent = energyEl.value;
+  document.getElementById("d_tags").value = (en.tags || []).join(", ");
+  document.getElementById("d_thoughts").value = en.thoughts || "";
+  document.getElementById("d_ideas").value = en.ideas || "";
+  document.getElementById("d_note").value = en.note || "";
+  document.getElementById("diaryForm").scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+function removeEntry(id) {
+  if (!db) return;
+  if (!confirm("Ta bort noteringen?")) return;
+  db.collection("dagbok").doc(id).delete().catch(err => alert("Fel: " + err.message));
+}
+
+function entryTs(en) {
+  return en.when || (en.date ? new Date(en.date+"T12:00:00").getTime() : (en.createdAt||0));
+}
+
+function renderList() {
+  const list = document.getElementById("entryList");
+  list.innerHTML = "";
+  const sorted = [...diary].sort((a,b) => entryTs(b) - entryTs(a));
+  document.getElementById("emptyMsg").style.display = sorted.length ? "none" : "";
+
+  sorted.forEach(en => {
+    const item = document.createElement("div");
+    item.className = "entry-item";
+
+    const head = document.createElement("div");
+    head.className = "entry-head";
+    const dateEl = document.createElement("div");
+    dateEl.className = "entry-date";
+    dateEl.textContent = formatDate(en.date);
+    const timeEl = document.createElement("div");
+    timeEl.className = "entry-time";
+    timeEl.textContent = formatTime(entryTs(en));
+    const moodEl = document.createElement("div");
+    moodEl.className = "entry-mood";
+    moodEl.textContent = moodEmoji[en.mood] || "";
+    moodEl.title = moodLabels[en.mood] || "";
+    const spacer = document.createElement("div");
+    spacer.className = "entry-spacer";
+    const actions = document.createElement("div");
+    actions.className = "entry-actions";
+    const edit = document.createElement("button");
+    edit.className = "icon-btn"; edit.textContent = "✎"; edit.title = "Redigera";
+    edit.onclick = () => startEdit(en.id);
+    const del = document.createElement("button");
+    del.className = "icon-btn"; del.textContent = "✕"; del.title = "Ta bort";
+    del.onclick = () => removeEntry(en.id);
+    actions.appendChild(edit); actions.appendChild(del);
+    head.appendChild(dateEl);
+    head.appendChild(timeEl);
+    head.appendChild(moodEl);
+    head.appendChild(spacer);
+    head.appendChild(actions);
+    item.appendChild(head);
+
+    if (en.energy != null) {
+      const eg = document.createElement("div");
+      eg.style.fontSize = "12px"; eg.style.color = "var(--muted)";
+      eg.innerHTML = `Energi <b style="color:var(--ink)">${en.energy}/10</b>`;
+      item.appendChild(eg);
+    }
+
+    if (en.tags && en.tags.length) {
+      const tags = document.createElement("div");
+      tags.className = "entry-tags";
+      en.tags.forEach(t => {
+        const tag = document.createElement("span");
+        tag.className = "entry-tag"; tag.textContent = t;
+        tags.appendChild(tag);
+      });
+      item.appendChild(tags);
+    }
+
+    addBlock(item, "Tankar", en.thoughts);
+    addBlock(item, "Roliga idéer", en.ideas);
+    addBlock(item, "Anteckning", en.note);
+
+    list.appendChild(item);
+  });
+}
+
+function addBlock(parent, label, text) {
+  if (!text) return;
+  const b = document.createElement("div"); b.className = "entry-block";
+  const l = document.createElement("div"); l.className = "lbl"; l.textContent = label;
+  const t = document.createElement("div"); t.className = "txt"; t.textContent = text;
+  b.appendChild(l); b.appendChild(t);
+  parent.appendChild(b);
+}
+
+function formatDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d)) return iso;
+  const months = ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
+  const days = ["sön","mån","tis","ons","tor","fre","lör"];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+function formatTime(ts) {
+  if (!ts) return "";
+  const d = new Date(ts);
+  return d.toLocaleTimeString("sv-SE", { hour:"2-digit", minute:"2-digit" });
+}
+
+function renderChart() {
+  const svg = document.getElementById("chart");
+  const emptyEl = document.getElementById("chartEmpty");
+  const rangeVal = document.getElementById("rangeSel").value;
+
+  let cutoff = 0;
+  if (rangeVal !== "all") cutoff = Date.now() - parseInt(rangeVal,10) * 86400000;
+
+  const points = diary
+    .filter(e => e.mood && entryTs(e) >= cutoff)
+    .map(e => ({ t: entryTs(e), mood: e.mood }))
+    .sort((a,b) => a.t - b.t);
+
+  if (points.length === 0) {
+    svg.innerHTML = "";
+    emptyEl.style.display = "";
+    return;
+  }
+  emptyEl.style.display = "none";
+
+  const W = 800, H = 240;
+  const padL = 40, padR = 20, padT = 20, padB = 30;
+  const innerW = W - padL - padR;
+  const innerH = H - padT - padB;
+
+  const tMin = points[0].t;
+  const tMax = points[points.length-1].t || tMin + 1;
+  const span = Math.max(tMax - tMin, 1);
+
+  function x(t) { return padL + ((t - tMin) / span) * innerW; }
+  function y(m) { return padT + (1 - (m - 1) / 4) * innerH; }
+
+  let g = "";
+  for (let m = 1; m <= 5; m++) {
+    const yy = y(m);
+    g += `<line x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}" stroke="#e6e1d4" stroke-width="1"/>`;
+    g += `<text x="${padL-8}" y="${yy+4}" text-anchor="end" font-size="11" fill="#7a7e87">${moodEmoji[m]}</text>`;
+  }
+
+  function fmtX(t) {
+    const d = new Date(t);
+    return d.toLocaleDateString("sv-SE", { day:"numeric", month:"short" });
+  }
+  const xLabels = [tMin, tMin + span/2, tMax];
+  xLabels.forEach(t => {
+    g += `<text x="${x(t)}" y="${H-padB+18}" text-anchor="middle" font-size="11" fill="#7a7e87">${fmtX(t)}</text>`;
+  });
+
+  const path = points.map((p,i) => (i===0?"M":"L") + x(p.t).toFixed(1) + "," + y(p.mood).toFixed(1)).join(" ");
+  g += `<path d="${path}" fill="none" stroke="#7a4fb0" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+  points.forEach(p => {
+    g += `<circle cx="${x(p.t).toFixed(1)}" cy="${y(p.mood).toFixed(1)}" r="4" fill="#7a4fb0" stroke="#fff" stroke-width="1.5"><title>${moodLabels[p.mood]} - ${new Date(p.t).toLocaleString("sv-SE")}</title></circle>`;
+  });
+
+  svg.innerHTML = g;
+}
+
+function render() {
+  renderList();
+  renderChart();
+}
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
+<script src="auth-gate.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
+  authDomain: "sommarplanering-d4300.firebaseapp.com",
+  projectId: "sommarplanering-d4300",
+  storageBucket: "sommarplanering-d4300.firebasestorage.app",
+  messagingSenderId: "261517602417",
+  appId: "1:261517602417:web:11b754c758c92cc33735d0"
+};
+
+function initFirebase(attempt) {
+  attempt = attempt || 0;
+  if (typeof firebase === "undefined") {
+    if (attempt > 50) { statusEl.textContent = "Firebase laddades aldrig"; return; }
+    return setTimeout(() => initFirebase(attempt+1), 100);
+  }
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    // Inaktivera persistent cache så inget hamnar i IndexedDB på den här datorn
+    db = firebase.firestore();
+    try { db.settings({ cache: { kind: "memory" } }); } catch(e) {}
+  } catch(e) { statusEl.textContent = "Init-fel: " + e.message; return; }
+
+  db.collection("dagbok").onSnapshot({ includeMetadataChanges:false }, snap => {
+    diary = [];
+    snap.forEach(d => diary.push({ id:d.id, ...d.data() }));
+    statusEl.textContent = diary.length + " noteringar (endast i molnet)";
+    render();
+  }, err => {
+    statusEl.textContent = "Firestore-fel: " + err.message;
+  });
+}
+window.firebaseConfig = firebaseConfig;
+requireAuth(() => initFirebase());
+</script>
+
+</body>
+</html>
