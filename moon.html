@@ -153,6 +153,8 @@ form textarea{min-height:50px;resize:vertical}
   <span class="nav-pill active"><span class="ico">🌙</span>The Moon</span>
   <a class="nav-pill" href="oracle.html"><span class="ico">🔮</span>Oracle</a>
   <a class="nav-pill" href="lankar.html"><span class="ico">🔗</span>Länkar</a>
+  <a class="nav-pill" href="parkering.html"><span class="ico">🅿️</span>Parkering</a>
+  <a class="nav-pill" href="ideer.html"><span class="ico">💡</span>Idéer</a>
 </nav>
 
 <div class="card today-card">
@@ -166,8 +168,13 @@ form textarea{min-height:50px;resize:vertical}
   <h2 id="formTitle">Logga Moon</h2>
   <form id="moonForm">
     <div class="field">
-      <label class="field-label" for="dDate">Datum</label>
+      <label class="field-label" for="dDate">Startdatum</label>
       <input type="date" id="dDate" required>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="dEndDate">Slutdatum (valfri)</label>
+      <input type="date" id="dEndDate">
     </div>
 
     <div class="field">
@@ -227,7 +234,8 @@ const firebaseConfig = {
 
 const statusEl = document.getElementById("status");
 let db = null;
-let logs = []; // { id (=date), date, mood, notes }
+let logs = []; // { id (=startdatum), date, endDate, mood, notes }
+let editingDocId = null; // ursprungligt dok-id när vi editerar
 
 const todayStr = (() => {
   const d = new Date();
@@ -265,16 +273,26 @@ document.getElementById("moonForm").addEventListener("submit", e => {
   if (!db) { statusEl.textContent = "Inte ansluten ännu"; return; }
   const date = document.getElementById("dDate").value;
   if (!date) return;
+  let endDate = document.getElementById("dEndDate").value || "";
+  if (endDate && endDate < date) { statusEl.textContent = "Slutdatum före startdatum"; return; }
   const mood = +(document.querySelector('input[name="mood"]:checked') || {}).value || null;
   const notes = document.getElementById("dNotes").value.trim();
-  const data = { date, mood, notes, updated: Date.now() };
-  db.collection("moon").doc(date).set(data, { merge:true })
+  const data = { date, endDate, mood, notes, updated: Date.now() };
+  const wasEditing = editingDocId;
+  const writeOp = db.collection("moon").doc(date).set(data, { merge:true });
+  writeOp.then(() => {
+    if (wasEditing && wasEditing !== date) {
+      return db.collection("moon").doc(wasEditing).delete();
+    }
+  })
     .then(() => { statusEl.textContent = "Sparat ✓"; resetForm(); })
     .catch(err => statusEl.textContent = "Fel: " + err.message);
 });
 
 function loadIntoForm(log) {
+  editingDocId = log.id;
   document.getElementById("dDate").value = log.date;
+  document.getElementById("dEndDate").value = log.endDate || "";
   document.querySelectorAll('input[name="mood"]').forEach(r => r.checked = (+r.value === +log.mood));
   document.getElementById("dNotes").value = log.notes || "";
   document.getElementById("formTitle").textContent = "Redigerar " + formatDate(log.date);
@@ -282,18 +300,38 @@ function loadIntoForm(log) {
 }
 
 function resetForm() {
+  editingDocId = null;
   document.getElementById("moonForm").reset();
   document.getElementById("dDate").value = todayStr;
+  document.getElementById("dEndDate").value = "";
   document.querySelector('input[name="mood"][value="3"]').checked = true;
   document.getElementById("formTitle").textContent = "Logga Moon";
 }
 document.getElementById("resetBtn").addEventListener("click", resetForm);
 
 // === Cykler ===
+function expandLogDates() {
+  // Expanderar varje logg till alla datum mellan date och endDate (om satt).
+  const set = new Set();
+  for (const l of logs) {
+    if (!l.date) continue;
+    const end = l.endDate && l.endDate >= l.date ? l.endDate : l.date;
+    let cur = l.date;
+    let safety = 0;
+    while (cur <= end && safety++ < 366) {
+      set.add(cur);
+      const d = new Date(cur + "T00:00");
+      d.setDate(d.getDate() + 1);
+      cur = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+    }
+  }
+  return Array.from(set).sort();
+}
+
 function detectCycles() {
   // Grupperar loggade dagar i sammanhängande Moon-perioder.
   // Upp till 2 dagars uppehåll räknas som samma cykel.
-  const dates = logs.map(l => l.date).sort();
+  const dates = expandLogDates();
   const groups = [];
   let cur = null;
   for (const d of dates) {
@@ -406,8 +444,11 @@ function renderLogs() {
   logs.slice(0, 60).forEach(l => {
     const li = document.createElement("li");
     li.className = "log-item";
+    const dateLabel = l.endDate && l.endDate !== l.date
+      ? formatDateShort(l.date) + "–" + formatDateShort(l.endDate)
+      : formatDateShort(l.date);
     li.innerHTML = `
-      <div class="log-date">${formatDateShort(l.date)}</div>
+      <div class="log-date">${dateLabel}</div>
       <div class="log-mood">${l.mood ? moodIcon[l.mood] : "·"}</div>
       <div class="log-body">${l.notes ? escapeHtml(l.notes) : ""}</div>
       <div class="log-actions">

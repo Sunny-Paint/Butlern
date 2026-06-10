@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Parkering">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#2b6cb0">
+<title>Parkering</title>
+
+<style>
+:root{
+  --bg-grad:linear-gradient(180deg,#fef9ee 0%,#f1e9d6 100%);
+  --card:#ffffff;
+  --ink:#2b2d33;
+  --muted:#7a7e87;
+  --line:#e6e1d4;
+  --accent:#2b6cb0;
+  --accent-soft:#e8f0fb;
+  --warn:#c0392b;
+  --shadow:0 1px 2px rgba(20,20,20,.04), 0 4px 16px rgba(20,20,20,.06);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg-grad);
+  color:var(--ink);
+  line-height:1.4;
+  padding:24px 16px 80px;
+  min-height:100vh;
+}
+.wrap{max-width:840px;margin:0 auto}
+h1{font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 4px}
+.subtitle{color:var(--muted);font-size:14px;margin:0 0 24px}
+.nav-pills{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 22px}
+.nav-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:var(--card);border:1px solid var(--line);border-radius:999px;color:var(--ink);font-size:13px;font-weight:500;text-decoration:none;transition:all .15s ease;box-shadow:0 1px 2px rgba(20,20,20,.03)}
+.nav-pill:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);box-shadow:0 2px 8px rgba(43,108,176,.12)}
+.nav-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(43,108,176,.25);cursor:default}
+.nav-pill.active:hover{transform:none}
+.nav-pill .ico{font-size:15px;line-height:1}
+@media (max-width:520px){.nav-pills{gap:6px}.nav-pill{padding:6px 10px;font-size:12px}}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  margin-bottom:16px;
+  box-shadow:var(--shadow);
+}
+.card h2,.card h3{margin-top:0}
+
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:6px;flex:1 1 220px;min-width:0}
+.field label{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);font-weight:600}
+input[type=text],input[type=date],input[type=password],select{
+  padding:10px 12px;font-size:14px;border:1px solid var(--line);border-radius:10px;
+  background:#fff;font-family:inherit;color:var(--ink);width:100%;
+  transition:border-color .15s, box-shadow .15s;
+}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+.btn{
+  padding:10px 18px;font-size:14px;font-weight:600;
+  border:none;border-radius:10px;cursor:pointer;font-family:inherit;
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#1f5a99}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+
+.status{font-size:12px;color:var(--muted);margin-top:10px;min-height:16px}
+.error{color:var(--warn)}
+
+.results{display:flex;flex-direction:column;gap:8px}
+.result{
+  border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;
+}
+.result-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.result-street{font-weight:600;font-size:15px}
+.result-time{font-size:13px;color:var(--accent);font-weight:600;white-space:nowrap}
+.result-day{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+.result-extra{font-size:12px;color:var(--muted);margin-top:4px}
+.result-rules{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.result-rule{display:flex;align-items:baseline;gap:8px;font-size:13px;flex-wrap:wrap}
+.result-rule .rt{font-weight:600;color:var(--accent);min-width:90px;white-space:nowrap}
+.result-rule .rd{color:var(--ink)}
+.result-rule .rday{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;min-width:54px}
+.result-meta{font-size:11px;color:var(--muted);margin-top:4px}
+details.raw summary{font-size:11px;color:var(--muted);cursor:pointer;margin-top:6px}
+details.raw pre{font-size:11px;background:#fafafa;border:1px solid var(--line);border-radius:6px;padding:8px;overflow:auto;max-height:240px;margin:6px 0 0}
+
+.muted{color:var(--muted);font-size:13px;margin:8px 0}
+.help{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+.help a{color:var(--accent)}
+
+.car-card{background:linear-gradient(135deg,#eaf2fb,#d6e6f7);border-color:#bcd5ef}
+.car-empty{color:var(--muted);font-style:italic;margin:0 0 12px}
+.car-info{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.car-place{font-size:18px;font-weight:700;color:var(--ink);word-break:break-word}
+.car-deadline{font-size:14px;color:var(--ink)}
+.car-countdown{display:inline-block;margin-top:6px;padding:6px 12px;border-radius:999px;font-weight:700;font-size:14px;background:#fff;border:1px solid var(--line);color:var(--accent)}
+.car-countdown.warn{background:#fff7e0;border-color:#e0c060;color:#8a6d2a}
+.car-countdown.danger{background:#fdecea;border-color:#e0a0a0;color:var(--warn)}
+.car-countdown.expired{background:var(--warn);border-color:var(--warn);color:#fff}
+.car-form-row{display:flex;gap:8px;flex-wrap:wrap}
+.car-form-row .btn{flex:0 0 auto}
+.car-form .field{margin-bottom:10px}
+
+@media (max-width:520px){
+  body{padding:14px 10px 60px}
+  h1{font-size:24px}
+  .card{padding:14px}
+  .field{flex:1 1 100%}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>🅿️ Parkering</h1>
+<p class="subtitle">Städdagar för boendeparkering i Stockholm.</p>
+
+<nav class="nav-pills" aria-label="Sidor">
+  <a class="nav-pill" href="butlern.html"><span class="ico">📅</span>Planering</a>
+  <a class="nav-pill" href="loggbok.html"><span class="ico">📓</span>Logg</a>
+  <a class="nav-pill" href="tacksamhet.html"><span class="ico">🙏</span>Tack</a>
+  <a class="nav-pill" href="moon.html"><span class="ico">🌙</span>The Moon</a>
+  <a class="nav-pill" href="oracle.html"><span class="ico">🔮</span>Oracle</a>
+  <a class="nav-pill" href="lankar.html"><span class="ico">🔗</span>Länkar</a>
+  <span class="nav-pill active"><span class="ico">🅿️</span>Parkering</span>
+  <a class="nav-pill" href="ideer.html"><span class="ico">💡</span>Idéer</a>
+</nav>
+
+<div class="card car-card" id="carCard">
+  <h3>🚗 Var står bilen?</h3>
+  <div id="carDisplay">
+    <p class="car-empty" id="carEmpty">Ingen parkering registrerad.</p>
+    <div class="car-info" id="carInfo" style="display:none">
+      <div class="car-place" id="carPlace"></div>
+      <div class="car-deadline" id="carDeadline"></div>
+      <div><span class="car-countdown" id="carCountdown"></span></div>
+    </div>
+    <div class="car-form-row">
+      <button type="button" class="btn btn-primary" id="carEditBtn">Uppdatera</button>
+      <button type="button" class="btn btn-ghost" id="carClearBtn" style="display:none">Rensa</button>
+      <button type="button" class="btn btn-ghost" id="carSearchBtn" style="display:none">Sök regler vid bilen</button>
+    </div>
+  </div>
+  <form class="car-form" id="carForm" style="display:none;margin-top:10px" autocomplete="off">
+    <div class="field">
+      <label for="carPlaceInput">Plats / adress</label>
+      <input type="text" id="carPlaceInput" placeholder="T.ex. Skaraborgsgatan 12" required>
+    </div>
+    <div class="field">
+      <label for="carDeadlineInput">Måste flyttas senast</label>
+      <input type="datetime-local" id="carDeadlineInput" required>
+    </div>
+    <div class="field">
+      <label for="carNoteInput">Anteckning (valfri)</label>
+      <input type="text" id="carNoteInput" placeholder="T.ex. norra sidan, taxa 3">
+    </div>
+    <div class="car-form-row">
+      <button type="submit" class="btn btn-primary">Spara</button>
+      <button type="button" class="btn btn-ghost" id="carCancelBtn">Avbryt</button>
+    </div>
+    <p class="status" id="carStatus"></p>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Sök städdagar (boendeparkering)</h3>
+  <form id="searchForm">
+    <div class="row" style="margin-bottom:10px">
+      <div class="field">
+        <label for="fArea">Område</label>
+        <input type="text" id="fArea" value="Södermalm" placeholder="T.ex. Södermalm" autocomplete="off">
+      </div>
+      <div class="field" style="flex:1 1 160px">
+        <label for="fDay">Veckodag</label>
+        <select id="fDay">
+          <option value="today">Idag</option>
+          <option value="måndag">Måndag</option>
+          <option value="tisdag">Tisdag</option>
+          <option value="onsdag">Onsdag</option>
+          <option value="torsdag">Torsdag</option>
+          <option value="fredag">Fredag</option>
+          <option value="lördag">Lördag</option>
+          <option value="söndag">Söndag</option>
+          <option value="all">Hela veckan</option>
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <button type="submit" class="btn btn-primary" id="searchBtn">Sök</button>
+      <button type="button" class="btn btn-ghost" id="clearCacheBtn">Töm cache</button>
+    </div>
+    <div class="status" id="status"></div>
+  </form>
+</div>
+
+<div class="card">
+  <h3 id="resultsTitle">Resultat</h3>
+  <div class="results" id="results"></div>
+  <p class="muted" id="resultsEmpty" style="display:none">Inga föreskrifter för valt datum.</p>
+</div>
+
+<div class="card">
+  <h3>API-nyckel</h3>
+  <p class="help">Tjänsten kräver en gratis nyckel från Open Stockholm. <a href="https://openstreetgs.stockholm.se/Home/Key" target="_blank" rel="noopener">Begär en här</a> (sparas bara på den här enheten).</p>
+  <div class="row" style="margin-top:8px">
+    <div class="field" style="flex:1 1 100%">
+      <label for="fKey">Nyckel</label>
+      <input type="password" id="fKey" placeholder="Klistra in din apiKey" autocomplete="off">
+    </div>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <button type="button" class="btn btn-primary" id="saveKeyBtn">Spara</button>
+    <button type="button" class="btn btn-ghost" id="forgetKeyBtn">Glöm nyckel</button>
+  </div>
+  <div class="status" id="keyStatus"></div>
+</div>
+
+</div><!-- /.wrap -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="auth-gate.js?v=8"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
+  authDomain: "sommarplanering-d4300.firebaseapp.com",
+  projectId: "sommarplanering-d4300",
+  storageBucket: "sommarplanering-d4300.firebasestorage.app",
+  messagingSenderId: "261517602417",
+  appId: "1:261517602417:web:11b754c758c92cc33735d0"
+};
+window.firebaseConfig = firebaseConfig;
+
+const KEY_STORE   = "parkering.apiKey";
+const AREA_STORE  = "parkering.area";
+const CACHE_STORE = "parkering.cache"; // { [area]: { ts, features:[...] } }
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+// Standard-nyckel (gratis från openstreetgs.stockholm.se). Överskrivs om användaren sparar en egen.
+const DEFAULT_API_KEY = "bcbfb149-7529-4a0c-a8fc-2a2f90d247e6";
+
+const WEEKDAYS_SV = ["söndag","måndag","tisdag","onsdag","torsdag","fredag","lördag"];
+
+const statusEl    = document.getElementById("status");
+const keyStatusEl = document.getElementById("keyStatus");
+const resultsEl   = document.getElementById("results");
+const resultsEmpty= document.getElementById("resultsEmpty");
+const resultsTitle= document.getElementById("resultsTitle");
+const fArea = document.getElementById("fArea");
+const fDay  = document.getElementById("fDay");
+const fKey  = document.getElementById("fKey");
+
+// Init formvärden
+(function init(){
+  try {
+    const savedArea = localStorage.getItem(AREA_STORE);
+    if (savedArea) fArea.value = savedArea;
+    let savedKey = localStorage.getItem(KEY_STORE);
+    if (!savedKey && DEFAULT_API_KEY) {
+      savedKey = DEFAULT_API_KEY;
+      try { localStorage.setItem(KEY_STORE, savedKey); } catch(e) {}
+    }
+    if (savedKey) { fKey.value = savedKey; keyStatusEl.textContent = "Nyckel sparad ✓"; }
+  } catch(e) {}
+})();
+
+// === API-nyckel ===
+document.getElementById("saveKeyBtn").onclick = () => {
+  const k = fKey.value.trim();
+  if (!k) { keyStatusEl.textContent = "Tom nyckel"; return; }
+  try { localStorage.setItem(KEY_STORE, k); } catch(e) {}
+  keyStatusEl.textContent = "Sparat ✓";
+};
+document.getElementById("forgetKeyBtn").onclick = () => {
+  try { localStorage.removeItem(KEY_STORE); } catch(e) {}
+  fKey.value = "";
+  keyStatusEl.textContent = "Borttagen";
+};
+
+// === Cache ===
+function readCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_STORE) || "{}"); } catch(e) { return {}; }
+}
+function writeCache(c) {
+  try { localStorage.setItem(CACHE_STORE, JSON.stringify(c)); } catch(e) {}
+}
+document.getElementById("clearCacheBtn").onclick = () => {
+  try { localStorage.removeItem(CACHE_STORE); } catch(e) {}
+  statusEl.textContent = "Cache rensad";
+};
+
+// === JSONP ===
+function jsonpFetch(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = "_pk_cb_" + Date.now() + "_" + Math.floor(Math.random()*1e6);
+    const sep = url.includes("?") ? "&" : "?";
+    const full = url + sep + "callback=" + cbName;
+    let done = false;
+    const script = document.createElement("script");
+    const cleanup = () => {
+      done = true;
+      try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    };
+    window[cbName] = (data) => { if (done) return; cleanup(); resolve(data); };
+    script.onerror = () => { if (done) return; cleanup(); reject(new Error("Nätverksfel eller ogiltig nyckel")); };
+    script.src = full;
+    document.body.appendChild(script);
+    setTimeout(() => { if (!done) { cleanup(); reject(new Error("Timeout (20s)")); } }, 20000);
+  });
+}
+
+// === Hämta servicedagar för område ===
+async function getServiceDays(area) {
+  const key = (localStorage.getItem(KEY_STORE) || DEFAULT_API_KEY || "").trim();
+  if (!key) throw new Error("Ingen API-nyckel sparad");
+
+  const cache = readCache();
+  const cached = cache[area.toLowerCase()];
+  if (cached && (Date.now() - cached.ts) < CACHE_TTL_MS) {
+    return { features: cached.features, fromCache: true };
+  }
+
+  const url = "https://openparking.stockholm.se/LTF-Tolken/v1/servicedagar/area/"
+            + encodeURIComponent(area)
+            + "?outputFormat=json&apiKey=" + encodeURIComponent(key);
+
+  const data = await jsonpFetch(url);
+  const features = extractFeatures(data);
+  cache[area.toLowerCase()] = { ts: Date.now(), features };
+  writeCache(cache);
+  return { features, fromCache: false };
+}
+
+function extractFeatures(data) {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.features)) return data.features;
+  if (Array.isArray(data.foreskrifter)) return data.foreskrifter;
+  if (Array.isArray(data.items)) return data.items;
+  if (data.type === "FeatureCollection" && Array.isArray(data.features)) return data.features;
+  // Sista utvägen: leta efter första array-property
+  for (const k of Object.keys(data)) {
+    if (Array.isArray(data[k])) return data[k];
+  }
+  return [];
+}
+
+// === Tolka en feature ===
+function propsOf(f) {
+  if (!f) return {};
+  if (f.properties && typeof f.properties === "object") return f.properties;
+  if (f.attributes && typeof f.attributes === "object") return f.attributes;
+  return f;
+}
+function pick(obj, keys) {
+  for (const k of keys) {
+    for (const real of Object.keys(obj)) {
+      if (real.toLowerCase() === k.toLowerCase() && obj[real] != null && obj[real] !== "") return obj[real];
+    }
+  }
+  return "";
+}
+function featureInfo(f) {
+  const p = propsOf(f);
+  return {
+    street: pick(p, ["STREET_NAME","STREET","Street","street","Adress","adress","ADRESS","gatunamn","NAMN","namn","Name","name"]),
+    section: pick(p, ["CITY_DISTRICT","section","Section","stracka","strackbeskrivning","DELSTRACKA","delstracka","sida","SIDA"]),
+    address: pick(p, ["ADDRESS","address"]),
+    district: pick(p, ["PARKING_DISTRICT"]),
+    day:     pick(p, ["START_WEEKDAY","WEEKDAY","weekday","Veckodag","veckodag","DAG","dag"]),
+    from:    pick(p, ["START_TIME","STARTTIME","starttime","FRAN","fran","tid_fran","TID_FRAN","start","Start"]),
+    to:      pick(p, ["END_TIME","ENDTIME","endtime","TILL","till","tid_till","TID_TILL","end","End","slut","Slut"]),
+    desc:    pick(p, ["VF_PLATS_TYP","BESKRIVNING","beskrivning","TEXT","text","desc","description"]),
+    rate:    pick(p, ["PARKING_RATE"]),
+    citation: pick(p, ["CITATION"]),
+    raw:     p
+  };
+}
+
+// API:t skickar tid som minuter sedan midnatt (0..1440). Konvertera till HH:MM.
+function formatTime(v) {
+  if (v == null || v === "") return "";
+  if (typeof v === "number" || /^\d+$/.test(String(v))) {
+    let n = Number(v);
+    if (n >= 1440) n = 1440;
+    const h = Math.floor(n / 60);
+    const m = n % 60;
+    return String(h).padStart(2,'0') + ":" + String(m).padStart(2,'0');
+  }
+  return String(v);
+}
+
+// === Sök ===
+document.getElementById("searchForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  resultsEl.innerHTML = "";
+  resultsEmpty.style.display = "none";
+  const area = fArea.value.trim();
+  const daySel = fDay.value;
+  if (!area) { statusEl.textContent = "Fyll i område"; return; }
+  try { localStorage.setItem(AREA_STORE, area); } catch(e) {}
+
+  let wantDay = null;     // null = hela veckan
+  let dayLabel = "";
+  if (daySel === "today") {
+    wantDay = WEEKDAYS_SV[new Date().getDay()];
+    dayLabel = "idag (" + wantDay + ")";
+  } else if (daySel === "all") {
+    wantDay = null;
+    dayLabel = "hela veckan";
+  } else {
+    wantDay = daySel;
+    dayLabel = daySel;
+  }
+  statusEl.textContent = "Hämtar data för " + area + "...";
+
+  try {
+    const { features, fromCache } = await getServiceDays(area);
+
+    // Filtrera till BARA boendeparkering
+    const boendeOnly = features.filter(f => {
+      const t = (featureInfo(f).desc || "").toLowerCase();
+      return t.includes("boende");
+    });
+
+    statusEl.textContent = boendeOnly.length + " boende-föreskrifter"
+      + (fromCache ? " (cache)" : "") + " · filtrerar...";
+
+    const filtered = boendeOnly.filter(f => {
+      if (!wantDay) return true;
+      const day = (featureInfo(f).day || "").toString().toLowerCase();
+      return day.includes(wantDay);
+    });
+
+    renderResults(filtered, area, dayLabel, !wantDay);
+    statusEl.textContent = filtered.length + " träff(ar) · " + dayLabel
+      + " (" + boendeOnly.length + " boende totalt"
+      + (fromCache ? ", cache" : "") + ")";
+  } catch (err) {
+    statusEl.innerHTML = '<span class="error">Fel: ' + escapeHtml(err.message) + '</span>';
+  }
+});
+
+function renderResults(features, area, dayLabel, all) {
+  resultsTitle.textContent = "Boendeparkering – " + area + " · " + dayLabel;
+  if (!features.length) {
+    resultsEmpty.style.display = "block";
+    return;
+  }
+
+  // Gruppera på gatunamn, dedupera identiska regler
+  const groups = new Map();
+  let skipped = 0;
+  for (const f of features) {
+    const info = featureInfo(f);
+    const street = (info.street || "").trim();
+    if (!street) { skipped++; continue; }
+    if (!groups.has(street)) groups.set(street, { street, district: info.section, rules: new Map() });
+    const grp = groups.get(street);
+    const fromT = formatTime(info.from);
+    const toT   = formatTime(info.to);
+    const day   = all ? (info.day || "") : "";
+    const key   = day + "|" + fromT + "-" + toT + "|" + (info.desc || "");
+    if (!grp.rules.has(key)) {
+      grp.rules.set(key, { day, fromT, toT, desc: info.desc });
+    }
+  }
+
+  const sorted = [...groups.values()].sort((a,b) => a.street.localeCompare(b.street, "sv"));
+  let totalRules = 0;
+
+  for (const grp of sorted) {
+    const rules = [...grp.rules.values()].sort((a,b) => {
+      if (a.day !== b.day) return (a.day || "").localeCompare(b.day || "", "sv");
+      return (a.fromT || "").localeCompare(b.fromT || "");
+    });
+    totalRules += rules.length;
+
+    const item = document.createElement("div");
+    item.className = "result";
+
+    const head = document.createElement("div");
+    head.className = "result-head";
+    const street = document.createElement("div");
+    street.className = "result-street";
+    street.textContent = grp.street;
+    head.appendChild(street);
+    if (rules.length > 1) {
+      const cnt = document.createElement("div");
+      cnt.className = "result-time";
+      cnt.textContent = rules.length + " regler";
+      head.appendChild(cnt);
+    }
+    item.appendChild(head);
+
+    if (grp.district) {
+      const meta = document.createElement("div");
+      meta.className = "result-meta";
+      meta.textContent = grp.district;
+      item.appendChild(meta);
+    }
+
+    const rulesEl = document.createElement("div");
+    rulesEl.className = "result-rules";
+    for (const r of rules) {
+      const row = document.createElement("div");
+      row.className = "result-rule";
+      if (r.day) {
+        const dEl = document.createElement("span");
+        dEl.className = "rday";
+        dEl.textContent = r.day.slice(0,3);
+        row.appendChild(dEl);
+      }
+      const tEl = document.createElement("span");
+      tEl.className = "rt";
+      tEl.textContent = (r.fromT && r.toT) ? (r.fromT + "–" + r.toT) : (r.fromT || "");
+      row.appendChild(tEl);
+      if (r.desc) {
+        const descEl = document.createElement("span");
+        descEl.className = "rd";
+        descEl.textContent = r.desc;
+        row.appendChild(descEl);
+      }
+      rulesEl.appendChild(row);
+    }
+    item.appendChild(rulesEl);
+
+    resultsEl.appendChild(item);
+  }
+
+  if (skipped > 0) {
+    const note = document.createElement("div");
+    note.className = "muted";
+    note.textContent = "(" + skipped + " poster utan gatunamn döldes)";
+    resultsEl.appendChild(note);
+  }
+
+  resultsTitle.textContent += " · " + sorted.length + " gator, " + totalRules + " regler";
+}
+
+function formatDate(s) {
+  const d = new Date(s + "T00:00");
+  return d.getDate() + " "
+    + ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"][d.getMonth()]
+    + " " + d.getFullYear();
+}
+function escapeHtml(s) {
+  return String(s).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+}
+
+// Auth-gate kör vi för konsekvens (sidan visar ingen privat data, men auth används överallt)
+requireAuth(() => {
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  initCarTracker();
+});
+
+// === Var står bilen? ===
+let carDb = null;
+let currentCar = null; // { place, deadline (ms), note, updated }
+let countdownTimer = null;
+
+function initCarTracker() {
+  carDb = firebase.firestore();
+  carDb.collection("parking_now").doc("current").onSnapshot(snap => {
+    currentCar = snap.exists ? snap.data() : null;
+    renderCar();
+  }, err => {
+    document.getElementById("carEmpty").textContent = "Kunde inte synka: " + err.message;
+  });
+
+  document.getElementById("carEditBtn").onclick = () => openCarForm();
+  document.getElementById("carCancelBtn").onclick = () => closeCarForm();
+  document.getElementById("carClearBtn").onclick = () => {
+    if (!confirm("Rensa parkeringsinfo?")) return;
+    carDb.collection("parking_now").doc("current").delete()
+      .catch(err => alert("Fel: " + err.message));
+  };
+  document.getElementById("carSearchBtn").onclick = () => {
+    if (!currentCar || !currentCar.place) return;
+    fArea.value = currentCar.place.split(",")[0].trim();
+    document.getElementById("searchForm").scrollIntoView({ behavior:"smooth", block:"start" });
+  };
+  document.getElementById("carForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const place = document.getElementById("carPlaceInput").value.trim();
+    const deadlineStr = document.getElementById("carDeadlineInput").value;
+    const note = document.getElementById("carNoteInput").value.trim();
+    if (!place || !deadlineStr) return;
+    const deadline = new Date(deadlineStr).getTime();
+    const data = { place, deadline, note, updated: Date.now() };
+    carDb.collection("parking_now").doc("current").set(data)
+      .then(() => { closeCarForm(); })
+      .catch(err => { document.getElementById("carStatus").textContent = "Fel: " + err.message; });
+  });
+}
+
+function openCarForm() {
+  document.getElementById("carForm").style.display = "block";
+  document.getElementById("carDisplay").style.display = "none";
+  document.getElementById("carPlaceInput").value = currentCar?.place || "";
+  document.getElementById("carNoteInput").value  = currentCar?.note  || "";
+  const d = new Date(currentCar?.deadline || (Date.now() + 24*60*60*1000));
+  // local datetime-local format: YYYY-MM-DDTHH:MM
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById("carDeadlineInput").value =
+    d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate())
+    + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+  document.getElementById("carPlaceInput").focus();
+}
+function closeCarForm() {
+  document.getElementById("carForm").style.display = "none";
+  document.getElementById("carDisplay").style.display = "block";
+  document.getElementById("carStatus").textContent = "";
+}
+
+function renderCar() {
+  const empty   = document.getElementById("carEmpty");
+  const info    = document.getElementById("carInfo");
+  const clearBt = document.getElementById("carClearBtn");
+  const searchBt= document.getElementById("carSearchBtn");
+  if (!currentCar) {
+    empty.style.display = "";
+    info.style.display = "none";
+    clearBt.style.display = "none";
+    searchBt.style.display = "none";
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    return;
+  }
+  empty.style.display = "none";
+  info.style.display = "flex";
+  clearBt.style.display = "";
+  searchBt.style.display = "";
+  document.getElementById("carPlace").textContent = currentCar.place
+    + (currentCar.note ? "  —  " + currentCar.note : "");
+  const d = new Date(currentCar.deadline);
+  const days = ["sön","mån","tis","ons","tor","fre","lör"];
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById("carDeadline").textContent =
+    "Flytta senast: " + days[d.getDay()] + " " + d.getDate() + "/" + (d.getMonth()+1)
+    + " kl " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+
+  paintCountdown();
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTimer = setInterval(paintCountdown, 30000);
+}
+
+function paintCountdown() {
+  if (!currentCar) return;
+  const el = document.getElementById("carCountdown");
+  const diff = currentCar.deadline - Date.now();
+  el.classList.remove("warn","danger","expired");
+  if (diff <= 0) {
+    const overdueMin = Math.floor(-diff / 60000);
+    el.textContent = overdueMin < 60
+      ? overdueMin + " min över tiden!"
+      : Math.floor(overdueMin / 60) + " tim " + (overdueMin % 60) + " min över tiden!";
+    el.classList.add("expired");
+    return;
+  }
+  const totalMin = Math.floor(diff / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  let txt;
+  if (h >= 24) {
+    const d = Math.floor(h / 24);
+    const restH = h % 24;
+    txt = d + " dgr " + restH + " tim kvar";
+  } else if (h > 0) {
+    txt = h + " tim " + m + " min kvar";
+  } else {
+    txt = m + " min kvar";
+  }
+  el.textContent = txt;
+  if (totalMin <= 30) el.classList.add("danger");
+  else if (totalMin <= 120) el.classList.add("warn");
+}
+</script>
+
+</body>
+</html>

@@ -263,7 +263,13 @@ form.add input[type=text]:focus{
 }
 .day.weekend{background:var(--weekend)}
 .day.holiday{background:var(--holiday)}
+.day{position:relative}
 .day.today{background:var(--today);border-color:#e5c84a;box-shadow:0 0 0 2px #e5c84a inset}
+.today-badge{
+  font-size:8px;font-weight:700;letter-spacing:0.06em;
+  background:#e5c84a;color:#5a4818;
+  padding:1px 5px;border-radius:999px;line-height:1.2;
+}
 .day:hover{background:#fbf9f3}
 .day.weekend:hover{background:#f3f1ec}
 
@@ -497,6 +503,12 @@ form.add input[type=text]:focus{
     gap:2px;
   }
   .date{font-size:11px}
+  .today-badge{font-size:7px;padding:0 3px;letter-spacing:0.02em}
+  body.view-month .today-badge{display:none}
+  body.view-month .day.today::after{
+    content:"";position:absolute;top:3px;right:3px;
+    width:6px;height:6px;border-radius:50%;background:#d4a700;
+  }
   .holiday-name{display:none}
   .entry{
     padding:2px 3px;
@@ -519,7 +531,6 @@ form.add input[type=text]:focus{
   body.view-agenda .weekday{display:none}
   body.view-agenda .week-num{display:none}
   body.view-agenda .grid > div:empty{display:none}
-  body.view-agenda .day:not(:has(.entry)):not(.today):not(.holiday){display:none}
   body.view-agenda .day{
     min-height:auto;
     padding:10px 12px;
@@ -594,6 +605,8 @@ form.add input[type=text]:focus{
   <a class="nav-pill" href="moon.html"><span class="ico">🌙</span>The Moon</a>
   <a class="nav-pill" href="oracle.html"><span class="ico">🔮</span>Oracle</a>
   <a class="nav-pill" href="lankar.html"><span class="ico">🔗</span>Länkar</a>
+  <a class="nav-pill" href="parkering.html"><span class="ico">🅿️</span>Parkering</a>
+  <a class="nav-pill" href="ideer.html"><span class="ico">💡</span>Idéer</a>
 </nav>
 
 <div class="view-toggle" id="viewToggle">
@@ -692,6 +705,15 @@ const holidays = {
   "2026-06-19":"Midsommarafton",
   "2026-06-20":"Midsommardagen"
 };
+
+/* ISO-veckonummer (måndag = första veckodag) */
+function isoWeek(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
 
 let editingId = null;   // id på post som redigeras (null = ny post)
 
@@ -806,6 +828,73 @@ function removeTodo(id) {
   if (!db) return;
   db.collection("todos").doc(id).delete().catch(err => console.error(err));
 }
+function updateTodo(id, fields) {
+  if (!db) return;
+  db.collection("todos").doc(id).update(fields).catch(err => alert("Fel: " + err.message));
+}
+
+function startTodoEdit(li, t) {
+  li.innerHTML = "";
+  li.classList.add("editing");
+
+  const prio = document.createElement("select");
+  prio.className = "todo-prio";
+  [["","Prio"],["hog","Hög"],["mellan","Mellan"],["lag","Låg"]].forEach(([v,l]) => {
+    const o = document.createElement("option"); o.value = v; o.innerText = l;
+    if ((t.prio||"") === v) o.selected = true;
+    prio.appendChild(o);
+  });
+  const assignee = document.createElement("select");
+  assignee.className = "todo-assignee-input";
+  ["Vem?","Johan","Sanna","Eira","Elian","Alla"].forEach((name,i) => {
+    const o = document.createElement("option");
+    o.value = i === 0 ? "" : name;
+    o.innerText = name;
+    if ((t.assignee||"") === o.value) o.selected = true;
+    assignee.appendChild(o);
+  });
+  const symbol = document.createElement("select");
+  symbol.className = "todo-symbol";
+  const symbolOptions = [
+    ["","—"],["☀️","☀️"],["🏖️","🏖️"],["✈️","✈️"],["🚗","🚗"],
+    ["🚆","🚆"],["⛵","⛵"],["🏕️","🏕️"],["🎉","🎉"],["🎂","🎂"],
+    ["💍","💍"],["🎓","🎓"],["🏠","🏠"],["🎁","🎁"],["🏊","🏊"],
+    ["⚽","⚽"],["🎵","🎵"],["🍔","🍔"],["🌳","🌳"],["🛒","🛒"],
+    ["🧹","🧹"],["📞","📞"],["📦","📦"],["💰","💰"],["✅","✅"]
+  ];
+  symbolOptions.forEach(([v,l]) => {
+    const o = document.createElement("option");
+    o.value = v; o.innerText = l;
+    if ((t.symbol||"") === v) o.selected = true;
+    symbol.appendChild(o);
+  });
+  const titleI = document.createElement("input");
+  titleI.type = "text"; titleI.className = "todo-title-input";
+  titleI.value = t.text || ""; titleI.placeholder = "Titel...";
+  const commentI = document.createElement("input");
+  commentI.type = "text"; commentI.className = "todo-comment-input";
+  commentI.value = t.comment || ""; commentI.placeholder = "Kommentar (valfri)";
+
+  const saveBtn = document.createElement("button");
+  saveBtn.type = "button"; saveBtn.innerText = "✓"; saveBtn.title = "Spara";
+  saveBtn.onclick = () => {
+    const text = titleI.value.trim();
+    if (!text) { titleI.focus(); return; }
+    updateTodo(t.id, {
+      text,
+      prio: prio.value || "",
+      comment: commentI.value.trim(),
+      assignee: assignee.value || "",
+      symbol: symbol.value || ""
+    });
+  };
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button"; cancelBtn.innerText = "✕"; cancelBtn.title = "Avbryt";
+  cancelBtn.onclick = () => render();
+
+  [prio, assignee, symbol, titleI, commentI, saveBtn, cancelBtn].forEach(el => li.appendChild(el));
+  titleI.focus();
+}
 
 /* Kalender */
 function render() {
@@ -837,6 +926,12 @@ function render() {
     const grid = document.createElement("div");
     grid.className = "grid";
 
+    // Tom cell ovanför veckonummer-kolumnen
+    const wnHead = document.createElement("div");
+    wnHead.className = "week-num week-head";
+    wnHead.textContent = "v";
+    grid.appendChild(wnHead);
+
     ["Mån","Tis","Ons","Tor","Fre","Lör","Sön"].forEach(d => {
       const h = document.createElement("div");
       h.className = "weekday";
@@ -849,11 +944,28 @@ function render() {
     // Tomma celler innan månadens första dag (måndag först)
     const first = new Date(2026, month-1, 1).getDay(); // 0=sön
     const offset = (first + 6) % 7;
+
+    // Veckonummer för första raden
+    const firstRowMonday = new Date(2026, month-1, 1 - offset);
+    const wn1 = document.createElement("div");
+    wn1.className = "week-num";
+    wn1.textContent = isoWeek(firstRowMonday);
+    grid.appendChild(wn1);
+
     for (let i=0; i<offset; i++) {
       grid.appendChild(document.createElement("div"));
     }
 
     for (let d=1; d<=days; d++) {
+      // Ny rad? Skjut in veckonummer.
+      const colInWeek = (offset + d - 1) % 7;
+      if (colInWeek === 0 && d !== 1) {
+        const wn = document.createElement("div");
+        wn.className = "week-num";
+        wn.textContent = isoWeek(new Date(2026, month-1, d));
+        grid.appendChild(wn);
+      }
+
       const dateStr = "2026-" + String(month).padStart(2,'0') + "-" + String(d).padStart(2,'0');
       const dow = new Date(2026, month-1, d).getDay(); // 0=sön, 6=lör
 
@@ -867,6 +979,12 @@ function render() {
       const dateRow = document.createElement("div");
       dateRow.className = "date";
       dateRow.innerText = d;
+      if (dateStr === todayStr) {
+        const badge = document.createElement("span");
+        badge.className = "today-badge";
+        badge.textContent = "IDAG";
+        dateRow.appendChild(badge);
+      }
       cell.appendChild(dateRow);
 
       if (holidays[dateStr]) {
@@ -984,6 +1102,12 @@ function render() {
         main.appendChild(c);
       }
       li.appendChild(main);
+
+      const editBtn = document.createElement("button");
+      editBtn.innerText = "✎";
+      editBtn.title = "Redigera";
+      editBtn.onclick = () => startTodoEdit(li, t);
+      li.appendChild(editBtn);
 
       const x = document.createElement("button");
       x.innerText = "✕";

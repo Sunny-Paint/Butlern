@@ -161,6 +161,8 @@ svg.mood-chart{display:block;width:100%;height:auto;max-width:100%}
   <a class="nav-pill" href="moon.html"><span class="ico">🌙</span>The Moon</a>
   <a class="nav-pill" href="oracle.html"><span class="ico">🔮</span>Oracle</a>
   <a class="nav-pill" href="lankar.html"><span class="ico">🔗</span>Länkar</a>
+  <a class="nav-pill" href="parkering.html"><span class="ico">🅿️</span>Parkering</a>
+  <a class="nav-pill" href="ideer.html"><span class="ico">💡</span>Idéer</a>
 </nav>
 
 <div class="privacy-note">🔒 Inget sparas lokalt på den här datorn — allt går direkt till molnet.</div>
@@ -177,7 +179,8 @@ svg.mood-chart{display:block;width:100%;height:auto;max-width:100%}
       <label>Hur mår du just nu? (1–10)</label>
       <div style="display:flex;align-items:center;gap:10px">
         <input type="range" id="d_mood" min="1" max="10" value="5" style="flex:1;accent-color:var(--accent)">
-        <span id="moodVal" style="display:inline-flex;align-items:center;gap:6px;min-width:120px;font-weight:600;background:var(--accent-soft);border-radius:8px;padding:6px 10px"><span id="moodEmojiEl" style="font-size:22px">😐</span><span id="moodLabelEl">Okej</span></span>
+        <span id="moodVal" style="display:inline-flex;align-items:center;gap:6px;min-width:120px;font-weight:600;background:var(--accent-soft);border-radius:8px;padding:6px 10px"><span id="moodEmojiEl" style="font-size:22px">—</span><span id="moodLabelEl">Inget valt</span></span>
+        <button type="button" id="clearMoodBtn" class="btn btn-ghost" style="padding:6px 10px;font-size:12px;display:none">Rensa</button>
       </div>
     </div>
 
@@ -197,11 +200,6 @@ svg.mood-chart{display:block;width:100%;height:auto;max-width:100%}
     <div class="field">
       <label>Tankar</label>
       <textarea id="d_thoughts" placeholder="Vad snurrar i huvudet? Reflektioner, känslor..." autocomplete="off"></textarea>
-    </div>
-
-    <div class="field">
-      <label>Roliga idéer</label>
-      <textarea id="d_ideas" placeholder="Idéer, drömmar, saker att testa..." autocomplete="off"></textarea>
     </div>
 
     <div class="field">
@@ -241,6 +239,10 @@ svg.mood-chart{display:block;width:100%;height:auto;max-width:100%}
   <h3>Tidigare noteringar</h3>
   <div class="entry-list" id="entryList"></div>
   <div id="emptyMsg" style="color:var(--muted);font-size:14px;display:none">Inga noteringar än — skapa din första ovan!</div>
+  <div style="margin-top:18px;padding-top:14px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:6px">
+    <button type="button" id="cleanupMoodBtn" class="btn btn-ghost" style="align-self:flex-start;font-size:12px;padding:6px 12px">Städa: ta bort gamla auto-humör (mood = 5)</button>
+    <div class="status" id="cleanupStatus" style="margin-top:0"></div>
+  </div>
 </div>
 
 </div>
@@ -253,7 +255,8 @@ const moodEmoji  = {1:"😭",2:"😞",3:"😕",4:"😟",5:"😐",6:"🙂",7:"�
 let diary = [];
 let db = null;
 let editingId = null;
-let selectedMood = 5;
+let selectedMood = null; // null = inget valt
+let moodSet = false;
 
 function setDefaultWhen() {
   const d = new Date();
@@ -265,13 +268,30 @@ setDefaultWhen();
 const moodEl = document.getElementById("d_mood");
 const moodEmojiEl = document.getElementById("moodEmojiEl");
 const moodLabelEl = document.getElementById("moodLabelEl");
+const clearMoodBtn = document.getElementById("clearMoodBtn");
 function syncMoodUI(){
-  const v = parseInt(moodEl.value, 10);
-  selectedMood = v;
-  moodEmojiEl.textContent = moodEmoji[v] || "";
-  moodLabelEl.textContent = moodLabels[v] || "";
+  if (!moodSet || selectedMood == null) {
+    moodEmojiEl.textContent = "—";
+    moodLabelEl.textContent = "Inget valt";
+    clearMoodBtn.style.display = "none";
+    return;
+  }
+  moodEmojiEl.textContent = moodEmoji[selectedMood] || "";
+  moodLabelEl.textContent = moodLabels[selectedMood] || "";
+  clearMoodBtn.style.display = "";
 }
-moodEl.addEventListener("input", syncMoodUI);
+function clearMood(){
+  moodSet = false;
+  selectedMood = null;
+  moodEl.value = 5;
+  syncMoodUI();
+}
+moodEl.addEventListener("input", () => {
+  moodSet = true;
+  selectedMood = parseInt(moodEl.value, 10);
+  syncMoodUI();
+});
+clearMoodBtn.addEventListener("click", clearMood);
 syncMoodUI();
 
 const energyEl = document.getElementById("d_energy");
@@ -287,8 +307,7 @@ function resetForm() {
   document.getElementById("cancelBtn").style.display = "none";
   document.getElementById("diaryForm").reset();
   setDefaultWhen();
-  moodEl.value = 5;
-  syncMoodUI();
+  clearMood();
   energyVal.textContent = "5";
 }
 
@@ -307,13 +326,13 @@ document.getElementById("diaryForm").addEventListener("submit", e => {
   const tagsRaw = document.getElementById("d_tags").value;
   const tags = tagsRaw.split(",").map(t => t.trim()).filter(Boolean);
   const thoughts = document.getElementById("d_thoughts").value.trim();
-  const ideas    = document.getElementById("d_ideas").value.trim();
   const note     = document.getElementById("d_note").value.trim();
 
   const data = {
     date, when: whenTs,
-    mood: selectedMood, energy,
-    tags, thoughts, ideas, note,
+    mood: moodSet ? selectedMood : null,
+    energy,
+    tags, thoughts, note,
     updatedAt: Date.now()
   };
   if (!editingId) data.createdAt = Date.now();
@@ -338,13 +357,20 @@ function startEdit(id) {
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   document.getElementById("d_when").value = d.toISOString().slice(0,16);
 
-  moodEl.value = en.mood || 5;
+  if (en.mood != null) {
+    moodEl.value = en.mood;
+    moodSet = true;
+    selectedMood = en.mood;
+  } else {
+    moodEl.value = 5;
+    moodSet = false;
+    selectedMood = null;
+  }
   syncMoodUI();
   energyEl.value = en.energy || 5;
   energyVal.textContent = energyEl.value;
   document.getElementById("d_tags").value = (en.tags || []).join(", ");
   document.getElementById("d_thoughts").value = en.thoughts || "";
-  document.getElementById("d_ideas").value = en.ideas || "";
   document.getElementById("d_note").value = en.note || "";
   document.getElementById("diaryForm").scrollIntoView({ behavior:"smooth", block:"start" });
 }
@@ -379,8 +405,8 @@ function renderList() {
     timeEl.textContent = formatTime(entryTs(en));
     const moodEl = document.createElement("div");
     moodEl.className = "entry-mood";
-    moodEl.textContent = moodEmoji[en.mood] || "";
-    moodEl.title = moodLabels[en.mood] || "";
+    moodEl.textContent = en.mood != null ? (moodEmoji[en.mood] || "") : "";
+    moodEl.title = en.mood != null ? (moodLabels[en.mood] || "") : "Inget humör valt";
     const spacer = document.createElement("div");
     spacer.className = "entry-spacer";
     const actions = document.createElement("div");
@@ -418,7 +444,6 @@ function renderList() {
     }
 
     addBlock(item, "Tankar", en.thoughts);
-    addBlock(item, "Roliga idéer", en.ideas);
     addBlock(item, "Anteckning", en.note);
 
     list.appendChild(item);
@@ -457,7 +482,7 @@ function renderChart() {
   if (rangeVal !== "all") cutoff = Date.now() - parseInt(rangeVal,10) * 86400000;
 
   const points = diary
-    .filter(e => e.mood && entryTs(e) >= cutoff)
+    .filter(e => e.mood != null && entryTs(e) >= cutoff)
     .map(e => ({ t: entryTs(e), mood: e.mood }))
     .sort((a,b) => a.t - b.t);
 
@@ -512,6 +537,27 @@ function render() {
   renderList();
   renderChart();
 }
+
+// Städa: ta bort mood=5 från gamla noteringar (de som blev automatiskt default)
+document.getElementById("cleanupMoodBtn").addEventListener("click", () => {
+  if (!db) { alert("Ansluter, vänta..."); return; }
+  const candidates = diary.filter(e => e.mood === 5);
+  if (!candidates.length) {
+    document.getElementById("cleanupStatus").textContent = "Inga noteringar med mood=5.";
+    return;
+  }
+  if (!confirm(candidates.length + " noteringar har mood=5. Ta bort humöret från dessa? (kan inte ångras)")) return;
+  let done = 0, fail = 0;
+  const statusEl = document.getElementById("cleanupStatus");
+  statusEl.textContent = "Rensar...";
+  Promise.all(candidates.map(e =>
+    db.collection("dagbok").doc(e.id).update({ mood: null })
+      .then(() => done++)
+      .catch(() => fail++)
+  )).then(() => {
+    statusEl.textContent = "Klar! Rensade " + done + (fail ? " (fel: " + fail + ")" : "");
+  });
+});
 </script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
