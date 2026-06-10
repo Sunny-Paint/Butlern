@@ -146,16 +146,7 @@ form textarea{min-height:50px;resize:vertical}
 <div class="wrap">
 
 <h1>🌙 The Moon</h1>
-<nav class="nav-pills" aria-label="Sidor">
-  <a class="nav-pill" href="butlern.html"><span class="ico">📅</span>Planering</a>
-  <a class="nav-pill" href="loggbok.html"><span class="ico">📓</span>Logg</a>
-  <a class="nav-pill" href="tacksamhet.html"><span class="ico">🙏</span>Tack</a>
-  <span class="nav-pill active"><span class="ico">🌙</span>The Moon</span>
-  <a class="nav-pill" href="oracle.html"><span class="ico">🔮</span>Oracle</a>
-  <a class="nav-pill" href="lankar.html"><span class="ico">🔗</span>Länkar</a>
-  <a class="nav-pill" href="parkering.html"><span class="ico">🅿️</span>Parkering</a>
-  <a class="nav-pill" href="ideer.html"><span class="ico">💡</span>Idéer</a>
-</nav>
+<nav data-nav-pills></nav>
 
 <div class="card today-card">
   <div class="today-icon" id="todayIcon">🌑</div>
@@ -221,16 +212,10 @@ form textarea{min-height:50px;resize:vertical}
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
-<script src="auth-gate.js?v=7"></script>
+<script src="auth-gate.js?v=8"></script>
+<script src="app.js?v=1"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
-  authDomain: "sommarplanering-d4300.firebaseapp.com",
-  projectId: "sommarplanering-d4300",
-  storageBucket: "sommarplanering-d4300.firebasestorage.app",
-  messagingSenderId: "261517602417",
-  appId: "1:261517602417:web:11b754c758c92cc33735d0"
-};
+renderNav("moon");
 
 const statusEl = document.getElementById("status");
 let db = null;
@@ -244,25 +229,12 @@ const todayStr = (() => {
 
 const moodIcon = { 1:"😞", 2:"😕", 3:"😐", 4:"🙂", 5:"😄" };
 
-function initFirebase(attempt) {
-  attempt = attempt || 0;
-  if (typeof firebase === "undefined") {
-    if (attempt < 50) return setTimeout(() => initFirebase(attempt+1), 100);
-    statusEl.textContent = "Kunde inte ladda Firebase";
-    return;
-  }
-  try {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    statusEl.textContent = "Ansluten · sparas i molnet";
-  } catch (err) {
-    statusEl.textContent = "Fel: " + err.message;
-    return;
-  }
-
+function startMoon(d) {
+  db = d;
+  statusEl.textContent = "Ansluten · sparas i molnet";
   db.collection("moon").onSnapshot(snap => {
     logs = [];
-    snap.forEach(d => logs.push({ id:d.id, ...d.data() }));
+    snap.forEach(doc => logs.push({ id: doc.id, ...doc.data() }));
     logs.sort((a,b) => b.date.localeCompare(a.date));
     render();
   }, err => statusEl.textContent = "Firestore-fel: " + err.message);
@@ -479,8 +451,7 @@ function escapeHtml(s) {
 }
 
 resetForm();
-window.firebaseConfig = firebaseConfig;
-requireAuth(() => initFirebase());
+initApp(startMoon, { onError: e => { statusEl.textContent = e.message; } });
 </script>
 
 </body>

@@ -13,6 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#7a4fb0">
 <title>Butlern</title>
+<link rel="stylesheet" href="styles.css?v=1">
 
 <style>
 :root{
@@ -598,16 +599,7 @@ form.add input[type=text]:focus{
 <div class="wrap">
 
 <h1>🎩 Butlern</h1>
-<nav class="nav-pills" aria-label="Sidor">
-  <span class="nav-pill active"><span class="ico">📅</span>Planering</span>
-  <a class="nav-pill" href="loggbok.html"><span class="ico">📓</span>Logg</a>
-  <a class="nav-pill" href="tacksamhet.html"><span class="ico">🙏</span>Tack</a>
-  <a class="nav-pill" href="moon.html"><span class="ico">🌙</span>The Moon</a>
-  <a class="nav-pill" href="oracle.html"><span class="ico">🔮</span>Oracle</a>
-  <a class="nav-pill" href="lankar.html"><span class="ico">🔗</span>Länkar</a>
-  <a class="nav-pill" href="parkering.html"><span class="ico">🅿️</span>Parkering</a>
-  <a class="nav-pill" href="ideer.html"><span class="ico">💡</span>Idéer</a>
-</nav>
+<nav data-nav-pills></nav>
 
 <div class="view-toggle" id="viewToggle">
   <button type="button" data-view="month" class="active">📅 Månad</button>
@@ -1224,34 +1216,12 @@ render();
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore (CDN blockerad?)'"></script>
 <script src="auth-gate.js?v=8"></script>
+<script src="app.js?v=1"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
-  authDomain: "sommarplanering-d4300.firebaseapp.com",
-  projectId: "sommarplanering-d4300",
-  storageBucket: "sommarplanering-d4300.firebasestorage.app",
-  messagingSenderId: "261517602417",
-  appId: "1:261517602417:web:11b754c758c92cc33735d0"
-};
+renderNav("butlern");
 
-function initFirebase(attempt) {
-  attempt = attempt || 0;
-  if (typeof firebase === "undefined") {
-    if (attempt > 50) {
-      statusEl.textContent = "Firebase laddades aldrig — kontrollera Network-fliken";
-      return;
-    }
-    return setTimeout(() => initFirebase(attempt + 1), 100);
-  }
-
-  try {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-  } catch (e) {
-    statusEl.textContent = "Init-fel: " + e.message;
-    return;
-  }
-
+function startButlern(d) {
+  db = d;
   const timeout = setTimeout(() => {
     if (statusEl.textContent === "Laddar...") {
       statusEl.textContent = "Firestore svarar inte (4s). Kolla Console.";
@@ -1261,7 +1231,7 @@ function initFirebase(attempt) {
   db.collection("semester").onSnapshot(snap => {
     clearTimeout(timeout);
     entries = [];
-    snap.forEach(d => entries.push({ id:d.id, ...d.data() }));
+    snap.forEach(doc => entries.push({ id: doc.id, ...doc.data() }));
     try { localStorage.setItem(CACHE_KEY, JSON.stringify(entries)); } catch(e) {}
     statusEl.textContent = entries.length + " poster" + (snap.metadata.fromCache ? " (cache)" : "");
     render();
@@ -1273,14 +1243,13 @@ function initFirebase(attempt) {
 
   db.collection("todos").onSnapshot(snap => {
     todos = [];
-    snap.forEach(d => todos.push({ id:d.id, ...d.data() }));
+    snap.forEach(doc => todos.push({ id: doc.id, ...doc.data() }));
     try { localStorage.setItem(TODO_CACHE_KEY, JSON.stringify(todos)); } catch(e) {}
     render();
   }, err => console.error("Todos-fel:", err));
 }
 
-window.firebaseConfig = firebaseConfig;
-requireAuth(() => initFirebase());
+initApp(startButlern, { onError: e => { statusEl.textContent = e.message; } });
 
 // === Mobil vy-växel: Månad / Agenda ===
 (function(){

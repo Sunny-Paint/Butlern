@@ -9,104 +9,39 @@
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Butlern">
+<meta name="apple-mobile-web-app-title" content="Länkar">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#7a4fb0">
 <title>Länkar</title>
-
+<link rel="stylesheet" href="styles.css?v=1">
 <style>
-:root{
-  --bg-grad:linear-gradient(180deg,#fef9ee 0%,#f1e9d6 100%);
-  --card:#ffffff;
-  --ink:#2b2d33;
-  --muted:#7a7e87;
-  --line:#e6e1d4;
-  --accent:#7a4fb0;
-  --accent-soft:#f0e8fb;
-  --warn:#c0392b;
-  --shadow:0 1px 2px rgba(20,20,20,.04), 0 4px 16px rgba(20,20,20,.06);
-  --radius:14px;
-}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  background:var(--bg-grad);
-  color:var(--ink);
-  line-height:1.4;
-  padding:24px 16px 80px;
-  min-height:100vh;
-}
-.wrap{max-width:840px;margin:0 auto}
-h1{font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 4px}
-.subtitle{color:var(--muted);font-size:14px;margin:0 0 24px}
-.nav-pills{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 24px}
-.nav-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:var(--card);border:1px solid var(--line);border-radius:999px;color:var(--ink);font-size:13px;font-weight:500;text-decoration:none;transition:all .15s ease;box-shadow:0 1px 2px rgba(20,20,20,.03)}
-.nav-pill:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);box-shadow:0 2px 8px rgba(122,79,176,.12)}
-.nav-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(122,79,176,.25);cursor:default}
-.nav-pill.active:hover{transform:none}
-.nav-pill .ico{font-size:15px;line-height:1}
-@media (max-width:520px){.nav-pills{gap:6px}.nav-pill{padding:6px 10px;font-size:12px}}
-
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:20px;
-  margin-bottom:20px;
-  box-shadow:var(--shadow);
-}
-.card h2,.card h3{margin-top:0}
-
-form.add{display:flex;flex-direction:column;gap:10px}
-.field{display:flex;flex-direction:column;gap:6px}
-.field label{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);font-weight:600}
-input[type=text],input[type=url]{
-  padding:10px 12px;font-size:14px;border:1px solid var(--line);border-radius:10px;
-  background:#fff;font-family:inherit;color:var(--ink);
-  transition:border-color .15s, box-shadow .15s;
-}
-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-
-.btn{
-  padding:10px 18px;font-size:14px;font-weight:600;
-  border:none;border-radius:10px;cursor:pointer;font-family:inherit;
-}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:#603d8c}
-.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-
-.status{font-size:12px;color:var(--muted);margin-top:10px}
-
-.link-list{display:flex;flex-direction:column;gap:10px}
-.link-item{
-  display:flex;align-items:center;gap:12px;
-  padding:14px 16px;border:1px solid var(--line);border-radius:12px;
-  background:#fff;transition:border-color .15s, box-shadow .15s, transform .05s;
-}
-.link-item:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(122,79,176,.1)}
-.link-item .link-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--ink)}
-.link-item .link-title{font-weight:600;font-size:15px;color:var(--ink)}
-.link-item .link-url{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.link-item .link-favicon{
-  width:32px;height:32px;flex:0 0 auto;border-radius:8px;
-  background:var(--accent-soft);display:flex;align-items:center;justify-content:center;
-  font-size:18px;overflow:hidden;
-}
-.link-item .link-favicon img{width:24px;height:24px;display:block}
-.link-item .link-del{
-  background:none;border:none;color:var(--muted);cursor:pointer;
-  font-size:18px;padding:8px 10px;border-radius:8px;
-}
-.link-item .link-del:hover{background:#fdecea;color:var(--warn)}
-
-@media (max-width:720px){
-  body{padding:12px 8px 60px}
-  h1{font-size:24px}
-  .card{padding:14px}
-  .link-item{padding:12px 14px}
-  .link-item .link-del{font-size:20px;padding:10px 12px}
-}
+  /* lankar-specifikt: standardpalett (lila) anv\u00e4nds, inget override beh\u00f6vs */
+  form.add{display:flex;flex-direction:column;gap:10px}
+  .link-list{display:flex;flex-direction:column;gap:10px}
+  .link-item{
+    display:flex;align-items:center;gap:12px;
+    padding:14px 16px;border:1px solid var(--line);border-radius:12px;
+    background:#fff;transition:border-color .15s, box-shadow .15s, transform .05s;
+  }
+  .link-item:hover{border-color:var(--accent);box-shadow:0 2px 8px color-mix(in srgb, var(--accent) 12%, transparent)}
+  .link-item .link-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--ink)}
+  .link-item .link-title{font-weight:600;font-size:15px;color:var(--ink)}
+  .link-item .link-url{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .link-item .link-favicon{
+    width:32px;height:32px;flex:0 0 auto;border-radius:8px;
+    background:var(--accent-soft);display:flex;align-items:center;justify-content:center;
+    font-size:18px;overflow:hidden;
+  }
+  .link-item .link-favicon img{width:24px;height:24px;display:block}
+  .link-item .link-del{
+    background:none;border:none;color:var(--muted);cursor:pointer;
+    font-size:18px;padding:8px 10px;border-radius:8px;
+  }
+  .link-item .link-del:hover{background:#fdecea;color:var(--warn)}
+  @media (max-width:720px){
+    .link-item{padding:12px 14px}
+    .link-item .link-del{font-size:20px;padding:10px 12px}
+  }
 </style>
 </head>
 <body>
@@ -115,16 +50,7 @@ input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--a
 
 <h1>🔗 Länkar</h1>
 <p class="subtitle">Dina favoritsidor på ett ställe.</p>
-<nav class="nav-pills" aria-label="Sidor">
-  <a class="nav-pill" href="butlern.html"><span class="ico">📅</span>Planering</a>
-  <a class="nav-pill" href="loggbok.html"><span class="ico">📓</span>Logg</a>
-  <a class="nav-pill" href="tacksamhet.html"><span class="ico">🙏</span>Tack</a>
-  <a class="nav-pill" href="moon.html"><span class="ico">🌙</span>The Moon</a>
-  <a class="nav-pill" href="oracle.html"><span class="ico">🔮</span>Oracle</a>
-  <span class="nav-pill active"><span class="ico">🔗</span>Länkar</span>
-  <a class="nav-pill" href="parkering.html"><span class="ico">🅿️</span>Parkering</a>
-  <a class="nav-pill" href="ideer.html"><span class="ico">💡</span>Idéer</a>
-</nav>
+<nav data-nav-pills></nav>
 
 <div class="card">
   <h3>Lägg till länk</h3>
@@ -152,14 +78,19 @@ input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--a
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
+<script src="auth-gate.js?v=8"></script>
+<script src="app.js?v=1"></script>
 <script>
+renderNav("lankar");
+
 const statusEl = document.getElementById("status");
-const SEED_LINKS = [
-  { title: "Google Maps", url: "https://www.google.com/maps" }
-];
 let links = [];
 let db = null;
-let seeded = false;
 
 function faviconFor(url) {
   try {
@@ -228,54 +159,24 @@ document.getElementById("addForm").addEventListener("submit", e => {
   let url = document.getElementById("l_url").value.trim();
   if (!title || !url) return;
   if (!/^https?:\/\//i.test(url)) url = "https://" + url;
-  db.collection("lankar").add({
-    title, url, createdAt: Date.now()
-  }).then(() => {
-    document.getElementById("addForm").reset();
-  }).catch(err => alert("Fel: " + err.message));
+  db.collection("lankar").add({ title, url, createdAt: Date.now() })
+    .then(() => document.getElementById("addForm").reset())
+    .catch(err => alert("Fel: " + err.message));
 });
 
 render();
-</script>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
-        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
-        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
-<script src="auth-gate.js?v=8"></script>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
-  authDomain: "sommarplanering-d4300.firebaseapp.com",
-  projectId: "sommarplanering-d4300",
-  storageBucket: "sommarplanering-d4300.firebasestorage.app",
-  messagingSenderId: "261517602417",
-  appId: "1:261517602417:web:11b754c758c92cc33735d0"
-};
-function initFirebase(attempt) {
-  attempt = attempt || 0;
-  if (typeof firebase === "undefined") {
-    if (attempt > 50) { statusEl.textContent = "Firebase laddades aldrig"; return; }
-    return setTimeout(() => initFirebase(attempt+1), 100);
-  }
-  try {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-  } catch(e) { statusEl.textContent = "Init-fel: " + e.message; return; }
-
+initApp(d => {
+  db = d;
   db.collection("lankar").onSnapshot(snap => {
     links = [];
-    snap.forEach(d => links.push({ id:d.id, ...d.data() }));
+    snap.forEach(doc => links.push({ id: doc.id, ...doc.data() }));
     statusEl.textContent = links.length + " länkar";
-    if (links.length === 0 && !snap.metadata.fromCache) seedIfEmpty();
     render();
   }, err => {
     statusEl.textContent = "Firestore-fel: " + err.message;
   });
-}
-window.firebaseConfig = firebaseConfig;
-requireAuth(() => initFirebase());
+}, { onError: e => { statusEl.textContent = e.message; } });
 </script>
 
 </body>

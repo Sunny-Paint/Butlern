@@ -13,132 +13,66 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#c97a2b">
 <title>Roliga idéer</title>
-
+<link rel="stylesheet" href="styles.css?v=1">
 <style>
-:root{
-  --bg-grad:linear-gradient(180deg,#fef9ee 0%,#f1e9d6 100%);
-  --card:#ffffff;
-  --ink:#2b2d33;
-  --muted:#7a7e87;
-  --line:#e6e1d4;
-  --accent:#c97a2b;
-  --accent-soft:#fbe9d2;
-  --warn:#c0392b;
-  --shadow:0 1px 2px rgba(20,20,20,.04), 0 4px 16px rgba(20,20,20,.06);
-  --radius:14px;
-}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  background:var(--bg-grad);
-  color:var(--ink);
-  line-height:1.4;
-  padding:24px 16px 80px;
-  min-height:100vh;
-}
-.wrap{max-width:840px;margin:0 auto}
-h1{font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 4px}
-.subtitle{color:var(--muted);font-size:14px;margin:0 0 24px}
-.nav-pills{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 24px}
-.nav-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:var(--card);border:1px solid var(--line);border-radius:999px;color:var(--ink);font-size:13px;font-weight:500;text-decoration:none;transition:all .15s ease;box-shadow:0 1px 2px rgba(20,20,20,.03)}
-.nav-pill:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);box-shadow:0 2px 8px rgba(201,122,43,.12)}
-.nav-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(201,122,43,.25);cursor:default}
-.nav-pill.active:hover{transform:none}
-.nav-pill .ico{font-size:15px;line-height:1}
-@media (max-width:520px){.nav-pills{gap:6px}.nav-pill{padding:6px 10px;font-size:12px}}
+  :root{
+    --accent:#c97a2b;
+    --accent-soft:#fbe9d2;
+    --accent-dark:#a45f1f;
+  }
+  form.add{display:flex;flex-direction:column;gap:10px}
+  .btn-sm{padding:6px 10px;font-size:12px}
 
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:20px;
-  margin-bottom:20px;
-  box-shadow:var(--shadow);
-}
-.card h2,.card h3{margin-top:0}
+  .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .tag-pill{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:5px 10px;font-size:12px;font-weight:600;border-radius:999px;
+    background:#f5f0e6;color:var(--ink);border:1px solid var(--line);cursor:pointer;
+    user-select:none;
+  }
+  .tag-pill.selected{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .tag-pill.tag-add{background:#fff;border-style:dashed;color:var(--muted)}
 
-form.add{display:flex;flex-direction:column;gap:10px}
-.field{display:flex;flex-direction:column;gap:6px}
-.field label{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);font-weight:600}
-input[type=text],textarea,select{
-  padding:10px 12px;font-size:14px;border:1px solid var(--line);border-radius:10px;
-  background:#fff;font-family:inherit;color:var(--ink);
-  transition:border-color .15s, box-shadow .15s;
-}
-input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-textarea{resize:vertical;min-height:50px}
+  .filter-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:14px}
+  .filter-row .lbl{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-right:4px}
 
-.btn{
-  padding:10px 18px;font-size:14px;font-weight:600;
-  border:none;border-radius:10px;cursor:pointer;font-family:inherit;
-}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:#a45f1f}
-.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-.btn-ghost:hover{background:#f5f3ee}
-.btn-sm{padding:6px 10px;font-size:12px}
+  .idea-list{display:flex;flex-direction:column;gap:14px}
+  .idea{
+    border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fff;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .idea:hover{border-color:var(--accent);box-shadow:0 2px 8px color-mix(in srgb, var(--accent) 10%, transparent)}
+  .idea-head{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+  .idea-title{font-size:17px;font-weight:700;color:var(--ink);flex:1;min-width:0;word-break:break-word;margin:0}
+  .idea-actions{display:flex;gap:4px}
 
-.status{font-size:12px;color:var(--muted);margin-top:10px}
+  .idea-desc{font-size:14px;color:#3a2f10;white-space:pre-wrap;margin:8px 0 6px}
+  .idea-tags{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+  .idea-tag{font-size:11px;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:600}
 
-.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.tag-pill{
-  display:inline-flex;align-items:center;gap:4px;
-  padding:5px 10px;font-size:12px;font-weight:600;border-radius:999px;
-  background:#f5f0e6;color:var(--ink);border:1px solid var(--line);cursor:pointer;
-  user-select:none;
-}
-.tag-pill.selected{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
-.tag-pill.tag-add{background:#fff;border-style:dashed;color:var(--muted)}
+  .idea-tasks{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+  .idea-task{
+    display:flex;align-items:center;gap:8px;font-size:14px;
+    padding:6px 8px;border-radius:8px;background:#fafaf6;border:1px solid #efe9d8;
+  }
+  .idea-task.done{opacity:.6;text-decoration:line-through}
+  .idea-task input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer;flex:0 0 auto}
+  .idea-task .task-text{flex:1;min-width:0;word-break:break-word}
+  .idea-task .icon-btn{padding:2px 6px;font-size:12px}
 
-.filter-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:14px}
-.filter-row .lbl{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-right:4px}
+  .task-add{display:flex;gap:6px;margin-top:6px}
+  .task-add input{flex:1;padding:8px 10px;font-size:13px}
+  .task-add button{padding:8px 12px;font-size:13px}
 
-.idea-list{display:flex;flex-direction:column;gap:14px}
-.idea{
-  border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fff;
-  transition:border-color .15s, box-shadow .15s;
-}
-.idea:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(201,122,43,.08)}
-.idea-head{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
-.idea-title{font-size:17px;font-weight:700;color:var(--ink);flex:1;min-width:0;word-break:break-word;margin:0}
-.idea-actions{display:flex;gap:4px}
-.icon-btn{
-  background:none;border:none;cursor:pointer;
-  font-size:14px;padding:4px 8px;border-radius:6px;color:var(--muted);
-}
-.icon-btn:hover{background:#f5f3ee;color:var(--ink)}
+  .progress{font-size:12px;color:var(--muted);margin-top:8px}
+  .progress-bar{height:6px;background:#f0ead8;border-radius:999px;overflow:hidden;margin-top:4px}
+  .progress-bar > div{height:100%;background:var(--accent);transition:width .25s}
 
-.idea-desc{font-size:14px;color:#3a2f10;white-space:pre-wrap;margin:8px 0 6px}
-.idea-tags{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
-.idea-tag{font-size:11px;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:18px}
 
-.idea-tasks{margin-top:10px;display:flex;flex-direction:column;gap:6px}
-.idea-task{
-  display:flex;align-items:center;gap:8px;font-size:14px;
-  padding:6px 8px;border-radius:8px;background:#fafaf6;border:1px solid #efe9d8;
-}
-.idea-task.done{opacity:.6;text-decoration:line-through}
-.idea-task input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer;flex:0 0 auto}
-.idea-task .task-text{flex:1;min-width:0;word-break:break-word}
-.idea-task .icon-btn{padding:2px 6px;font-size:12px}
-
-.task-add{display:flex;gap:6px;margin-top:6px}
-.task-add input{flex:1;padding:8px 10px;font-size:13px}
-.task-add button{padding:8px 12px;font-size:13px}
-
-.progress{font-size:12px;color:var(--muted);margin-top:8px}
-.progress-bar{height:6px;background:#f0ead8;border-radius:999px;overflow:hidden;margin-top:4px}
-.progress-bar > div{height:100%;background:var(--accent);transition:width .25s}
-
-.empty{color:var(--muted);font-size:14px;text-align:center;padding:18px}
-
-@media (max-width:720px){
-  body{padding:12px 8px 60px}
-  h1{font-size:24px}
-  .card{padding:14px}
-  .idea{padding:12px 14px}
-}
+  @media (max-width:720px){
+    .idea{padding:12px 14px}
+  }
 </style>
 </head>
 <body>
@@ -147,16 +81,7 @@ textarea{resize:vertical;min-height:50px}
 
 <h1>💡 Roliga idéer</h1>
 <p class="subtitle">Spara idéer, bryt ner i delmål, bocka av.</p>
-<nav class="nav-pills" aria-label="Sidor">
-  <a class="nav-pill" href="butlern.html"><span class="ico">📅</span>Planering</a>
-  <a class="nav-pill" href="loggbok.html"><span class="ico">📓</span>Logg</a>
-  <a class="nav-pill" href="tacksamhet.html"><span class="ico">🙏</span>Tack</a>
-  <a class="nav-pill" href="moon.html"><span class="ico">🌙</span>The Moon</a>
-  <a class="nav-pill" href="oracle.html"><span class="ico">🔮</span>Oracle</a>
-  <a class="nav-pill" href="lankar.html"><span class="ico">🔗</span>Länkar</a>
-  <a class="nav-pill" href="parkering.html"><span class="ico">🅿️</span>Parkering</a>
-  <span class="nav-pill active"><span class="ico">💡</span>Idéer</span>
-</nav>
+<nav data-nav-pills></nav>
 
 <div class="card">
   <h3 id="formTitle">Ny idé</h3>
@@ -193,7 +118,16 @@ textarea{resize:vertical;min-height:50px}
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
+<script src="auth-gate.js?v=8"></script>
+<script src="app.js?v=1"></script>
 <script>
+renderNav("ideer");
+
 const statusEl = document.getElementById("status");
 const DEFAULT_TAGS = ["Roligt","Arbete","Bra för framtiden","Familj","Resa","Lärande","Hus","Hälsa"];
 const TAGS_STORE = "ideer.customTags";
@@ -290,12 +224,7 @@ document.getElementById("ideaForm").addEventListener("submit", e => {
   const title = document.getElementById("i_title").value.trim();
   const desc  = document.getElementById("i_desc").value.trim();
   if (!title) return;
-  const data = {
-    title,
-    desc,
-    tags: [...selectedTags],
-    updatedAt: Date.now()
-  };
+  const data = { title, desc, tags: [...selectedTags], updatedAt: Date.now() };
   if (editingId) {
     db.collection("ideer").doc(editingId).set(data, { merge: true })
       .then(resetForm).catch(err => alert("Fel: " + err.message));
@@ -449,52 +378,22 @@ function renderList() {
   });
 }
 
-function render() {
-  renderFilter();
-  renderList();
-}
+function render() { renderFilter(); renderList(); }
 
 renderTagPicker();
 renderFilter();
-</script>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
-        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
-        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
-<script src="auth-gate.js?v=8"></script>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
-  authDomain: "sommarplanering-d4300.firebaseapp.com",
-  projectId: "sommarplanering-d4300",
-  storageBucket: "sommarplanering-d4300.firebasestorage.app",
-  messagingSenderId: "261517602417",
-  appId: "1:261517602417:web:11b754c758c92cc33735d0"
-};
-function initFirebase(attempt) {
-  attempt = attempt || 0;
-  if (typeof firebase === "undefined") {
-    if (attempt > 50) { statusEl.textContent = "Firebase laddades aldrig"; return; }
-    return setTimeout(() => initFirebase(attempt+1), 100);
-  }
-  try {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-  } catch(e) { statusEl.textContent = "Init-fel: " + e.message; return; }
-
+initApp(d => {
+  db = d;
   db.collection("ideer").onSnapshot(snap => {
     ideas = [];
-    snap.forEach(d => ideas.push({ id:d.id, ...d.data() }));
+    snap.forEach(doc => ideas.push({ id: doc.id, ...doc.data() }));
     statusEl.textContent = ideas.length + " idéer";
     render();
   }, err => {
     statusEl.textContent = "Firestore-fel: " + err.message;
   });
-}
-window.firebaseConfig = firebaseConfig;
-requireAuth(() => initFirebase());
+}, { onError: e => { statusEl.textContent = e.message; } });
 </script>
 
 </body>

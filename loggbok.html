@@ -9,140 +9,47 @@
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Butlern">
+<meta name="apple-mobile-web-app-title" content="Loggbok">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#7a4fb0">
 <title>Min loggbok</title>
-
+<link rel="stylesheet" href="styles.css?v=1">
 <style>
-:root{
-  --bg-grad:linear-gradient(180deg,#fef9ee 0%,#f1e9d6 100%);
-  --card:#ffffff;
-  --ink:#2b2d33;
-  --muted:#7a7e87;
-  --line:#e6e1d4;
-  --accent:#7a4fb0;
-  --accent-soft:#f0e8fb;
-  --warn:#c0392b;
-  --shadow:0 1px 2px rgba(20,20,20,.04), 0 4px 16px rgba(20,20,20,.06);
-  --radius:14px;
-}
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  background:var(--bg-grad);
-  color:var(--ink);
-  line-height:1.4;
-  padding:24px 16px 80px;
-  min-height:100vh;
-}
-.wrap{max-width:840px;margin:0 auto}
-h1{font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 4px}
-.subtitle{color:var(--muted);font-size:14px;margin:0 0 24px}
-.subtitle a{color:var(--accent);text-decoration:none;margin-right:14px}
-.subtitle a:hover{text-decoration:underline}
-.nav-pills{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 24px}
-.nav-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:var(--card);border:1px solid var(--line);border-radius:999px;color:var(--ink);font-size:13px;font-weight:500;text-decoration:none;transition:all .15s ease;box-shadow:0 1px 2px rgba(20,20,20,.03)}
-.nav-pill:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);box-shadow:0 2px 8px rgba(43,108,176,.12)}
-.nav-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(43,108,176,.25);cursor:default}
-.nav-pill.active:hover{transform:none}
-.nav-pill .ico{font-size:15px;line-height:1}
-@media (max-width:520px){.nav-pills{gap:6px}.nav-pill{padding:6px 10px;font-size:12px}}
+  form.diary{display:flex;flex-direction:column;gap:14px}
 
-.card{
-  background:var(--card);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:20px;
-  margin-bottom:20px;
-  box-shadow:var(--shadow);
-}
-.card h2,.card h3{margin-top:0}
+  .mood-row{display:flex;gap:10px;flex-wrap:wrap}
+  .mood-option{
+    flex:1 1 auto;display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding:12px 8px;border:2px solid var(--line);border-radius:12px;background:#fff;
+    cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;min-width:60px;
+  }
+  .mood-option:hover{border-color:var(--accent-soft);background:#fafafa}
+  .mood-option.selected{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);font-weight:600}
+  .mood-option .emoji{font-size:28px;line-height:1}
 
-form.diary{display:flex;flex-direction:column;gap:14px}
-.field{display:flex;flex-direction:column;gap:6px}
-.field label{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);font-weight:600}
-input[type=date],input[type=datetime-local],input[type=text],input[type=number],textarea,select{
-  padding:10px 12px;font-size:14px;border:1px solid var(--line);border-radius:10px;
-  background:#fff;font-family:inherit;color:var(--ink);
-  transition:border-color .15s, box-shadow .15s;
-}
-input:focus,textarea:focus,select:focus{
-  outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
-}
-textarea{resize:vertical;min-height:60px}
+  .chart-wrap{background:#fafaf6;border:1px solid var(--line);border-radius:12px;padding:14px;overflow-x:auto}
+  .chart-controls{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
+  .chart-controls select{padding:6px 10px;font-size:13px}
+  svg.mood-chart{display:block;width:100%;height:auto;max-width:100%}
 
-.mood-row{display:flex;gap:10px;flex-wrap:wrap}
-.mood-option{
-  flex:1 1 auto;display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:12px 8px;border:2px solid var(--line);border-radius:12px;background:#fff;
-  cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;min-width:60px;
-}
-.mood-option:hover{border-color:var(--accent-soft);background:#fafafa}
-.mood-option.selected{border-color:var(--accent);background:var(--accent-soft);color:var(--ink);font-weight:600}
-.mood-option .emoji{font-size:28px;line-height:1}
+  .entry-list{display:flex;flex-direction:column;gap:12px}
+  .entry-item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+  .entry-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+  .entry-date{font-weight:700;font-size:14px}
+  .entry-time{font-size:12px;color:var(--muted)}
+  .entry-mood{font-size:22px;line-height:1}
+  .entry-spacer{flex:1}
+  .entry-tags{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+  .entry-tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .entry-block{margin-top:8px}
+  .entry-block .lbl{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);font-weight:700;margin-bottom:2px}
+  .entry-block .txt{font-size:14px;white-space:pre-wrap;color:#3a2f10}
+  .entry-actions{display:flex;gap:6px;margin-left:auto}
 
-.btn{
-  padding:10px 18px;font-size:14px;font-weight:600;
-  border:none;border-radius:10px;cursor:pointer;font-family:inherit;
-  transition:transform .05s, background .15s;
-}
-.btn:active{transform:translateY(1px)}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{background:#603d8c}
-.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-.btn-ghost:hover{background:#f5f3ee}
-
-.status{font-size:12px;color:var(--muted);margin-top:10px}
-
-.chart-wrap{
-  background:#fafaf6;border:1px solid var(--line);border-radius:12px;
-  padding:14px;overflow-x:auto;
-}
-.chart-controls{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;font-size:13px;color:var(--muted)}
-.chart-controls select{padding:6px 10px;font-size:13px}
-svg.mood-chart{display:block;width:100%;height:auto;max-width:100%}
-
-.entry-list{display:flex;flex-direction:column;gap:12px}
-.entry-item{
-  border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;
-}
-.entry-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap}
-.entry-date{font-weight:700;font-size:14px}
-.entry-time{font-size:12px;color:var(--muted)}
-.entry-mood{font-size:22px;line-height:1}
-.entry-spacer{flex:1}
-.entry-tags{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
-.entry-tag{
-  font-size:11px;padding:2px 8px;border-radius:999px;
-  background:var(--accent-soft);color:var(--accent);font-weight:600;
-}
-.entry-block{margin-top:8px}
-.entry-block .lbl{
-  font-size:10px;text-transform:uppercase;letter-spacing:0.05em;
-  color:var(--muted);font-weight:700;margin-bottom:2px;
-}
-.entry-block .txt{font-size:14px;white-space:pre-wrap;color:#3a2f10}
-.entry-actions{display:flex;gap:6px;margin-left:auto}
-.icon-btn{
-  background:none;border:none;cursor:pointer;
-  font-size:14px;padding:4px 8px;border-radius:6px;color:var(--muted);
-}
-.icon-btn:hover{background:#f5f3ee;color:var(--ink)}
-
-.privacy-note{
-  background:#fff8e7;border:1px solid #f3e2a8;color:#7a5a10;
-  padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:16px;
-}
-
-@media (max-width:720px){
-  body{padding:12px 8px 60px}
-  h1{font-size:24px}
-  .card{padding:14px}
-  .mood-option{flex:1 1 18%;padding:10px 4px;font-size:11px;min-width:50px}
-  .mood-option .emoji{font-size:24px}
-}
+  @media (max-width:720px){
+    .mood-option{flex:1 1 18%;padding:10px 4px;font-size:11px;min-width:50px}
+    .mood-option .emoji{font-size:24px}
+  }
 </style>
 </head>
 <body>
@@ -150,20 +57,8 @@ svg.mood-chart{display:block;width:100%;height:auto;max-width:100%}
 <div class="wrap">
 
 <h1>📓 Min loggbok</h1>
-<p class="subtitle">
-  <a href="butlern.html">← Kalendern</a>
-  <a href="tacksamhet.html">🙏 Tacksamhet</a>
-</p>
-<nav class="nav-pills" aria-label="Sidor">
-  <a class="nav-pill" href="butlern.html"><span class="ico">📅</span>Planering</a>
-  <span class="nav-pill active"><span class="ico">📓</span>Logg</span>
-  <a class="nav-pill" href="tacksamhet.html"><span class="ico">🙏</span>Tack</a>
-  <a class="nav-pill" href="moon.html"><span class="ico">🌙</span>The Moon</a>
-  <a class="nav-pill" href="oracle.html"><span class="ico">🔮</span>Oracle</a>
-  <a class="nav-pill" href="lankar.html"><span class="ico">🔗</span>Länkar</a>
-  <a class="nav-pill" href="parkering.html"><span class="ico">🅿️</span>Parkering</a>
-  <a class="nav-pill" href="ideer.html"><span class="ico">💡</span>Idéer</a>
-</nav>
+<p class="subtitle">Spara hur du mår och vad som händer.</p>
+<nav data-nav-pills></nav>
 
 <div class="privacy-note">🔒 Inget sparas lokalt på den här datorn — allt går direkt till molnet.</div>
 
@@ -247,7 +142,16 @@ svg.mood-chart{display:block;width:100%;height:auto;max-width:100%}
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
+<script src="auth-gate.js?v=8"></script>
+<script src="app.js?v=1"></script>
 <script>
+renderNav("loggbok");
+
 const statusEl = document.getElementById("status");
 const moodLabels = {1:"Hemsk",2:"Dålig",3:"Trött",4:"Nedstämd",5:"Okej",6:"Hyfsad",7:"Bra",8:"Glad",9:"Toppen",10:"Fantastisk"};
 const moodEmoji  = {1:"😭",2:"😞",3:"😕",4:"😟",5:"😐",6:"🙂",7:"😊",8:"😄",9:"🤩",10:"🥳"};
@@ -255,7 +159,7 @@ const moodEmoji  = {1:"😭",2:"😞",3:"😕",4:"😟",5:"😐",6:"🙂",7:"�
 let diary = [];
 let db = null;
 let editingId = null;
-let selectedMood = null; // null = inget valt
+let selectedMood = null;
 let moodSet = false;
 
 function setDefaultWhen() {
@@ -403,14 +307,12 @@ function renderList() {
     const timeEl = document.createElement("div");
     timeEl.className = "entry-time";
     timeEl.textContent = formatTime(entryTs(en));
-    const moodEl = document.createElement("div");
-    moodEl.className = "entry-mood";
-    moodEl.textContent = en.mood != null ? (moodEmoji[en.mood] || "") : "";
-    moodEl.title = en.mood != null ? (moodLabels[en.mood] || "") : "Inget humör valt";
-    const spacer = document.createElement("div");
-    spacer.className = "entry-spacer";
-    const actions = document.createElement("div");
-    actions.className = "entry-actions";
+    const moodIcon = document.createElement("div");
+    moodIcon.className = "entry-mood";
+    moodIcon.textContent = en.mood != null ? (moodEmoji[en.mood] || "") : "";
+    moodIcon.title = en.mood != null ? (moodLabels[en.mood] || "") : "Inget humör valt";
+    const spacer = document.createElement("div"); spacer.className = "entry-spacer";
+    const actions = document.createElement("div"); actions.className = "entry-actions";
     const edit = document.createElement("button");
     edit.className = "icon-btn"; edit.textContent = "✎"; edit.title = "Redigera";
     edit.onclick = () => startEdit(en.id);
@@ -418,11 +320,8 @@ function renderList() {
     del.className = "icon-btn"; del.textContent = "✕"; del.title = "Ta bort";
     del.onclick = () => removeEntry(en.id);
     actions.appendChild(edit); actions.appendChild(del);
-    head.appendChild(dateEl);
-    head.appendChild(timeEl);
-    head.appendChild(moodEl);
-    head.appendChild(spacer);
-    head.appendChild(actions);
+    head.appendChild(dateEl); head.appendChild(timeEl); head.appendChild(moodIcon);
+    head.appendChild(spacer); head.appendChild(actions);
     item.appendChild(head);
 
     if (en.energy != null) {
@@ -538,7 +437,6 @@ function render() {
   renderChart();
 }
 
-// Städa: ta bort mood=5 från gamla noteringar (de som blev automatiskt default)
 document.getElementById("cleanupMoodBtn").addEventListener("click", () => {
   if (!db) { alert("Ansluter, vänta..."); return; }
   const candidates = diary.filter(e => e.mood === 5);
@@ -548,58 +446,28 @@ document.getElementById("cleanupMoodBtn").addEventListener("click", () => {
   }
   if (!confirm(candidates.length + " noteringar har mood=5. Ta bort humöret från dessa? (kan inte ångras)")) return;
   let done = 0, fail = 0;
-  const statusEl = document.getElementById("cleanupStatus");
-  statusEl.textContent = "Rensar...";
+  const st = document.getElementById("cleanupStatus");
+  st.textContent = "Rensar...";
   Promise.all(candidates.map(e =>
     db.collection("dagbok").doc(e.id).update({ mood: null })
       .then(() => done++)
       .catch(() => fail++)
   )).then(() => {
-    statusEl.textContent = "Klar! Rensade " + done + (fail ? " (fel: " + fail + ")" : "");
+    st.textContent = "Klar! Rensade " + done + (fail ? " (fel: " + fail + ")" : "");
   });
 });
-</script>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
-        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
-        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
-<script src="auth-gate.js?v=8"></script>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
-  authDomain: "sommarplanering-d4300.firebaseapp.com",
-  projectId: "sommarplanering-d4300",
-  storageBucket: "sommarplanering-d4300.firebasestorage.app",
-  messagingSenderId: "261517602417",
-  appId: "1:261517602417:web:11b754c758c92cc33735d0"
-};
-
-function initFirebase(attempt) {
-  attempt = attempt || 0;
-  if (typeof firebase === "undefined") {
-    if (attempt > 50) { statusEl.textContent = "Firebase laddades aldrig"; return; }
-    return setTimeout(() => initFirebase(attempt+1), 100);
-  }
-  try {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    // Inaktivera persistent cache så inget hamnar i IndexedDB på den här datorn
-    db = firebase.firestore();
-    try { db.settings({ cache: { kind: "memory" } }); } catch(e) {}
-  } catch(e) { statusEl.textContent = "Init-fel: " + e.message; return; }
-
+initApp(d => {
+  db = d;
   db.collection("dagbok").onSnapshot({ includeMetadataChanges:false }, snap => {
     diary = [];
-    snap.forEach(d => diary.push({ id:d.id, ...d.data() }));
+    snap.forEach(doc => diary.push({ id: doc.id, ...doc.data() }));
     statusEl.textContent = diary.length + " noteringar (endast i molnet)";
     render();
   }, err => {
     statusEl.textContent = "Firestore-fel: " + err.message;
   });
-}
-window.firebaseConfig = firebaseConfig;
-requireAuth(() => initFirebase());
+}, { memoryCache: true, onError: e => { statusEl.textContent = e.message; } });
 </script>
 
 </body>
