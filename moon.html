@@ -13,6 +13,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a1238">
 <title>The Moon</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
 
 <style>
 :root{
@@ -213,7 +216,7 @@ form textarea{min-height:50px;resize:vertical}
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
 <script src="auth-gate.js?v=8"></script>
-<script src="app.js?v=1"></script>
+<script src="app.js?v=4"></script>
 <script>
 renderNav("moon");
 
@@ -454,5 +457,6 @@ resetForm();
 initApp(startMoon, { onError: e => { statusEl.textContent = e.message; } });
 </script>
 
+<script src="pwa.js?v=1"></script>
 </body>
 </html>

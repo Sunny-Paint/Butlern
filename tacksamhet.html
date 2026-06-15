@@ -13,6 +13,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#b8902a">
 <title>Tacksamhetsloggbok</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="styles.css?v=1">
 <style>
   :root{
@@ -109,7 +112,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
 <script src="auth-gate.js?v=8"></script>
-<script src="app.js?v=1"></script>
+<script src="app.js?v=4"></script>
 <script>
 renderNav("tacksamhet");
 
@@ -229,5 +232,6 @@ initApp(d => {
 }, { memoryCache: true, onError: e => { statusEl.textContent = e.message; } });
 </script>
 
+<script src="pwa.js?v=1"></script>
 </body>
 </html>

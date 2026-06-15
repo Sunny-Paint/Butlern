@@ -13,16 +13,39 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#7a4fb0">
 <title>Länkar</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="styles.css?v=1">
 <style>
   /* lankar-specifikt: standardpalett (lila) anv\u00e4nds, inget override beh\u00f6vs */
   form.add{display:flex;flex-direction:column;gap:10px}
   .link-list{display:flex;flex-direction:column;gap:10px}
+  .link-group{margin-bottom:18px}
+  .link-group-head{
+    display:flex;align-items:center;gap:8px;margin:6px 0 8px;
+    font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-dark);
+  }
+  .link-group-head .lg-name{cursor:pointer;padding:2px 6px;border-radius:6px}
+  .link-group-head .lg-name:hover{background:var(--accent-soft)}
+  .link-group-head .lg-count{color:var(--muted);font-weight:500;font-size:12px;text-transform:none;letter-spacing:0}
+  .link-group.drop-target > .link-list{outline:2px dashed var(--accent);outline-offset:4px;border-radius:10px}
   .link-item{
     display:flex;align-items:center;gap:12px;
     padding:14px 16px;border:1px solid var(--line);border-radius:12px;
-    background:#fff;transition:border-color .15s, box-shadow .15s, transform .05s;
+    background:#fff;transition:border-color .15s, box-shadow .15s;
   }
+  .link-item.dragging{
+    opacity:.65;box-shadow:0 8px 20px rgba(0,0,0,.18);
+    border-color:var(--accent);transform:scale(1.02);
+  }
+  .link-item .drag-handle{
+    flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    width:28px;height:36px;color:var(--muted);font-size:18px;line-height:1;
+    cursor:grab;user-select:none;touch-action:none;border-radius:6px;
+  }
+  .link-item .drag-handle:hover{background:var(--accent-soft);color:var(--accent)}
+  .link-item .drag-handle:active{cursor:grabbing}
   .link-item:hover{border-color:var(--accent);box-shadow:0 2px 8px color-mix(in srgb, var(--accent) 12%, transparent)}
   .link-item .link-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--ink)}
   .link-item .link-title{font-weight:600;font-size:15px;color:var(--ink)}
@@ -63,8 +86,14 @@
       <label>URL</label>
       <input type="url" id="l_url" placeholder="https://..." required>
     </div>
+    <div class="field">
+      <label>Grupp <span style="color:var(--muted);font-weight:400">(valfri)</span></label>
+      <input type="text" id="l_group" list="groupList" placeholder="T.ex. Familj, Jobb, Resor" autocomplete="off">
+      <datalist id="groupList"></datalist>
+    </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button type="submit" class="btn btn-primary">Spara länk</button>
+      <button type="submit" class="btn btn-primary" id="saveBtn">Spara länk</button>
+      <button type="button" class="btn btn-ghost" id="cancelBtn" style="display:none">Avbryt</button>
     </div>
   </form>
   <div class="status" id="status">Ansluter...</div>
@@ -84,13 +113,15 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
 <script src="auth-gate.js?v=8"></script>
-<script src="app.js?v=1"></script>
+<script src="app.js?v=4"></script>
 <script>
 renderNav("lankar");
 
 const statusEl = document.getElementById("status");
 let links = [];
 let db = null;
+let editingId = null;
+const UNGROUPED = "Övrigt";
 
 function faviconFor(url) {
   try {
@@ -103,53 +134,160 @@ function render() {
   const list = document.getElementById("linkList");
   list.innerHTML = "";
   document.getElementById("emptyMsg").style.display = links.length ? "none" : "";
-  const sorted = [...links].sort((a,b) => (a.createdAt||0) - (b.createdAt||0));
-  sorted.forEach(l => {
-    const item = document.createElement("div");
-    item.className = "link-item";
 
-    const fav = document.createElement("div");
-    fav.className = "link-favicon";
-    const favUrl = faviconFor(l.url);
-    if (favUrl) {
-      const img = document.createElement("img");
-      img.src = favUrl;
-      img.alt = "";
-      img.onerror = () => { fav.textContent = "🔗"; };
-      fav.appendChild(img);
-    } else {
-      fav.textContent = "🔗";
-    }
-    item.appendChild(fav);
-
-    const a = document.createElement("a");
-    a.className = "link-main";
-    a.href = l.url;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    const title = document.createElement("span");
-    title.className = "link-title";
-    title.textContent = l.title || l.url;
-    const urlEl = document.createElement("span");
-    urlEl.className = "link-url";
-    urlEl.textContent = l.url;
-    a.appendChild(title);
-    a.appendChild(urlEl);
-    item.appendChild(a);
-
-    const del = document.createElement("button");
-    del.className = "link-del";
-    del.textContent = "✕";
-    del.title = "Ta bort";
-    del.onclick = () => {
-      if (!db) return;
-      if (!confirm("Ta bort \"" + (l.title || l.url) + "\"?")) return;
-      db.collection("lankar").doc(l.id).delete().catch(err => alert("Fel: " + err.message));
-    };
-    item.appendChild(del);
-
-    list.appendChild(item);
+  // Sortera alla länkar på order
+  const sorted = [...links].sort((a,b) => {
+    const oa = (typeof a.order === "number") ? a.order : (a.createdAt || 0);
+    const ob = (typeof b.order === "number") ? b.order : (b.createdAt || 0);
+    return oa - ob;
   });
+
+  // Gruppera i ordning de först dyker upp
+  const groupOrder = [];
+  const byGroup = new Map();
+  for (const l of sorted) {
+    const g = (l.group || "").trim() || "";
+    if (!byGroup.has(g)) { byGroup.set(g, []); groupOrder.push(g); }
+    byGroup.get(g).push(l);
+  }
+
+  // Uppdatera datalist med befintliga grupper
+  const dl = document.getElementById("groupList");
+  if (dl) {
+    dl.innerHTML = "";
+    [...byGroup.keys()].filter(g => g).sort((a,b) => a.localeCompare(b, "sv")).forEach(g => {
+      const o = document.createElement("option"); o.value = g; dl.appendChild(o);
+    });
+  }
+
+  const hasGroups = groupOrder.some(g => g !== "");
+
+  for (const g of groupOrder) {
+    const section = document.createElement("div");
+    section.className = "link-group";
+    section.dataset.group = g;
+
+    if (hasGroups) {
+      const head = document.createElement("div");
+      head.className = "link-group-head";
+      const name = document.createElement("span");
+      name.className = "lg-name";
+      name.textContent = g || UNGROUPED;
+      name.title = g ? "Klicka för att döpa om gruppen" : "Länkar utan grupp";
+      if (g) name.addEventListener("click", () => renameGroup(g));
+      head.appendChild(name);
+      const cnt = document.createElement("span");
+      cnt.className = "lg-count";
+      cnt.textContent = byGroup.get(g).length + " st";
+      head.appendChild(cnt);
+      section.appendChild(head);
+    }
+
+    const groupList = document.createElement("div");
+    groupList.className = "link-list";
+    groupList.dataset.group = g;
+
+    byGroup.get(g).forEach(l => groupList.appendChild(renderItem(l)));
+    section.appendChild(groupList);
+    list.appendChild(section);
+  }
+}
+
+function renderItem(l) {
+  const item = document.createElement("div");
+  item.className = "link-item";
+  item.dataset.id = l.id;
+  item.dataset.group = l.group || "";
+
+  const handle = document.createElement("div");
+  handle.className = "drag-handle";
+  handle.title = "Dra för att sortera / flytta mellan grupper";
+  handle.textContent = "☰";
+  attachDrag(handle, item);
+  item.appendChild(handle);
+
+  const fav = document.createElement("div");
+  fav.className = "link-favicon";
+  const favUrl = faviconFor(l.url);
+  if (favUrl) {
+    const img = document.createElement("img");
+    img.src = favUrl;
+    img.alt = "";
+    img.onerror = () => { fav.textContent = "🔗"; };
+    fav.appendChild(img);
+  } else {
+    fav.textContent = "🔗";
+  }
+  item.appendChild(fav);
+
+  const a = document.createElement("a");
+  a.className = "link-main";
+  a.href = l.url;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+  const title = document.createElement("span");
+  title.className = "link-title";
+  title.textContent = l.title || l.url;
+  const urlEl = document.createElement("span");
+  urlEl.className = "link-url";
+  urlEl.textContent = l.url;
+  a.appendChild(title);
+  a.appendChild(urlEl);
+  item.appendChild(a);
+
+  const edit = document.createElement("button");
+  edit.className = "link-del";
+  edit.textContent = "✎";
+  edit.title = "Redigera";
+  edit.onclick = () => startEdit(l);
+  item.appendChild(edit);
+
+  const del = document.createElement("button");
+  del.className = "link-del";
+  del.textContent = "✕";
+  del.title = "Ta bort";
+  del.onclick = () => {
+    if (!db) return;
+    if (!confirm("Ta bort \"" + (l.title || l.url) + "\"?")) return;
+    db.collection("lankar").doc(l.id).delete().catch(err => alert("Fel: " + err.message));
+  };
+  item.appendChild(del);
+
+  return item;
+}
+
+function startEdit(l) {
+  editingId = l.id;
+  document.getElementById("l_title").value = l.title || "";
+  document.getElementById("l_url").value   = l.url || "";
+  document.getElementById("l_group").value = l.group || "";
+  document.getElementById("saveBtn").textContent = "Spara ändringar";
+  document.getElementById("cancelBtn").style.display = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function resetForm() {
+  editingId = null;
+  document.getElementById("addForm").reset();
+  document.getElementById("saveBtn").textContent = "Spara länk";
+  document.getElementById("cancelBtn").style.display = "none";
+}
+
+document.getElementById("cancelBtn").addEventListener("click", resetForm);
+
+function renameGroup(oldName) {
+  if (!db) return;
+  const nn = prompt("Nytt namn på gruppen \"" + oldName + "\" (lämna tomt för att ta bort gruppen):", oldName);
+  if (nn === null) return;
+  const newName = nn.trim();
+  if (newName === oldName) return;
+  const affected = links.filter(l => (l.group || "") === oldName);
+  if (!affected.length) return;
+  const batch = db.batch();
+  affected.forEach(l => {
+    batch.update(db.collection("lankar").doc(l.id), { group: newName });
+  });
+  batch.commit().catch(err => alert("Kunde inte byta namn: " + err.message));
 }
 
 document.getElementById("addForm").addEventListener("submit", e => {
@@ -157,12 +295,99 @@ document.getElementById("addForm").addEventListener("submit", e => {
   if (!db) { alert("Ansluter, vänta..."); return; }
   const title = document.getElementById("l_title").value.trim();
   let url = document.getElementById("l_url").value.trim();
+  const group = document.getElementById("l_group").value.trim();
   if (!title || !url) return;
   if (!/^https?:\/\//i.test(url)) url = "https://" + url;
-  db.collection("lankar").add({ title, url, createdAt: Date.now() })
-    .then(() => document.getElementById("addForm").reset())
-    .catch(err => alert("Fel: " + err.message));
+  if (editingId) {
+    db.collection("lankar").doc(editingId).update({ title, url, group })
+      .then(resetForm).catch(err => alert("Fel: " + err.message));
+  } else {
+    const maxOrder = links.reduce((m, l) => {
+      const o = (typeof l.order === "number") ? l.order : 0;
+      return o > m ? o : m;
+    }, 0);
+    db.collection("lankar").add({ title, url, group, createdAt: Date.now(), order: maxOrder + 1 })
+      .then(resetForm).catch(err => alert("Fel: " + err.message));
+  }
 });
+
+/* === Dra-att-sortera + dra-mellan-grupper (Pointer Events) === */
+let dragState = null;
+
+function attachDrag(handle, item) {
+  handle.addEventListener("pointerdown", e => {
+    if (e.button !== undefined && e.button !== 0) return;
+    e.preventDefault();
+    const root = document.getElementById("linkList");
+    item.classList.add("dragging");
+    handle.setPointerCapture(e.pointerId);
+    dragState = { item, root, pointerId: e.pointerId, moved: false };
+  });
+
+  handle.addEventListener("pointermove", e => {
+    if (!dragState || e.pointerId !== dragState.pointerId) return;
+    e.preventDefault();
+    dragState.moved = true;
+    const { item, root } = dragState;
+
+    // 1) Hitta vilken grupp-container pekaren är över
+    const groups = [...root.querySelectorAll(".link-group")];
+    let targetSection = item.closest(".link-group");
+    for (const sec of groups) {
+      const r = sec.getBoundingClientRect();
+      if (e.clientY >= r.top && e.clientY <= r.bottom) { targetSection = sec; break; }
+    }
+    if (!targetSection) return;
+    const targetList = targetSection.querySelector(".link-list");
+
+    // Visuell drop-markering
+    groups.forEach(s => s.classList.toggle("drop-target", s === targetSection));
+
+    // 2) Hitta vilken rad i mål-listan pekaren är över
+    const siblings = [...targetList.querySelectorAll(".link-item")].filter(n => n !== item);
+    if (siblings.length === 0) {
+      if (item.parentNode !== targetList) targetList.appendChild(item);
+      return;
+    }
+    let placed = false;
+    for (const sib of siblings) {
+      const r = sib.getBoundingClientRect();
+      if (e.clientY < r.top + r.height / 2) {
+        if (sib.previousElementSibling !== item) targetList.insertBefore(item, sib);
+        placed = true; break;
+      }
+    }
+    if (!placed) {
+      const last = siblings[siblings.length - 1];
+      if (last.nextElementSibling !== item) targetList.insertBefore(item, last.nextElementSibling);
+    }
+  });
+
+  const finish = e => {
+    if (!dragState || e.pointerId !== dragState.pointerId) return;
+    const { item, root, moved } = dragState;
+    item.classList.remove("dragging");
+    root.querySelectorAll(".link-group.drop-target").forEach(s => s.classList.remove("drop-target"));
+    try { handle.releasePointerCapture(e.pointerId); } catch (err) {}
+    dragState = null;
+    if (!moved || !db) return;
+
+    // Skriv ny grupp + ny ordning för alla länkar baserat på DOM-ordningen
+    const batch = db.batch();
+    let idx = 0;
+    root.querySelectorAll(".link-group").forEach(sec => {
+      const group = sec.dataset.group || "";
+      sec.querySelectorAll(".link-item").forEach(node => {
+        const id = node.dataset.id;
+        idx++;
+        batch.update(db.collection("lankar").doc(id), { group, order: idx });
+      });
+    });
+    batch.commit().catch(err => alert("Kunde inte spara ordning: " + err.message));
+  };
+  handle.addEventListener("pointerup", finish);
+  handle.addEventListener("pointercancel", finish);
+}
 
 render();
 
@@ -179,5 +404,6 @@ initApp(d => {
 }, { onError: e => { statusEl.textContent = e.message; } });
 </script>
 
+<script src="pwa.js?v=1"></script>
 </body>
 </html>

@@ -10,6 +10,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1a1238">
 <title>Oracle</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
 
 <style>
 :root{
@@ -153,7 +156,7 @@ h1{margin:0 0 4px;font-size:30px;font-weight:600;letter-spacing:0.02em;text-alig
 
 </div>
 
-<script src="app.js?v=1"></script>
+<script src="app.js?v=4"></script>
 <script>
 renderNav("oracle");
 
@@ -308,11 +311,11 @@ const SPREADS = [
     positions:["Ett kort"]
   },
   {
-    id:"yesno", name:"Ja / Nej", info:"Ett kort. Drag ett kort med ditt jadagsfrågande i tanken.",
+    id:"yesno", name:"Ja / Nej", info:"Ett kort för ja eller nej.",
     positions:["Svaret"], yesno:true
   },
   {
-    id:"past", name:"Dåtid · Nutid · Framtid", info:"Tre kort — flödet genom tiden.",
+    id:"past", name:"Dåtid · Nutid · Framtid", info:"Tre kort — Dåtid · Nutid · Framtid.",
     positions:["Dåtid","Nutid","Framtid"]
   },
   {
@@ -455,5 +458,6 @@ drawBtn.addEventListener("click", () => {
   renderCards(currentSpread, cards);
 });
 </script>
+<script src="pwa.js?v=1"></script>
 </body>
 </html>

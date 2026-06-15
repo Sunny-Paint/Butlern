@@ -13,6 +13,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#2b6cb0">
 <title>Parkering</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="styles.css?v=1">
 <style>
   :root{
@@ -32,10 +35,19 @@
   .result-time{font-size:13px;color:var(--accent);font-weight:600;white-space:nowrap}
   .result-meta{font-size:11px;color:var(--muted);margin-top:4px}
   .result-rules{display:flex;flex-direction:column;gap:4px;margin-top:8px}
-  .result-rule{display:flex;align-items:baseline;gap:8px;font-size:13px;flex-wrap:wrap}
+  .result-rule{display:flex;align-items:baseline;gap:8px;font-size:13px;flex-wrap:wrap;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background .1s}
+  .result-rule:hover{background:var(--accent-soft)}
+  .result-rule.open{background:var(--accent-soft)}
   .result-rule .rt{font-weight:600;color:var(--accent);min-width:90px;white-space:nowrap}
   .result-rule .rd{color:var(--ink)}
   .result-rule .rday{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;min-width:54px}
+  .result-rule .chev{margin-left:auto;color:var(--muted);font-size:12px;transition:transform .15s}
+  .result-rule.open .chev{transform:rotate(90deg)}
+  .rule-details{margin:4px 0 6px 8px;padding:10px 12px;border-left:3px solid var(--accent);background:#fafbfd;border-radius:0 8px 8px 0;font-size:12px;display:none}
+  .rule-details.open{display:block}
+  .rule-details dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0}
+  .rule-details dt{font-weight:600;color:var(--muted);white-space:nowrap}
+  .rule-details dd{margin:0;color:var(--ink);word-break:break-word}
 
   .muted{color:var(--muted);font-size:13px;margin:8px 0}
   .help{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
@@ -75,7 +87,7 @@
     <div class="car-form-row">
       <button type="button" class="btn btn-primary" id="carEditBtn">Uppdatera</button>
       <button type="button" class="btn btn-ghost" id="carClearBtn" style="display:none">Rensa</button>
-      <button type="button" class="btn btn-ghost" id="carSearchBtn" style="display:none">Sök regler vid bilen</button>
+      <button type="button" class="btn btn-ghost" id="carSearchBtn" style="display:none">Sök städdagar vid bilen</button>
     </div>
   </div>
   <form class="car-form" id="carForm" style="display:none;margin-top:10px" autocomplete="off">
@@ -122,6 +134,12 @@
         </select>
       </div>
     </div>
+    <div class="row" style="margin-bottom:10px">
+      <div class="field" style="flex:1 1 100%">
+        <label for="fStreet">Gata (valfri — visar alla dagar för matchande gator)</label>
+        <input type="text" id="fStreet" placeholder="T.ex. Skaraborgsgatan" autocomplete="off">
+      </div>
+    </div>
     <div class="row">
       <button type="submit" class="btn btn-primary" id="searchBtn">Sök</button>
       <button type="button" class="btn btn-ghost" id="clearCacheBtn">Töm cache</button>
@@ -158,7 +176,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="auth-gate.js?v=8"></script>
-<script src="app.js?v=1"></script>
+<script src="app.js?v=4"></script>
 <script>
 renderNav("parkering");
 
@@ -176,6 +194,7 @@ const resultsEmpty= document.getElementById("resultsEmpty");
 const resultsTitle= document.getElementById("resultsTitle");
 const fArea = document.getElementById("fArea");
 const fDay  = document.getElementById("fDay");
+const fStreet = document.getElementById("fStreet");
 const fKey  = document.getElementById("fKey");
 
 (function init(){
@@ -309,11 +328,15 @@ document.getElementById("searchForm").addEventListener("submit", async e => {
   resultsEmpty.style.display = "none";
   const area = fArea.value.trim();
   const daySel = fDay.value;
+  const streetQ = fStreet.value.trim().toLowerCase();
   if (!area) { statusEl.textContent = "Fyll i område"; return; }
   try { localStorage.setItem(AREA_STORE, area); } catch(e) {}
 
   let wantDay = null, dayLabel = "";
-  if (daySel === "today") {
+  if (streetQ) {
+    wantDay = null;
+    dayLabel = 'gata "' + streetQ + '" · alla dagar';
+  } else if (daySel === "today") {
     wantDay = WEEKDAYS_SV[new Date().getDay()];
     dayLabel = "idag (" + wantDay + ")";
   } else if (daySel === "all") {
@@ -332,11 +355,17 @@ document.getElementById("searchForm").addEventListener("submit", async e => {
     statusEl.textContent = boendeOnly.length + " boende-föreskrifter"
       + (fromCache ? " (cache)" : "") + " · filtrerar...";
     const filtered = boendeOnly.filter(f => {
+      const info = featureInfo(f);
+      if (streetQ) {
+        const s = (info.street || "").toLowerCase();
+        if (!s.includes(streetQ)) return false;
+      }
       if (!wantDay) return true;
-      const day = (featureInfo(f).day || "").toString().toLowerCase();
+      const day = (info.day || "").toString().toLowerCase();
       return day.includes(wantDay);
     });
-    renderResults(filtered, area, dayLabel, !wantDay);
+    // När en gata söks vill vi alltid visa veckodagar i resultatet (third arg = "all")
+    renderResults(filtered, area, dayLabel, !wantDay || !!streetQ);
     statusEl.textContent = filtered.length + " träff(ar) · " + dayLabel
       + " (" + boendeOnly.length + " boende totalt"
       + (fromCache ? ", cache" : "") + ")";
@@ -361,7 +390,7 @@ function renderResults(features, area, dayLabel, all) {
     const toT   = formatTime(info.to);
     const day   = all ? (info.day || "") : "";
     const key   = day + "|" + fromT + "-" + toT + "|" + (info.desc || "");
-    if (!grp.rules.has(key)) grp.rules.set(key, { day, fromT, toT, desc: info.desc });
+    if (!grp.rules.has(key)) grp.rules.set(key, { day, fromT, toT, desc: info.desc, info, raw: info.raw });
   }
 
   const sorted = [...groups.values()].sort((a,b) => a.street.localeCompare(b.street, "sv"));
@@ -381,7 +410,7 @@ function renderResults(features, area, dayLabel, all) {
     head.appendChild(street);
     if (rules.length > 1) {
       const cnt = document.createElement("div");
-      cnt.className = "result-time"; cnt.textContent = rules.length + " regler";
+      cnt.className = "result-time"; cnt.textContent = rules.length + " städdagar";
       head.appendChild(cnt);
     }
     item.appendChild(head);
@@ -395,6 +424,7 @@ function renderResults(features, area, dayLabel, all) {
     const rulesEl = document.createElement("div"); rulesEl.className = "result-rules";
     for (const r of rules) {
       const row = document.createElement("div"); row.className = "result-rule";
+      row.title = "Klicka för mer info";
       if (r.day) {
         const dEl = document.createElement("span");
         dEl.className = "rday"; dEl.textContent = r.day.slice(0,3);
@@ -409,7 +439,20 @@ function renderResults(features, area, dayLabel, all) {
         descEl.className = "rd"; descEl.textContent = r.desc;
         row.appendChild(descEl);
       }
+      const chev = document.createElement("span");
+      chev.className = "chev"; chev.textContent = "›";
+      row.appendChild(chev);
       rulesEl.appendChild(row);
+
+      const details = document.createElement("div");
+      details.className = "rule-details";
+      details.appendChild(buildRuleDetails(r, grp));
+      rulesEl.appendChild(details);
+
+      row.addEventListener("click", () => {
+        const isOpen = row.classList.toggle("open");
+        details.classList.toggle("open", isOpen);
+      });
     }
     item.appendChild(rulesEl);
     resultsEl.appendChild(item);
@@ -421,11 +464,54 @@ function renderResults(features, area, dayLabel, all) {
     note.textContent = "(" + skipped + " poster utan gatunamn döldes)";
     resultsEl.appendChild(note);
   }
-  resultsTitle.textContent += " · " + sorted.length + " gator, " + totalRules + " regler";
+  resultsTitle.textContent += " · " + sorted.length + " gator, " + totalRules + " städdag" + (totalRules === 1 ? "" : "ar");
 }
 
 function escapeHtml(s) {
   return String(s).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+}
+
+function buildRuleDetails(r, grp) {
+  const dl = document.createElement("dl");
+  const fields = [];
+  if (r.day)         fields.push(["Veckodag", r.day]);
+  if (r.fromT && r.toT) fields.push(["Tid", r.fromT + "–" + r.toT]);
+  else if (r.fromT)  fields.push(["Tid", r.fromT]);
+  if (r.desc)        fields.push(["Beskrivning", r.desc]);
+  if (grp && grp.street)   fields.push(["Gata", grp.street]);
+  if (grp && grp.district) fields.push(["Område", grp.district]);
+  if (r.info && r.info.section)  fields.push(["Sektion", r.info.section]);
+  if (r.info && r.info.district) fields.push(["Parkeringsdistrikt", r.info.district]);
+
+  for (const [k, v] of fields) {
+    const dt = document.createElement("dt"); dt.textContent = k;
+    const dd = document.createElement("dd"); dd.textContent = v;
+    dl.appendChild(dt); dl.appendChild(dd);
+  }
+
+  // Rådata-fallback: visa allt annat från properties som inte redan visats
+  if (r.raw && typeof r.raw === "object") {
+    const shown = new Set(["STREET_NAME","STREET","Street","street","Adress","adress","ADRESS","gatunamn","NAMN","namn","Name","name","CITY_DISTRICT","section","Section","stracka","strackbeskrivning","DELSTRACKA","delstracka","sida","SIDA","PARKING_DISTRICT","START_WEEKDAY","WEEKDAY","weekday","Veckodag","veckodag","DAG","dag","START_TIME","STARTTIME","starttime","FRAN","fran","tid_fran","TID_FRAN","start","Start","END_TIME","ENDTIME","endtime","TILL","till","tid_till","TID_TILL","end","End","slut","Slut","VF_PLATS_TYP","BESKRIVNING","beskrivning","TEXT","text","desc","description"].map(s => s.toLowerCase()));
+    const extra = [];
+    for (const key of Object.keys(r.raw)) {
+      if (shown.has(key.toLowerCase())) continue;
+      const v = r.raw[key];
+      if (v == null || v === "") continue;
+      if (typeof v === "object") continue;
+      extra.push([key, String(v)]);
+    }
+    if (extra.length) {
+      const dt = document.createElement("dt"); dt.textContent = "—";
+      dt.style.gridColumn = "1 / -1"; dt.style.color = "#bbb"; dt.style.margin = "6px 0 2px";
+      dl.appendChild(dt);
+      for (const [k, v] of extra) {
+        const dtE = document.createElement("dt"); dtE.textContent = k;
+        const ddE = document.createElement("dd"); ddE.textContent = v;
+        dl.appendChild(dtE); dl.appendChild(ddE);
+      }
+    }
+  }
+  return dl;
 }
 
 // === Var står bilen? ===
@@ -545,5 +631,6 @@ function paintCountdown() {
 initApp(d => { initCarTracker(d); });
 </script>
 
+<script src="pwa.js?v=1"></script>
 </body>
 </html>

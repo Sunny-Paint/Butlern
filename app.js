@@ -18,14 +18,16 @@ window.firebaseConfig = {
 };
 
 const NAV_LINKS = [
-  { key: "butlern",    href: "butlern.html",    icon: "\ud83d\udcc5",     label: "Planering" },
-  { key: "loggbok",    href: "loggbok.html",    icon: "\ud83d\udcd3",     label: "Logg" },
-  { key: "tacksamhet", href: "tacksamhet.html", icon: "\ud83d\ude4f",     label: "Tack" },
-  { key: "moon",       href: "moon.html",       icon: "\ud83c\udf19",     label: "The Moon" },
-  { key: "oracle",     href: "oracle.html",     icon: "\ud83d\udd2e",     label: "Oracle" },
-  { key: "lankar",     href: "lankar.html",     icon: "\ud83d\udd17",     label: "L\u00e4nkar" },
-  { key: "parkering",  href: "parkering.html",  icon: "\ud83c\udd7f\ufe0f", label: "Parkering" },
-  { key: "ideer",      href: "ideer.html",      icon: "\ud83d\udca1",     label: "Id\u00e9er" }
+  { key: "butlern",     href: "butlern.html",     icon: "\ud83d\udcc5",     label: "Planering" },
+  { key: "todo",        href: "todo.html",        icon: "\ud83d\udcdd",     label: "Todo" },
+  { key: "ideer",       href: "ideer.html",       icon: "\ud83d\udca1",     label: "Id\u00e9er" },
+  { key: "loggbok",     href: "loggbok.html",     icon: "\ud83d\udcd3",     label: "Logg" },
+  { key: "tacksamhet",  href: "tacksamhet.html",  icon: "\ud83d\ude4f",     label: "Tack" },
+  { key: "mindfulness", href: "mindfulness.html", icon: "\ud83e\uddd8",     label: "Mindfulness" },
+  { key: "moon",        href: "moon.html",        icon: "\ud83c\udf19",     label: "The Moon" },
+  { key: "oracle",      href: "oracle.html",      icon: "\ud83d\udd2e",     label: "Oracle" },
+  { key: "lankar",      href: "lankar.html",      icon: "\ud83d\udd17",     label: "L\u00e4nkar" },
+  { key: "parkering",   href: "parkering.html",   icon: "\ud83c\udd7f\ufe0f", label: "Parkering" }
 ];
 
 function renderNav(activeKey) {
@@ -62,8 +64,23 @@ function initApp(onReady, opts) {
     const db = firebase.firestore();
     if (opts.memoryCache) {
       try { db.settings({ cache: { kind: "memory" } }); } catch (e) {}
+      onReady(db);
+    } else {
+      // Aktivera offline-persistens (IndexedDB) så appen funkar utan nät.
+      // Måste ske före första query. Failar i privat läge eller om annan
+      // flik redan håller låset – då fortsätter vi utan persistens.
+      db.enablePersistence()
+        .catch(err => {
+          if (err && err.code === "failed-precondition") {
+            console.warn("[Firestore] offline-persistens av (flera flikar öppna)");
+          } else if (err && err.code === "unimplemented") {
+            console.warn("[Firestore] webbläsaren stödjer inte offline-persistens");
+          } else {
+            console.warn("[Firestore] persistens-fel:", err);
+          }
+        })
+        .finally(() => onReady(db));
     }
-    onReady(db);
   };
   if (typeof requireAuth === "function") {
     requireAuth(tryInit);

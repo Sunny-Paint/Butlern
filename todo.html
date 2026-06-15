@@ -9,19 +9,19 @@
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="apple-touch-icon" href="icon.svg">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Idéer">
+<meta name="apple-mobile-web-app-title" content="Todo">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#c97a2b">
-<title>Roliga idéer</title>
+<meta name="theme-color" content="#3a7c87">
+<title>Todo</title>
 <link rel="manifest" href="/manifest.json">
 
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="styles.css?v=1">
 <style>
   :root{
-    --accent:#c97a2b;
-    --accent-soft:#fbe9d2;
-    --accent-dark:#a45f1f;
+    --accent:#3a7c87;
+    --accent-soft:#d6eaee;
+    --accent-dark:#285a64;
   }
   form.add{display:flex;flex-direction:column;gap:10px}
   .btn-sm{padding:6px 10px;font-size:12px}
@@ -30,7 +30,7 @@
   .tag-pill{
     display:inline-flex;align-items:center;gap:4px;
     padding:5px 10px;font-size:12px;font-weight:600;border-radius:999px;
-    background:#f5f0e6;color:var(--ink);border:1px solid var(--line);cursor:pointer;
+    background:#eef3f4;color:var(--ink);border:1px solid var(--line);cursor:pointer;
     user-select:none;
   }
   .tag-pill.selected{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
@@ -45,6 +45,14 @@
   .tag-pill .tag-x:hover{background:#c0392b;color:#fff}
   .tag-pill.tag-add .tag-x{display:none}
 
+  .calendar-toggle{
+    display:flex;align-items:center;gap:8px;
+    padding:10px 12px;border:1px dashed var(--line);border-radius:10px;
+    background:#fafdfd;font-size:14px;cursor:pointer;user-select:none;
+  }
+  .calendar-toggle input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+  .calendar-toggle small{color:var(--muted);font-size:12px;margin-left:4px}
+
   .filter-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:14px}
   .filter-row .lbl{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-right:4px}
 
@@ -53,19 +61,19 @@
     border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fff;
     transition:border-color .15s, box-shadow .15s;
   }
-  .idea:hover{border-color:var(--accent);box-shadow:0 2px 8px color-mix(in srgb, var(--accent) 10%, transparent)}
+  .idea:hover{border-color:var(--accent);box-shadow:0 2px 8px color-mix(in srgb, var(--accent) 12%, transparent)}
   .idea-head{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
   .idea-title{font-size:17px;font-weight:700;color:var(--ink);flex:1;min-width:0;word-break:break-word;margin:0}
   .idea-actions{display:flex;gap:4px}
 
-  .idea-desc{font-size:14px;color:#3a2f10;white-space:pre-wrap;margin:8px 0 6px}
+  .idea-desc{font-size:14px;color:#1f2f33;white-space:pre-wrap;margin:8px 0 6px}
   .idea-tags{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
   .idea-tag{font-size:11px;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:600}
 
   .idea-tasks{margin-top:10px;display:flex;flex-direction:column;gap:6px}
   .idea-task{
     display:flex;align-items:center;gap:8px;font-size:14px;
-    padding:6px 8px;border-radius:8px;background:#fafaf6;border:1px solid #efe9d8;
+    padding:6px 8px;border-radius:8px;background:#f7fafa;border:1px solid #e2ecee;
   }
   .idea-task.done{opacity:.6;text-decoration:line-through}
   .idea-task input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer;flex:0 0 auto}
@@ -77,10 +85,23 @@
   .task-add button{padding:8px 12px;font-size:13px}
 
   .progress{font-size:12px;color:var(--muted);margin-top:8px}
-  .progress-bar{height:6px;background:#f0ead8;border-radius:999px;overflow:hidden;margin-top:4px}
+  .progress-bar{height:6px;background:#e7eff1;border-radius:999px;overflow:hidden;margin-top:4px}
   .progress-bar > div{height:100%;background:var(--accent);transition:width .25s}
 
   .empty{color:var(--muted);font-size:14px;text-align:center;padding:18px}
+
+  .prio-badge,.due-badge,.cal-badge{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:600;flex:0 0 auto;white-space:nowrap}
+  .prio-1{background:#fde2e2;color:#a32b2b;border:1px solid #f3b6b6}
+  .prio-2{background:#fef3c7;color:#92400e;border:1px solid #f4d99a}
+  .prio-3{background:#dcfce7;color:#166534;border:1px solid #b8e6c8}
+  .due-badge{background:#eef3f4;color:var(--accent-dark);border:1px solid #d4e3e6}
+  .due-today{background:#fef3c7;color:#92400e;border-color:#f4d99a}
+  .due-overdue{background:#fde2e2;color:#a32b2b;border-color:#f3b6b6}
+  .cal-badge{background:#e0e7ff;color:#3730a3;border:1px solid #c7d2fe}
+
+  .form-row{display:flex;gap:10px;flex-wrap:wrap}
+  .form-row .field{flex:1 1 140px;min-width:140px}
+  .form-row select,.form-row input[type=date]{padding:8px 10px;font-size:14px;width:100%}
 
   @media (max-width:720px){
     .idea{padding:12px 14px}
@@ -91,27 +112,46 @@
 
 <div class="wrap">
 
-<h1>💡 Roliga idéer</h1>
-<p class="subtitle">Spara idéer, bryt ner i delmål, bocka av.</p>
+<h1>📝 Todo</h1>
+<p class="subtitle">Saker som måste göras — bryt ner och bocka av.</p>
 <nav data-nav-pills></nav>
 
 <div class="card">
-  <h3 id="formTitle">Ny idé</h3>
+  <h3 id="formTitle">Ny todo</h3>
   <form class="add" id="ideaForm" autocomplete="off">
     <div class="field">
       <label>Titel</label>
-      <input type="text" id="i_title" placeholder="T.ex. Lära mig surfa" required>
+      <input type="text" id="i_title" placeholder="T.ex. Boka tid med tandläkaren" required>
     </div>
     <div class="field">
       <label>Beskrivning (valfri)</label>
       <textarea id="i_desc" placeholder="Mer detaljer..."></textarea>
     </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="i_prio">Prio</label>
+        <select id="i_prio">
+          <option value="1">🔴 Hög</option>
+          <option value="2" selected>🟡 Medel</option>
+          <option value="3">🟢 Låg</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="i_due">Klart senast</label>
+        <input type="date" id="i_due">
+      </div>
+    </div>
     <div class="field">
       <label>Taggar</label>
       <div class="tag-row" id="tagPicker"></div>
     </div>
+    <label class="calendar-toggle" for="i_calendar">
+      <input type="checkbox" id="i_calendar">
+      📅 Spara i kalender
+      <small>(kryssas i automatiskt när du väljer datum)</small>
+    </label>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <button type="submit" id="saveBtn" class="btn btn-primary">Spara idé</button>
+      <button type="submit" id="saveBtn" class="btn btn-primary">Spara todo</button>
       <button type="button" id="cancelBtn" class="btn btn-ghost" style="display:none">Avbryt</button>
     </div>
   </form>
@@ -119,13 +159,13 @@
 </div>
 
 <div class="card">
-  <h3>Mina idéer</h3>
+  <h3>Mina todos</h3>
   <div class="filter-row">
     <span class="lbl">Filter:</span>
     <div class="tag-row" id="filterPicker"></div>
   </div>
   <div class="idea-list" id="ideaList"></div>
-  <div id="emptyMsg" class="empty" style="display:none">Inga idéer än — lägg till en ovan!</div>
+  <div id="emptyMsg" class="empty" style="display:none">Inga todos än — lägg till en ovan!</div>
 </div>
 
 </div>
@@ -140,18 +180,21 @@
 <script src="task-list.js?v=5"></script>
 <script>
 initTaskList({
-  collection: "ideer",
-  navKey: "ideer",
-  defaultTags: ["Roligt","Arbete","Bra för framtiden","Familj","Resa","Lärande","Hus","Hälsa"],
-  storePrefix: "ideer",
-  formTitleNew: "Ny idé",
-  formTitleEdit: "Redigera idé",
-  saveBtnNew: "Spara idé",
+  collection: "todo",
+  navKey: "todo",
+  defaultTags: ["Hem","Räkningar","Hälsa","Familj","Arbete","Bil","Inköp","Viktigt"],
+  storePrefix: "todo",
+  formTitleNew: "Ny todo",
+  formTitleEdit: "Redigera todo",
+  saveBtnNew: "Spara todo",
   saveBtnEdit: "Spara ändringar",
   addPlaceholder: "Nytt delmål...",
-  confirmRemoveItem: "Ta bort idén?",
-  emptyText: "Inga idéer än — lägg till en ovan!",
-  itemsLabel: "idéer"
+  confirmRemoveItem: "Ta bort todon?",
+  emptyText: "Inga todos än — lägg till en ovan!",
+  itemsLabel: "todos",
+  enablePrio: true,
+  enableDueDate: true,
+  enableCalendar: true
 });
 </script>
 

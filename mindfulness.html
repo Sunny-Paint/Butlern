@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mindfulness">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#8a6fb5">
+<title>Mindfulness</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="styles.css?v=1">
+<style>
+  :root{
+    --accent:#8a6fb5;
+    --accent-soft:#ece4f5;
+    --accent-dark:#6a4f95;
+  }
+  .section h3{margin-top:0}
+  .entry-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+  .entry{
+    display:flex;align-items:flex-start;gap:10px;
+    border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;background:#fff;
+  }
+  .entry-main{flex:1;min-width:0}
+  .entry-title{font-weight:600;color:var(--ink);word-break:break-word}
+  .entry-title a{color:var(--accent-dark);text-decoration:none}
+  .entry-title a:hover{text-decoration:underline}
+  .entry-desc{font-size:13px;color:#3a2f4a;white-space:pre-wrap;margin-top:4px;word-break:break-word;line-height:1.5}
+  .entry-desc.collapsed{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  .entry-toggle{background:none;border:none;color:var(--accent-dark);font-size:12px;font-weight:600;cursor:pointer;padding:4px 0 0;text-decoration:underline}
+  .entry .icon-btn{padding:4px 8px;font-size:13px}
+
+  .add-entry{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:12px}
+  .add-entry input, .add-entry textarea{padding:8px 10px;font-size:14px;font-family:inherit}
+  .add-entry textarea{resize:vertical;min-height:80px;line-height:1.5;border:1px solid var(--line);border-radius:8px}
+  .add-entry textarea:focus{outline:none;border-color:var(--accent)}
+  .add-entry button{align-self:flex-start;padding:8px 14px;font-size:13px}
+
+  .empty{color:var(--muted);font-size:13px;text-align:center;padding:14px;font-style:italic}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>🧘 Mindfulness</h1>
+<p class="subtitle">Meditationer, andningsövningar, tekniker och länkar — fyll på själv.</p>
+<nav data-nav-pills></nav>
+
+<div class="card section" data-cat="meditation">
+  <h3>🧘‍♀️ Meditationer</h3>
+  <div class="entry-list" id="list-meditation"></div>
+  <form class="add-entry">
+    <input type="text" name="title" placeholder="Titel (t.ex. 10 min kroppsskanning)" required>
+    <textarea name="desc" placeholder="Beskrivning (valfri) – använd radbrytningar och blankrader om du vill" rows="3"></textarea>
+    <input type="url" name="url" placeholder="Länk (valfri, https://...)">
+    <button type="submit" class="btn btn-primary">+ Lägg till</button>
+  </form>
+</div>
+
+<div class="card section" data-cat="breathing">
+  <h3>🌬️ Andningsövningar</h3>
+  <div class="entry-list" id="list-breathing"></div>
+  <form class="add-entry">
+    <input type="text" name="title" placeholder="Titel (t.ex. Box breathing 4-4-4-4)" required>
+    <textarea name="desc" placeholder="Beskrivning (valfri) – använd radbrytningar och blankrader om du vill" rows="3"></textarea>
+    <input type="url" name="url" placeholder="Länk (valfri, https://...)">
+    <button type="submit" class="btn btn-primary">+ Lägg till</button>
+  </form>
+</div>
+
+<div class="card section" data-cat="technique">
+  <h3>🛠️ Tekniker</h3>
+  <div class="entry-list" id="list-technique"></div>
+  <form class="add-entry">
+    <input type="text" name="title" placeholder="Titel (t.ex. 5-4-3-2-1 grounding)" required>
+    <textarea name="desc" placeholder="Beskrivning (valfri) – använd radbrytningar och blankrader om du vill" rows="3"></textarea>
+    <input type="url" name="url" placeholder="Länk (valfri, https://...)">
+    <button type="submit" class="btn btn-primary">+ Lägg till</button>
+  </form>
+</div>
+
+<div class="card section" data-cat="link">
+  <h3>🔗 Länkar / resurser</h3>
+  <div class="entry-list" id="list-link"></div>
+  <form class="add-entry">
+    <input type="text" name="title" placeholder="Titel (t.ex. Insight Timer)" required>
+    <textarea name="desc" placeholder="Beskrivning (valfri)" rows="2"></textarea>
+    <input type="url" name="url" placeholder="https://..." required>
+    <button type="submit" class="btn btn-primary">+ Lägg till</button>
+  </form>
+</div>
+
+<div class="status" id="status">Ansluter...</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
+<script src="auth-gate.js?v=8"></script>
+<script src="app.js?v=4"></script>
+<script>
+renderNav("mindfulness");
+
+const CATEGORIES = [
+  { key: "meditation", emptyText: "Inga meditationer än." },
+  { key: "breathing",  emptyText: "Inga andningsövningar än." },
+  { key: "technique",  emptyText: "Inga tekniker än." },
+  { key: "link",       emptyText: "Inga länkar än." }
+];
+const statusEl = document.getElementById("status");
+let db = null;
+let entries = [];
+let editingId = null;
+
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function startEditEntry(item) {
+  const form = document.querySelector('.section[data-cat="' + item.category + '"] form.add-entry');
+  if (!form) return;
+  editingId = item.id;
+  form.querySelector('[name="title"]').value = item.title || "";
+  form.querySelector('[name="desc"]').value = item.desc || "";
+  form.querySelector('[name="url"]').value = item.url || "";
+  form.querySelector('button[type="submit"]').textContent = "Spara ändringar";
+  form.scrollIntoView({ behavior: "smooth", block: "center" });
+  form.querySelector('[name="title"]').focus();
+}
+
+function renderAll() {
+  CATEGORIES.forEach(cat => {
+    const root = document.getElementById("list-" + cat.key);
+    if (!root) return;
+    root.innerHTML = "";
+    const filtered = entries
+      .filter(e => e.category === cat.key)
+      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (!filtered.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent = cat.emptyText;
+      root.appendChild(empty);
+      return;
+    }
+    filtered.forEach(item => {
+      const row = document.createElement("div");
+      row.className = "entry";
+
+      const main = document.createElement("div");
+      main.className = "entry-main";
+      const title = document.createElement("div");
+      title.className = "entry-title";
+      if (item.url) {
+        const a = document.createElement("a");
+        a.href = item.url; a.target = "_blank"; a.rel = "noopener";
+        a.textContent = item.title || item.url;
+        title.appendChild(a);
+      } else {
+        title.textContent = item.title || "(utan titel)";
+      }
+      main.appendChild(title);
+      if (item.desc) {
+        const desc = document.createElement("div");
+        desc.className = "entry-desc";
+        desc.textContent = item.desc;
+        const isLong = (item.desc.match(/\n/g) || []).length >= 4 || item.desc.length > 220;
+        if (isLong) {
+          desc.classList.add("collapsed");
+          main.appendChild(desc);
+          const toggle = document.createElement("button");
+          toggle.type = "button";
+          toggle.className = "entry-toggle";
+          toggle.textContent = "Visa mer";
+          toggle.onclick = () => {
+            const collapsed = desc.classList.toggle("collapsed");
+            toggle.textContent = collapsed ? "Visa mer" : "Visa mindre";
+          };
+          main.appendChild(toggle);
+        } else {
+          main.appendChild(desc);
+        }
+      }
+      row.appendChild(main);
+
+      const ed = document.createElement("button");
+      ed.className = "icon-btn"; ed.textContent = "✎"; ed.title = "Redigera";
+      ed.onclick = () => startEditEntry(item);
+      row.appendChild(ed);
+
+      const del = document.createElement("button");
+      del.className = "icon-btn"; del.textContent = "✕"; del.title = "Ta bort";
+      del.onclick = () => {
+        if (!db) return;
+        if (!confirm("Ta bort?")) return;
+        db.collection("mindfulness").doc(item.id).delete()
+          .catch(err => alert("Fel: " + err.message));
+      };
+      row.appendChild(del);
+
+      root.appendChild(row);
+    });
+  });
+}
+
+document.querySelectorAll(".section form.add-entry").forEach(form => {
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    if (!db) { alert("Ansluter, vänta..."); return; }
+    const cat = form.closest(".section").dataset.cat;
+    const title = form.querySelector('[name="title"]').value.trim();
+    const desc  = form.querySelector('[name="desc"]').value.trim();
+    const url   = form.querySelector('[name="url"]').value.trim();
+    if (!title && !url) return;
+    const data = { category: cat, title, desc, url, updatedAt: Date.now() };
+    const onDone = () => {
+      form.reset();
+      form.querySelector('button[type="submit"]').textContent = "+ Lägg till";
+      editingId = null;
+    };
+    if (editingId) {
+      db.collection("mindfulness").doc(editingId).set(data, { merge: true })
+        .then(onDone).catch(err => alert("Fel: " + err.message));
+    } else {
+      data.createdAt = Date.now();
+      db.collection("mindfulness").add(data)
+        .then(onDone).catch(err => alert("Fel: " + err.message));
+    }
+  });
+});
+
+initApp(d => {
+  db = d;
+  db.collection("mindfulness").onSnapshot(snap => {
+    entries = [];
+    snap.forEach(doc => entries.push({ id: doc.id, ...doc.data() }));
+    statusEl.textContent = entries.length + " sparade";
+    renderAll();
+  }, err => {
+    statusEl.textContent = "Firestore-fel: " + err.message;
+  });
+}, { onError: e => { statusEl.textContent = e.message; } });
+</script>
+
+<script src="pwa.js?v=1"></script>
+</body>
+</html>

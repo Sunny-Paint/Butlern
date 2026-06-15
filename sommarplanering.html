@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Butlern</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2b6cb0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
 
 <style>
 :root{
@@ -478,7 +486,25 @@ form.add input[type=text]:focus{
   </form>
   <div class="status" id="status">Laddar...</div>
   <button type="button" id="resetBtn" class="btn btn-danger" style="margin-top:12px">Återställ startposter</button>
+  <button type="button" id="forceUpdateBtn" class="btn btn-ghost" style="margin-top:12px;margin-left:8px">Tvinga uppdatering</button>
 </div>
+
+<script>
+/* Tvingar fram fräsch HTML genom att avregistrera service worker + ladda om */
+document.getElementById("forceUpdateBtn").addEventListener("click", async () => {
+  try {
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+    if ("caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+  } catch (e) { console.warn(e); }
+  location.reload();
+});
+</script>
 
 <div id="calendar"></div>
 
@@ -488,10 +514,12 @@ form.add input[type=text]:focus{
 <script>
 const CACHE_KEY = "sommar2026_entries";
 const TODO_CACHE_KEY = "sommar2026_todos";
+const LINKED_TODO_CACHE_KEY = "sommar2026_linkedTodos";
 const statusEl  = document.getElementById("status");
-let entries     = [];
-let todos       = [];
-let db          = null;   // sätts när Firebase är laddat
+let entries      = [];
+let todos        = [];
+let linkedTodos  = [];
+let db           = null;   // sätts när Firebase är laddat
 
 try {
   entries = JSON.parse(localStorage.getItem(CACHE_KEY) || "[]");
@@ -499,6 +527,9 @@ try {
 try {
   todos = JSON.parse(localStorage.getItem(TODO_CACHE_KEY) || "[]");
 } catch(e) { todos = []; }
+try {
+  linkedTodos = JSON.parse(localStorage.getItem(LINKED_TODO_CACHE_KEY) || "[]");
+} catch(e) { linkedTodos = []; }
 
 statusEl.textContent = entries.length
   ? "Visar " + entries.length + " poster (cache) — synkar med molnet..."
@@ -647,6 +678,26 @@ function removeTodo(id) {
   db.collection("todos").doc(id).delete().catch(err => console.error(err));
 }
 
+/* === Kopplade todos från todo-sidan === */
+const PRIO_NUM_TO_KEY = { 1: "hog", 2: "mellan", 3: "lag" };
+function linkedMonthOf(t) {
+  if (!t.dueDate || !t.inCalendar) return null;
+  const m = /^2026-(\d{2})-/.exec(t.dueDate);
+  if (!m) return null;
+  const mon = parseInt(m[1], 10);
+  return (mon >= 6 && mon <= 8) ? mon : null;
+}
+function toggleLinkedTodo(id, done) {
+  if (!db) return;
+  db.collection("todo").doc(id).update({ done, updatedAt: Date.now() }).catch(err => console.error(err));
+}
+function unlinkLinkedTodo(id) {
+  if (!db) return;
+  if (!confirm("Ta bort från kalendern?\n(Todon finns kvar på todo-sidan.)")) return;
+  db.collection("todo").doc(id).update({ inCalendar: false, updatedAt: Date.now() })
+    .catch(err => alert("Fel: " + err.message));
+}
+
 /* Återställ: rensa allt och seeda om */
 document.getElementById("resetBtn").addEventListener("click", () => {
   if (!db) { alert("Vänta tills Firebase är anslutet"); return; }
@@ -683,7 +734,8 @@ function render() {
       en.start && en.start.startsWith(`2026-${String(month).padStart(2,'0')}`) ||
       en.end   && en.end.startsWith(`2026-${String(month).padStart(2,'0')}`)
     );
-    const monthTodoCount = todos.filter(t => t.month === month).length;
+    const monthLinked = linkedTodos.filter(t => linkedMonthOf(t) === month);
+    const monthTodoCount = todos.filter(t => t.month === month).length + monthLinked.length;
 
     const title = document.createElement("h2");
     const monthName = ["Juni","Juli","Augusti"][month-6];
@@ -841,6 +893,65 @@ function render() {
       li.appendChild(x);
       ul.appendChild(li);
     });
+
+    // Kopplade todos från todo-sidan
+    monthLinked
+      .sort((a, b) => {
+        const da = (a.done?1:0) - (b.done?1:0);
+        if (da) return da;
+        const pa = parseInt(a.prio,10) || 2;
+        const pb = parseInt(b.prio,10) || 2;
+        if (pa !== pb) return pa - pb;
+        return (a.dueDate || "").localeCompare(b.dueDate || "");
+      })
+      .forEach(t => {
+        const li = document.createElement("li");
+        if (t.done) li.className = "done";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = !!t.done;
+        cb.onchange = () => toggleLinkedTodo(t.id, cb.checked);
+        li.appendChild(cb);
+
+        const prioKey = PRIO_NUM_TO_KEY[parseInt(t.prio,10)];
+        if (prioKey) {
+          const badge = document.createElement("span");
+          badge.className = "prio-badge prio-" + prioKey;
+          badge.innerText = { hog:"Hög", mellan:"Mellan", lag:"Låg" }[prioKey];
+          li.appendChild(badge);
+        }
+
+        const dayBadge = document.createElement("span");
+        dayBadge.className = "todo-assignee";
+        dayBadge.title = "Klart senast " + t.dueDate;
+        const dd = /^2026-\d{2}-(\d{2})$/.exec(t.dueDate);
+        dayBadge.innerText = (dd ? dd[1] + "/" + month : t.dueDate);
+        li.appendChild(dayBadge);
+
+        const main = document.createElement("div");
+        main.className = "todo-main";
+        const title = document.createElement("span");
+        title.className = "todo-title";
+        title.innerText = "📝 " + t.title;
+        title.title = "Från todo-sidan (klicka för att öppna)";
+        title.style.cursor = "pointer";
+        title.onclick = () => { window.location.href = "todo.html"; };
+        main.appendChild(title);
+        if (t.desc) {
+          const c = document.createElement("span");
+          c.className = "todo-comment";
+          c.innerText = t.desc;
+          main.appendChild(c);
+        }
+        li.appendChild(main);
+
+        const x = document.createElement("button");
+        x.innerText = "✕";
+        x.title = "Ta bort från kalendern (finns kvar på todo-sidan)";
+        x.onclick = () => unlinkLinkedTodo(t.id);
+        li.appendChild(x);
+        ul.appendChild(li);
+      });
     todoBox.appendChild(ul);
 
     const tForm = document.createElement("form");
@@ -912,10 +1023,12 @@ render();
 <!-- STEG 2: Firebase laddas i bakgrunden -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app (CDN blockerad?)'"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-auth (CDN blockerad?)'"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore (CDN blockerad?)'"></script>
 <script>
-const firebaseConfig = {
+window.firebaseConfig = {
   apiKey: "AIzaSyA4_OLEPJ6ZU8wB9W3Vzslcc7j1m6jLRdc",
   authDomain: "sommarplanering-d4300.firebaseapp.com",
   projectId: "sommarplanering-d4300",
@@ -923,7 +1036,9 @@ const firebaseConfig = {
   messagingSenderId: "261517602417",
   appId: "1:261517602417:web:11b754c758c92cc33735d0"
 };
-
+</script>
+<script src="auth-gate.js?v=8"></script>
+<script>
 function initFirebase(attempt) {
   attempt = attempt || 0;
   if (typeof firebase === "undefined") {
@@ -935,7 +1050,7 @@ function initFirebase(attempt) {
   }
 
   try {
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) firebase.initializeApp(window.firebaseConfig);
     db = firebase.firestore();
   } catch (e) {
     statusEl.textContent = "Init-fel: " + e.message;
@@ -968,10 +1083,33 @@ function initFirebase(attempt) {
     try { localStorage.setItem(TODO_CACHE_KEY, JSON.stringify(todos)); } catch(e) {}
     render();
   }, err => console.error("Todos-fel:", err));
+
+  db.collection("todo").onSnapshot(snap => {
+    linkedTodos = [];
+    snap.forEach(d => linkedTodos.push({ id:d.id, ...d.data() }));
+    try { localStorage.setItem(LINKED_TODO_CACHE_KEY, JSON.stringify(linkedTodos)); } catch(e) {}
+    const total = linkedTodos.length;
+    const linkedInCal = linkedTodos.filter(t => t.inCalendar && t.dueDate).length;
+    const inSummer = linkedTodos.filter(t => {
+      if (!t.inCalendar || !t.dueDate) return false;
+      const m = /^2026-(\d{2})-/.exec(t.dueDate);
+      return m && +m[1] >= 6 && +m[1] <= 8;
+    }).length;
+    console.log("[sommarplanering] todo-koll:", { total, inCalendar: linkedInCal, summer2026: inSummer, items: linkedTodos });
+    if (statusEl) {
+      const base = statusEl.textContent.split(" · todo:")[0];
+      statusEl.textContent = base + " · todo: " + total + " total, " + linkedInCal + " i kalender, " + inSummer + " i sommar 2026";
+    }
+    render();
+  }, err => {
+    console.error("Linked todos-fel:", err);
+    if (statusEl) statusEl.textContent += " · todo-fel: " + err.code;
+  });
 }
 
-initFirebase();
+requireAuth(() => initFirebase());
 </script>
 
+<script src="pwa.js?v=1"></script>
 </body>
 </html>

@@ -1,0 +1,20 @@
+{
+  "name": "Butlern",
+  "short_name": "Butlern",
+  "description": "Familjens sommarplanering, todos, idéer och loggbok.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f1e7",
+  "theme_color": "#2b6cb0",
+  "lang": "sv",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
