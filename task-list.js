@@ -78,6 +78,24 @@ function initTaskList(opts) {
   } catch(e) { removedDefaults = []; }
   try { activeFilter = localStorage.getItem(FILTER_STORE) || null; } catch(e) {}
 
+  if (!document.getElementById("task-list-arkiv-css")) {
+    const css = document.createElement("style");
+    css.id = "task-list-arkiv-css";
+    css.textContent = `
+      .idea-done-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;user-select:none;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:#fff;flex:0 0 auto}
+      .idea-done-toggle input{accent-color:var(--accent,#3a7c87);width:14px;height:14px;cursor:pointer;margin:0}
+      .idea.done{opacity:.65;background:#fafafa}
+      .idea.done .idea-title{text-decoration:line-through;color:var(--muted)}
+      details.todos-arkiv{margin-top:24px;border-top:1px dashed var(--line);padding-top:12px}
+      details.todos-arkiv > summary{cursor:pointer;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700;list-style:none;padding:6px 0;user-select:none;display:flex;align-items:center;gap:8px}
+      details.todos-arkiv > summary::-webkit-details-marker{display:none}
+      details.todos-arkiv > summary::before{content:"▸";display:inline-block;transition:transform .15s;font-size:11px}
+      details.todos-arkiv[open] > summary::before{transform:rotate(90deg)}
+      .todos-arkiv-list{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+    `;
+    document.head.appendChild(css);
+  }
+
   function allTags() {
     const removed = new Set(removedDefaults);
     const set = new Set();
@@ -286,6 +304,15 @@ function initTaskList(opts) {
     db.collection(cfg.collection).doc(id).delete().catch(err => alert("Fel: " + err.message));
   }
 
+  function toggleItemDone(id, done) {
+    if (!db) return;
+    db.collection(cfg.collection).doc(id).update({
+      done: !!done,
+      doneAt: done ? Date.now() : null,
+      updatedAt: Date.now()
+    }).catch(err => alert("Fel: " + err.message));
+  }
+
   function addTask(item, text) {
     const trimmed = (text || "").trim();
     if (!trimmed) return;
@@ -349,7 +376,7 @@ function initTaskList(opts) {
     list.innerHTML = "";
     let shown = items;
     if (activeFilter) shown = items.filter(i => (i.tags || []).includes(activeFilter));
-    const sorted = [...shown].sort((a, b) => {
+    const sortActive = (a, b) => {
       if (cfg.enablePrio) {
         const pa = parseInt(a.prio, 10) || 2;
         const pb = parseInt(b.prio, 10) || 2;
@@ -362,12 +389,30 @@ function initTaskList(opts) {
         if (ta !== tb) return ta - tb;
       }
       return (b.updatedAt || b.createdAt || 0) - (a.updatedAt || a.createdAt || 0);
-    });
-    if (emptyMsgEl) emptyMsgEl.style.display = sorted.length ? "none" : "";
+    };
+    const active = shown.filter(i => !i.done).sort(sortActive);
+    const done = shown.filter(i => i.done).sort((a, b) => (b.doneAt || b.updatedAt || 0) - (a.doneAt || a.updatedAt || 0));
+    if (emptyMsgEl) emptyMsgEl.style.display = (active.length + done.length) ? "none" : "";
 
-    sorted.forEach(item => {
+    active.forEach(item => list.appendChild(buildCard(item)));
+
+    if (done.length) {
+      const arkiv = document.createElement("details");
+      arkiv.className = "todos-arkiv";
+      const sum = document.createElement("summary");
+      sum.textContent = "📁 Arkiv (" + done.length + ")";
+      arkiv.appendChild(sum);
+      const dList = document.createElement("div");
+      dList.className = "todos-arkiv-list";
+      done.forEach(item => dList.appendChild(buildCard(item)));
+      arkiv.appendChild(dList);
+      list.appendChild(arkiv);
+    }
+  }
+
+  function buildCard(item) {
       const card = document.createElement("div");
-      card.className = "idea";
+      card.className = "idea" + (item.done ? " done" : "");
 
       const head = document.createElement("div");
       head.className = "idea-head";
@@ -375,6 +420,17 @@ function initTaskList(opts) {
       title.className = "idea-title";
       title.textContent = item.title;
       head.appendChild(title);
+
+      const doneLbl = document.createElement("label");
+      doneLbl.className = "idea-done-toggle";
+      doneLbl.title = item.done ? "Återaktivera" : "Markera som klar";
+      const doneCb = document.createElement("input");
+      doneCb.type = "checkbox";
+      doneCb.checked = !!item.done;
+      doneCb.onchange = () => toggleItemDone(item.id, doneCb.checked);
+      doneLbl.appendChild(doneCb);
+      doneLbl.appendChild(document.createTextNode(item.done ? "Klar" : "Klar?"));
+      head.appendChild(doneLbl);
 
       if (cfg.enablePrio) {
         const info = PRIO_INFO[parseInt(item.prio, 10) || 2];
@@ -497,8 +553,7 @@ function initTaskList(opts) {
       };
       card.appendChild(addForm);
 
-      list.appendChild(card);
-    });
+      return card;
   }
 
   if (typeof renderNav === "function") renderNav(cfg.navKey);
