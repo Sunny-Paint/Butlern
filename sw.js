@@ -1,7 +1,7 @@
 // Service worker – PWA + offline-cache av app-shell.
 // Firestore har sin egen offline-persistens (aktiveras i app.js).
 
-const VERSION = "v5";
+const VERSION = "v6";
 const CACHE = "app-shell-" + VERSION;
 
 // Allt som ska kunna laddas helt utan nät. Versions-querystrings måste matcha exakt.
@@ -21,7 +21,7 @@ const SHELL = [
   "/styles.css?v=1",
   "/app.js?v=4",
   "/task-list.js?v=5",
-  "/auth-gate.js?v=8",
+  "/auth-gate.js?v=9",
   "/pwa.js?v=1",
   "/icon.svg",
   "/manifest.json"
