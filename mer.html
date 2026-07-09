@@ -65,7 +65,7 @@
 
 </div>
 
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 <script>
 renderNav("mer");
 
@@ -83,8 +83,8 @@ const CATEGORIES = [
     ]
   },
   {
-    name: "Inspiration & spå",
-    desc: "Lite magi.",
+    name: "Inspiration",
+    desc: "Intuition, idéer & kreativitet.",
     items: [
       { key: "oracle2", sub: "Dra ett kort" }
     ]
@@ -101,21 +101,14 @@ const CATEGORIES = [
     name: "Språk",
     desc: "Dagligt övande.",
     items: [
-      { key: "tyska",       sub: "C1: ord, meningar, grammatik" },
-      { key: "anki_spanska", sub: "Flashcards via Anki (öppnas i ny flik)" }
+      { key: "tyska",   sub: "C1: ord, meningar, grammatik" },
+      { key: "spanska", sub: "Flashcards A2–B1" }
     ]
   }
 ];
 
-// Externa länkar som inte finns i NAV_LINKS men kan visas i "Mer"
-const EXTERNAL_LINKS = {
-  anki_spanska: {
-    href: "https://apps.ankiweb.net/",
-    icon: "🇪🇸",
-    label: "Spanska (Anki)",
-    external: true
-  }
-};
+// (Ingen extern länk behövs för närvarande)
+const EXTERNAL_LINKS = {};
 
 const byKey = new Map(NAV_LINKS.map(l => [l.key, l]));
 const catsEl = document.getElementById("cats");

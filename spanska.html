@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Spanska">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#c8402c">
+<title>Spanska – flashcards</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="styles.css?v=1">
+<style>
+  :root{
+    --accent:#c8402c;
+    --accent-soft:#fde3dd;
+    --accent-dark:#8a2416;
+  }
+  .lvl-badge{display:inline-block;background:var(--accent-soft);color:var(--accent-dark);
+    font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:.05em;margin-left:8px}
+
+  .cats{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 18px}
+  .cats button{
+    font-size:12px;padding:6px 12px;border-radius:999px;
+    background:#fff;border:1px solid var(--line);color:var(--muted);cursor:pointer;
+  }
+  .cats button.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:18px;
+    box-shadow:var(--shadow);
+    padding:32px 24px;margin-bottom:16px;min-height:180px;
+    display:flex;flex-direction:column;justify-content:center;text-align:center;
+  }
+  .card .cat{
+    font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+    font-weight:600;margin-bottom:12px;
+  }
+  .card .es{
+    font-size:30px;font-weight:700;color:var(--ink);line-height:1.2;word-break:break-word;
+  }
+  .card .es .art{color:var(--accent);margin-right:6px;font-weight:600}
+  .card .sv{
+    margin-top:16px;padding:12px 14px;background:#fef7f5;border-radius:10px;
+    border:1px dashed var(--line);font-size:20px;font-weight:600;color:var(--ink);
+  }
+  .card .ex{
+    margin-top:10px;font-size:14px;color:#2a2a2a;font-style:italic;
+    padding:8px 12px;background:#faf6ec;border-radius:8px;border:1px dashed var(--line);
+  }
+  .card .ex .ex-sv{display:block;margin-top:4px;font-style:normal;color:var(--muted);font-size:13px}
+  .hidden{display:none}
+
+  .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .actions button{font-size:14px;padding:9px 18px}
+  .actions .btn-primary{min-width:130px}
+
+  .progress{
+    text-align:center;font-size:12px;color:var(--muted);margin-top:14px;
+  }
+  .empty{
+    text-align:center;color:var(--muted);font-style:italic;padding:40px 20px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>🇪🇸 Spanska <span class="lvl-badge">A2 · B1</span></h1>
+<p class="subtitle">Flashcards med vanliga ord och fraser. Klicka för att vända kortet.</p>
+<nav data-nav-pills></nav>
+
+<div class="cats" id="cats"></div>
+
+<div id="cardWrap"></div>
+
+<div class="actions">
+  <button type="button" class="btn btn-ghost" id="revealBtn">Visa svar</button>
+  <button type="button" class="btn btn-primary" id="nextBtn">Nästa kort →</button>
+</div>
+
+<div class="progress" id="progress"></div>
+
+</div>
+
+<script src="app.js?v=7"></script>
+<script>
+renderNav("spanska");
+
+// Bundlade flashcards. Kategorier: hälsning, vardag, mat, resa,
+// familj, hem, tid, känslor, konversation, verb, adjektiv, frågeord, uttryck.
+const CARDS = [
+  // Hälsning & artighet
+  { c:"hälsning", es:"Hola", sv:"Hej" },
+  { c:"hälsning", es:"Buenos días", sv:"God morgon" },
+  { c:"hälsning", es:"Buenas tardes", sv:"God eftermiddag" },
+  { c:"hälsning", es:"Buenas noches", sv:"God kväll / god natt" },
+  { c:"hälsning", es:"¿Cómo estás?", sv:"Hur mår du?" },
+  { c:"hälsning", es:"Estoy bien, gracias", sv:"Jag mår bra, tack" },
+  { c:"hälsning", es:"Mucho gusto", sv:"Trevligt att träffas" },
+  { c:"hälsning", es:"Hasta luego", sv:"Vi ses" },
+  { c:"hälsning", es:"Hasta mañana", sv:"Vi ses imorgon" },
+  { c:"hälsning", es:"Por favor", sv:"Snälla / var vänlig" },
+  { c:"hälsning", es:"Gracias", sv:"Tack" },
+  { c:"hälsning", es:"De nada", sv:"Ingen orsak / varsågod" },
+  { c:"hälsning", es:"Perdón / disculpe", sv:"Ursäkta" },
+  { c:"hälsning", es:"Lo siento", sv:"Jag är ledsen / förlåt" },
+
+  // Frågeord
+  { c:"frågeord", es:"¿Qué?", sv:"Vad?" },
+  { c:"frågeord", es:"¿Quién?", sv:"Vem?" },
+  { c:"frågeord", es:"¿Dónde?", sv:"Var?" },
+  { c:"frågeord", es:"¿Cuándo?", sv:"När?" },
+  { c:"frågeord", es:"¿Por qué?", sv:"Varför?" },
+  { c:"frågeord", es:"¿Cómo?", sv:"Hur?" },
+  { c:"frågeord", es:"¿Cuánto cuesta?", sv:"Hur mycket kostar det?" },
+  { c:"frågeord", es:"¿A qué hora?", sv:"Vilken tid?" },
+
+  // Konversation
+  { c:"konversation", es:"No entiendo", sv:"Jag förstår inte" },
+  { c:"konversation", es:"¿Puedes repetir, por favor?", sv:"Kan du upprepa, tack?" },
+  { c:"konversation", es:"Habla más despacio, por favor", sv:"Prata långsammare, tack" },
+  { c:"konversation", es:"¿Hablas inglés?", sv:"Talar du engelska?" },
+  { c:"konversation", es:"Estoy aprendiendo español", sv:"Jag lär mig spanska" },
+  { c:"konversation", es:"¿Cómo se dice ... en español?", sv:"Hur säger man ... på spanska?" },
+  { c:"konversation", es:"¿Qué significa esto?", sv:"Vad betyder det här?" },
+  { c:"konversation", es:"Claro que sí", sv:"Ja, självklart" },
+  { c:"konversation", es:"Tal vez", sv:"Kanske" },
+  { c:"konversation", es:"No lo sé", sv:"Jag vet inte" },
+  { c:"konversation", es:"Creo que sí", sv:"Jag tror det" },
+  { c:"konversation", es:"Depende", sv:"Det beror på" },
+
+  // Mat & dryck
+  { c:"mat", es:"la comida", sv:"maten" },
+  { c:"mat", es:"el desayuno", sv:"frukost" },
+  { c:"mat", es:"el almuerzo", sv:"lunch" },
+  { c:"mat", es:"la cena", sv:"middag / kvällsmat" },
+  { c:"mat", es:"el agua", sv:"vatten" },
+  { c:"mat", es:"el café", sv:"kaffe" },
+  { c:"mat", es:"el vino", sv:"vin" },
+  { c:"mat", es:"la cerveza", sv:"öl" },
+  { c:"mat", es:"el pan", sv:"bröd" },
+  { c:"mat", es:"el queso", sv:"ost" },
+  { c:"mat", es:"la carne", sv:"kött" },
+  { c:"mat", es:"el pescado", sv:"fisk" },
+  { c:"mat", es:"la fruta", sv:"frukt" },
+  { c:"mat", es:"la verdura", sv:"grönsak" },
+  { c:"mat", es:"la cuenta, por favor", sv:"Notan, tack" },
+  { c:"mat", es:"Tengo hambre", sv:"Jag är hungrig" },
+  { c:"mat", es:"Tengo sed", sv:"Jag är törstig" },
+  { c:"mat", es:"Está delicioso", sv:"Det är utsökt" },
+
+  // Resa
+  { c:"resa", es:"el aeropuerto", sv:"flygplatsen" },
+  { c:"resa", es:"la estación", sv:"stationen" },
+  { c:"resa", es:"el billete", sv:"biljetten" },
+  { c:"resa", es:"el hotel", sv:"hotellet" },
+  { c:"resa", es:"la habitación", sv:"rummet" },
+  { c:"resa", es:"la playa", sv:"stranden" },
+  { c:"resa", es:"la ciudad", sv:"staden" },
+  { c:"resa", es:"el pueblo", sv:"byn / småstaden" },
+  { c:"resa", es:"a la izquierda", sv:"till vänster" },
+  { c:"resa", es:"a la derecha", sv:"till höger" },
+  { c:"resa", es:"todo recto", sv:"rakt fram" },
+  { c:"resa", es:"cerca de", sv:"nära" },
+  { c:"resa", es:"lejos de", sv:"långt från" },
+  { c:"resa", es:"¿Dónde está el baño?", sv:"Var är toaletten?" },
+
+  // Familj & människor
+  { c:"familj", es:"la familia", sv:"familjen" },
+  { c:"familj", es:"la madre", sv:"mamman" },
+  { c:"familj", es:"el padre", sv:"pappan" },
+  { c:"familj", es:"la hija", sv:"dottern" },
+  { c:"familj", es:"el hijo", sv:"sonen" },
+  { c:"familj", es:"la hermana", sv:"systern" },
+  { c:"familj", es:"el hermano", sv:"brodern" },
+  { c:"familj", es:"el amigo / la amiga", sv:"vännen (m/f)" },
+  { c:"familj", es:"el niño / la niña", sv:"barnet (pojke/flicka)" },
+
+  // Hem & vardag
+  { c:"vardag", es:"la casa", sv:"huset / hemmet" },
+  { c:"vardag", es:"el trabajo", sv:"arbetet" },
+  { c:"vardag", es:"la escuela", sv:"skolan" },
+  { c:"vardag", es:"el coche", sv:"bilen" },
+  { c:"vardag", es:"el dinero", sv:"pengarna" },
+  { c:"vardag", es:"la tienda", sv:"butiken" },
+  { c:"vardag", es:"el mercado", sv:"marknaden" },
+  { c:"vardag", es:"la calle", sv:"gatan" },
+  { c:"vardag", es:"hoy", sv:"idag" },
+  { c:"vardag", es:"mañana", sv:"imorgon" },
+  { c:"vardag", es:"ayer", sv:"igår" },
+  { c:"vardag", es:"ahora", sv:"nu" },
+  { c:"vardag", es:"siempre", sv:"alltid" },
+  { c:"vardag", es:"nunca", sv:"aldrig" },
+  { c:"vardag", es:"a veces", sv:"ibland" },
+
+  // Väder
+  { c:"väder", es:"Hace sol", sv:"Det är soligt" },
+  { c:"väder", es:"Hace calor", sv:"Det är varmt" },
+  { c:"väder", es:"Hace frío", sv:"Det är kallt" },
+  { c:"väder", es:"Está lloviendo", sv:"Det regnar" },
+  { c:"väder", es:"Está nevando", sv:"Det snöar" },
+  { c:"väder", es:"Hace viento", sv:"Det blåser" },
+
+  // Känslor
+  { c:"känslor", es:"feliz", sv:"glad" },
+  { c:"känslor", es:"triste", sv:"ledsen" },
+  { c:"känslor", es:"cansado / cansada", sv:"trött" },
+  { c:"känslor", es:"enfadado / enfadada", sv:"arg" },
+  { c:"känslor", es:"tranquilo / tranquila", sv:"lugn" },
+  { c:"känslor", es:"nervioso / nerviosa", sv:"nervös" },
+  { c:"känslor", es:"Te quiero", sv:"Jag älskar dig", ex_es:"Te quiero mucho.", ex_sv:"Jag älskar dig mycket." },
+  { c:"känslor", es:"Te echo de menos", sv:"Jag saknar dig" },
+
+  // Verb (infinitiv)
+  { c:"verb", es:"ser", sv:"att vara (permanent)" },
+  { c:"verb", es:"estar", sv:"att vara (tillfälligt/plats)" },
+  { c:"verb", es:"tener", sv:"att ha" },
+  { c:"verb", es:"hacer", sv:"att göra" },
+  { c:"verb", es:"ir", sv:"att gå / åka" },
+  { c:"verb", es:"venir", sv:"att komma" },
+  { c:"verb", es:"decir", sv:"att säga" },
+  { c:"verb", es:"poder", sv:"att kunna" },
+  { c:"verb", es:"querer", sv:"att vilja / älska" },
+  { c:"verb", es:"saber", sv:"att veta (fakta)" },
+  { c:"verb", es:"conocer", sv:"att känna (person / plats)" },
+  { c:"verb", es:"comer", sv:"att äta" },
+  { c:"verb", es:"beber", sv:"att dricka" },
+  { c:"verb", es:"dormir", sv:"att sova" },
+  { c:"verb", es:"trabajar", sv:"att arbeta" },
+  { c:"verb", es:"vivir", sv:"att bo / leva" },
+  { c:"verb", es:"comprar", sv:"att köpa" },
+  { c:"verb", es:"pagar", sv:"att betala" },
+  { c:"verb", es:"buscar", sv:"att söka" },
+  { c:"verb", es:"encontrar", sv:"att hitta" },
+
+  // Adjektiv
+  { c:"adjektiv", es:"grande", sv:"stor" },
+  { c:"adjektiv", es:"pequeño / pequeña", sv:"liten" },
+  { c:"adjektiv", es:"bueno / buena", sv:"bra / god" },
+  { c:"adjektiv", es:"malo / mala", sv:"dålig" },
+  { c:"adjektiv", es:"bonito / bonita", sv:"vacker / fin" },
+  { c:"adjektiv", es:"caro / cara", sv:"dyr" },
+  { c:"adjektiv", es:"barato / barata", sv:"billig" },
+  { c:"adjektiv", es:"fácil", sv:"lätt / enkelt" },
+  { c:"adjektiv", es:"difícil", sv:"svår" },
+  { c:"adjektiv", es:"rápido / rápida", sv:"snabb" },
+  { c:"adjektiv", es:"lento / lenta", sv:"långsam" },
+  { c:"adjektiv", es:"nuevo / nueva", sv:"ny" },
+  { c:"adjektiv", es:"viejo / vieja", sv:"gammal" },
+
+  // Uttryck
+  { c:"uttryck", es:"No pasa nada", sv:"Det gör inget / ingen fara" },
+  { c:"uttryck", es:"Vale", sv:"Okej / överens" },
+  { c:"uttryck", es:"¡Qué guay!", sv:"Vad coolt!" },
+  { c:"uttryck", es:"¡Qué pena!", sv:"Vad synd!" },
+  { c:"uttryck", es:"En seguida", sv:"Med detsamma" },
+  { c:"uttryck", es:"Poco a poco", sv:"Lite i taget" },
+  { c:"uttryck", es:"Más o menos", sv:"Mer eller mindre" },
+  { c:"uttryck", es:"Tener ganas de", sv:"Ha lust att", ex_es:"Tengo ganas de viajar.", ex_sv:"Jag har lust att resa." },
+  { c:"uttryck", es:"Dar un paseo", sv:"Ta en promenad" },
+  { c:"uttryck", es:"Echar de menos", sv:"Sakna" }
+];
+
+// UI-state
+const catsEl = document.getElementById("cats");
+const cardWrap = document.getElementById("cardWrap");
+const revealBtn = document.getElementById("revealBtn");
+const nextBtn = document.getElementById("nextBtn");
+const progressEl = document.getElementById("progress");
+
+const CAT_ORDER = ["alla","hälsning","frågeord","konversation","mat","resa","familj","vardag","väder","känslor","verb","adjektiv","uttryck"];
+const CAT_LABEL = {
+  alla:"Alla", hälsning:"Hälsning", frågeord:"Frågeord", konversation:"Konversation",
+  mat:"Mat", resa:"Resa", familj:"Familj", vardag:"Vardag", väder:"Väder",
+  känslor:"Känslor", verb:"Verb", adjektiv:"Adjektiv", uttryck:"Uttryck"
+};
+
+const LS_CAT = "spanska.category";
+let activeCat = localStorage.getItem(LS_CAT) || "alla";
+let deck = [];
+let idx = -1;
+
+function renderCats() {
+  catsEl.innerHTML = "";
+  CAT_ORDER.forEach(cat => {
+    const count = cat === "alla" ? CARDS.length : CARDS.filter(c => c.c === cat).length;
+    if (count === 0 && cat !== "alla") return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = CAT_LABEL[cat] + " (" + count + ")";
+    if (cat === activeCat) btn.classList.add("active");
+    btn.onclick = () => {
+      activeCat = cat;
+      localStorage.setItem(LS_CAT, cat);
+      renderCats();
+      buildDeck();
+      showNext();
+    };
+    catsEl.appendChild(btn);
+  });
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildDeck() {
+  const filtered = activeCat === "alla" ? CARDS : CARDS.filter(c => c.c === activeCat);
+  deck = shuffle(filtered);
+  idx = -1;
+}
+
+function renderCard(card) {
+  cardWrap.innerHTML = "";
+  if (!card) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "Inga kort i denna kategori.";
+    cardWrap.appendChild(empty);
+    return;
+  }
+  const box = document.createElement("div");
+  box.className = "card";
+
+  const cat = document.createElement("div");
+  cat.className = "cat";
+  cat.textContent = CAT_LABEL[card.c] || card.c;
+  box.appendChild(cat);
+
+  const es = document.createElement("div");
+  es.className = "es";
+  es.textContent = card.es;
+  box.appendChild(es);
+
+  const sv = document.createElement("div");
+  sv.className = "sv hidden";
+  sv.id = "svAnswer";
+  sv.textContent = card.sv;
+  box.appendChild(sv);
+
+  if (card.ex_es) {
+    const ex = document.createElement("div");
+    ex.className = "ex hidden";
+    ex.id = "exAnswer";
+    ex.textContent = "„" + card.ex_es + "”";
+    if (card.ex_sv) {
+      const sub = document.createElement("span");
+      sub.className = "ex-sv";
+      sub.textContent = card.ex_sv;
+      ex.appendChild(sub);
+    }
+    box.appendChild(ex);
+  }
+
+  cardWrap.appendChild(box);
+
+  revealBtn.textContent = "Visa svar";
+  revealBtn.disabled = false;
+}
+
+function showNext() {
+  if (!deck.length) {
+    renderCard(null);
+    progressEl.textContent = "";
+    return;
+  }
+  idx++;
+  if (idx >= deck.length) {
+    // Blanda om när kortleken är slut
+    deck = shuffle(deck);
+    idx = 0;
+  }
+  renderCard(deck[idx]);
+  progressEl.textContent = "Kort " + (idx + 1) + " / " + deck.length;
+}
+
+revealBtn.onclick = () => {
+  const sv = document.getElementById("svAnswer");
+  const ex = document.getElementById("exAnswer");
+  if (sv) sv.classList.remove("hidden");
+  if (ex) ex.classList.remove("hidden");
+  revealBtn.textContent = "✓ Visat";
+  revealBtn.disabled = true;
+};
+nextBtn.onclick = showNext;
+
+renderCats();
+buildDeck();
+showNext();
+</script>
+
+<script src="pwa.js?v=1"></script>
+</body>
+</html>
