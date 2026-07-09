@@ -34,7 +34,15 @@ h1{font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 4px}
 .subtitle a:hover{text-decoration:underline}
 
 /* Nav pills */
+.nav-wrap{display:block;margin:6px 0 24px}
+.nav-wrap .nav-pills{margin:0}
+.nav-wrap .nav-pills + .nav-pills{margin-top:8px}
 .nav-pills{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 24px}
+.nav-pills-sub{
+  gap:6px;
+  padding-top:8px;
+  border-top:1px dashed var(--line);
+}
 .nav-pill{
   display:inline-flex;align-items:center;gap:6px;
   padding:7px 13px;background:var(--card);
@@ -42,6 +50,10 @@ h1{font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 4px}
   color:var(--ink);font-size:13px;font-weight:500;
   text-decoration:none;transition:all .15s ease;
   box-shadow:0 1px 2px rgba(20,20,20,.03);
+}
+.nav-pill-sub{
+  padding:5px 11px;font-size:12px;
+  background:#faf7f0;
 }
 .nav-pill:hover{
   border-color:var(--accent);color:var(--accent);
@@ -58,6 +70,7 @@ h1{font-size:32px;font-weight:700;letter-spacing:-0.02em;margin:0 0 4px}
 @media (max-width:520px){
   .nav-pills{gap:6px}
   .nav-pill{padding:6px 10px;font-size:12px}
+  .nav-pill-sub{padding:4px 9px;font-size:11px}
 }
 
 /* Card */

@@ -38,24 +38,41 @@ const NAV_LINKS = [
 // Sidor som visas som pills i toppnavigationen (resten n\u00e5s via mer.html)
 const PRIMARY_NAV_KEYS = ["butlern", "todo", "ideer", "inkop", "vader", "lankar"];
 
-const MER_LINK = { key: "mer", href: "mer.html", icon: "\u2026", label: "Mer" };
+const MER_LINK = { key: "mer", href: "mer.html", icon: "\u2026", label: "Tidsf\u00f6rdriv" };
 
 function renderNav(activeKey) {
   const navs = document.querySelectorAll("[data-nav-pills]");
   const primary = NAV_LINKS.filter(l => PRIMARY_NAV_KEYS.includes(l.key));
+  const subs = NAV_LINKS.filter(l => !PRIMARY_NAV_KEYS.includes(l.key));
   const isPrimary = PRIMARY_NAV_KEYS.includes(activeKey);
-  const merActive = activeKey === "mer" || (!isPrimary && activeKey !== undefined);
-  const pills = [...primary, MER_LINK];
+  const subActive = activeKey === "mer" || (!isPrimary && activeKey !== undefined);
+  const primaryPills = [...primary, MER_LINK];
+
+  const pillHtml = (l, active, extraClass) => {
+    const cls = "nav-pill" + (extraClass ? " " + extraClass : "") + (active ? " active" : "");
+    return active
+      ? `<span class="${cls}"><span class="ico">${l.icon}</span>${l.label}</span>`
+      : `<a class="${cls}" href="${l.href}"><span class="ico">${l.icon}</span>${l.label}</a>`;
+  };
 
   navs.forEach(nav => {
-    nav.classList.add("nav-pills");
+    nav.className = "nav-wrap";
     if (!nav.hasAttribute("aria-label")) nav.setAttribute("aria-label", "Sidor");
-    nav.innerHTML = pills.map(l => {
-      const active = l.key === "mer" ? merActive : l.key === activeKey;
-      return active
-        ? `<span class="nav-pill active"><span class="ico">${l.icon}</span>${l.label}</span>`
-        : `<a class="nav-pill" href="${l.href}"><span class="ico">${l.icon}</span>${l.label}</a>`;
-    }).join("");
+
+    const primaryRow = primaryPills
+      .map(l => pillHtml(l, l.key === "mer" ? subActive : l.key === activeKey))
+      .join("");
+
+    let html = `<div class="nav-pills">${primaryRow}</div>`;
+
+    if (subActive) {
+      const subRow = subs
+        .map(l => pillHtml(l, l.key === activeKey, "nav-pill-sub"))
+        .join("");
+      html += `<div class="nav-pills nav-pills-sub">${subRow}</div>`;
+    }
+
+    nav.innerHTML = html;
   });
 }
 
