@@ -30,7 +30,8 @@ const NAV_LINKS = [
   { key: "moon",        href: "moon.html",        icon: "\ud83c\udf19",     label: "The Moon" },
   { key: "oracle2",     href: "oracle2.html",     icon: "\ud83d\udd2e",     label: "Oraklet" },
   { key: "lankar",      href: "lankar.html",      icon: "\ud83d\udd17",     label: "L\u00e4nkar" },
-  { key: "parkering",   href: "parkering.html",   icon: "\ud83c\udd7f\ufe0f", label: "Parkering" }
+  { key: "parkering",   href: "parkering.html",   icon: "\ud83c\udd7f\ufe0f", label: "Parkering" },
+  { key: "tyska",       href: "tyska.html",       icon: "\ud83c\udde9\ud83c\uddea", label: "Tyska" }
 ];
 
 // Sidor som visas som pills i toppnavigationen (resten n\u00e5s via mer.html)

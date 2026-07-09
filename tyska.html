@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tyska">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#a6612a">
+<title>Tyska – C1</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="styles.css?v=1">
+<style>
+  :root{
+    --accent:#a6612a;
+    --accent-soft:#f5e3cf;
+    --accent-dark:#7f4a1e;
+  }
+  .lvl-badge{display:inline-block;background:var(--accent-soft);color:var(--accent-dark);
+    font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:.05em;margin-left:8px}
+
+  .de-card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:18px 20px;box-shadow:var(--shadow);margin-bottom:18px}
+  .de-card h2{margin:0 0 12px;font-size:18px;color:var(--accent-dark);display:flex;align-items:center;flex-wrap:wrap}
+  .de-card .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .de-card .actions button{font-size:13px;padding:7px 14px}
+  .de-card .loading{color:var(--muted);font-style:italic;font-size:14px}
+  .de-card .err{color:#a02020;font-size:13px;background:#fdecea;border:1px solid #f5c2c0;padding:8px 10px;border-radius:8px}
+
+  /* Ord */
+  .word-main{font-size:26px;font-weight:700;color:var(--ink);margin-bottom:4px}
+  .word-main .art{color:var(--accent);margin-right:6px;font-weight:600}
+  .word-pos{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px}
+  .word-answer{margin-top:10px;padding:10px 12px;background:#faf6ec;border-radius:8px;border:1px dashed var(--line)}
+  .word-answer .en{font-size:16px;font-weight:600;color:var(--ink)}
+  .word-answer .ex-de{margin-top:8px;font-size:14px;color:#2a2a2a;font-style:italic}
+  .word-answer .ex-en{font-size:13px;color:var(--muted)}
+  .hidden{display:none}
+
+  /* Mening */
+  .sent-de{font-size:18px;font-weight:600;color:var(--ink);line-height:1.5;word-break:break-word}
+  .sent-en{margin-top:10px;padding:10px 12px;background:#faf6ec;border-radius:8px;border:1px dashed var(--line);font-size:15px;color:#2a2a2a}
+
+  /* Grammatik */
+  .gram-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:6px}
+  .gram-cat{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px}
+  .gram-expl{font-size:14px;color:#2a2a2a;line-height:1.55;white-space:pre-wrap}
+  .gram-examples{margin-top:10px;padding:10px 12px;background:#faf6ec;border-radius:8px;border:1px dashed var(--line)}
+  .gram-examples ul{margin:0;padding-left:18px}
+  .gram-examples li{font-size:13px;margin:3px 0}
+
+  .status-line{font-size:12px;color:var(--muted);margin-top:10px}
+  .cache-note{font-size:11px;color:var(--muted);margin-top:6px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>🇩🇪 Tyska <span class="lvl-badge">C1</span></h1>
+<p class="subtitle">Ord, meningar och grammatikregler på avancerad nivå. Data från <a href="https://rep12.com" target="_blank" rel="noopener" style="color:var(--accent)">rep12</a>.</p>
+<nav data-nav-pills></nav>
+
+<div class="de-card" id="wordCard">
+  <h2>📚 Dagens ord</h2>
+  <div id="wordBody">
+    <div class="loading">Laddar ord…</div>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn btn-ghost" id="wordRevealBtn">Visa översättning &amp; exempel</button>
+    <button type="button" class="btn btn-primary" id="wordNextBtn">Nytt ord →</button>
+  </div>
+</div>
+
+<div class="de-card" id="sentCard">
+  <h2>💬 Mening att översätta</h2>
+  <div id="sentBody">
+    <div class="loading">Laddar mening…</div>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn btn-ghost" id="sentRevealBtn">Visa översättning</button>
+    <button type="button" class="btn btn-primary" id="sentNextBtn">Ny mening →</button>
+  </div>
+</div>
+
+<div class="de-card" id="gramCard">
+  <h2>📖 Grammatikregel</h2>
+  <div id="gramBody">
+    <div class="loading">Laddar regel…</div>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn btn-primary" id="gramNextBtn">Ny regel →</button>
+  </div>
+</div>
+
+<div class="status-line" id="status"></div>
+<div class="cache-note">API:et hostas gratis på Render — första anrop efter inaktivitet kan ta 30–60 sek (cold start). Data cachas lokalt så sidan fungerar offline.</div>
+
+</div>
+
+<script src="app.js?v=6"></script>
+<script>
+renderNav("tyska");
+
+const API_BASE = "https://german-language.onrender.com";
+const API_KEY  = "demo-key-12345";
+const LEVEL    = "c1";
+
+// LocalStorage-cache: håll batchar och rotera lokalt så vi spar API-anrop
+// och funkar offline när Render-instansen sover.
+const CACHE_TTL_MS = 24 * 3600 * 1000;
+const CK = {
+  vocab:    "tyska.cache.vocab.c1",
+  sents:    "tyska.cache.sents.c1",
+  grammar:  "tyska.cache.grammar"
+};
+
+function readCache(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !Array.isArray(obj.data)) return null;
+    if (Date.now() - (obj.ts || 0) > CACHE_TTL_MS) return { data: obj.data, stale: true };
+    return { data: obj.data, stale: false };
+  } catch(e) { return null; }
+}
+function writeCache(key, data) {
+  try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data })); } catch(e) {}
+}
+
+async function apiGet(path) {
+  const res = await fetch(API_BASE + path, {
+    headers: { "X-API-Key": API_KEY }
+  });
+  if (!res.ok) throw new Error("API " + res.status);
+  return res.json();
+}
+
+async function loadBatch(cacheKey, path, extract) {
+  const cached = readCache(cacheKey);
+  if (cached && !cached.stale) return cached.data;
+  try {
+    const json = await apiGet(path);
+    const data = extract(json);
+    if (Array.isArray(data) && data.length) {
+      writeCache(cacheKey, data);
+      return data;
+    }
+  } catch (e) {
+    console.warn("[tyska] API-fel för " + path + ":", e);
+  }
+  // Fall tillbaka till stale cache om det finns
+  if (cached) return cached.data;
+  return [];
+}
+
+function pickRandom(arr, notEqualTo) {
+  if (!arr.length) return null;
+  if (arr.length === 1) return arr[0];
+  let x;
+  let tries = 0;
+  do { x = arr[Math.floor(Math.random() * arr.length)]; tries++; }
+  while (x === notEqualTo && tries < 10);
+  return x;
+}
+
+const statusEl = document.getElementById("status");
+function setStatus(msg) { statusEl.textContent = msg || ""; }
+
+// === Ord ===
+let vocab = [];
+let currentWord = null;
+
+const wordBody = document.getElementById("wordBody");
+const wordRevealBtn = document.getElementById("wordRevealBtn");
+const wordNextBtn = document.getElementById("wordNextBtn");
+
+function renderWord(w) {
+  currentWord = w;
+  wordBody.innerHTML = "";
+  if (!w) {
+    wordBody.innerHTML = '<div class="err">Kunde inte hämta något ord. Försök igen om en stund.</div>';
+    return;
+  }
+  const main = document.createElement("div");
+  main.className = "word-main";
+  if (w.gender) {
+    const art = document.createElement("span");
+    art.className = "art";
+    art.textContent = w.gender;
+    main.appendChild(art);
+  }
+  main.appendChild(document.createTextNode(w.german || "?"));
+  wordBody.appendChild(main);
+
+  if (w.pos) {
+    const pos = document.createElement("div");
+    pos.className = "word-pos";
+    pos.textContent = w.pos;
+    wordBody.appendChild(pos);
+  }
+
+  const answer = document.createElement("div");
+  answer.className = "word-answer hidden";
+  answer.id = "wordAnswer";
+  const en = document.createElement("div");
+  en.className = "en";
+  en.textContent = w.english || "(saknar översättning)";
+  answer.appendChild(en);
+  if (w.example_de) {
+    const ex = document.createElement("div");
+    ex.className = "ex-de";
+    ex.textContent = "„" + w.example_de + "”";
+    answer.appendChild(ex);
+  }
+  if (w.example_en) {
+    const ex = document.createElement("div");
+    ex.className = "ex-en";
+    ex.textContent = w.example_en;
+    answer.appendChild(ex);
+  }
+  wordBody.appendChild(answer);
+
+  wordRevealBtn.textContent = "Visa översättning & exempel";
+  wordRevealBtn.disabled = false;
+}
+wordRevealBtn.onclick = () => {
+  const a = document.getElementById("wordAnswer");
+  if (!a) return;
+  a.classList.remove("hidden");
+  wordRevealBtn.textContent = "✓ Visat";
+  wordRevealBtn.disabled = true;
+};
+wordNextBtn.onclick = () => renderWord(pickRandom(vocab, currentWord));
+
+// === Meningar ===
+let sents = [];
+let currentSent = null;
+
+const sentBody = document.getElementById("sentBody");
+const sentRevealBtn = document.getElementById("sentRevealBtn");
+const sentNextBtn = document.getElementById("sentNextBtn");
+
+function renderSent(s) {
+  currentSent = s;
+  sentBody.innerHTML = "";
+  if (!s) {
+    sentBody.innerHTML = '<div class="err">Kunde inte hämta någon mening. Försök igen om en stund.</div>';
+    return;
+  }
+  const de = document.createElement("div");
+  de.className = "sent-de";
+  de.textContent = s.german || s.de || s.text || "?";
+  sentBody.appendChild(de);
+
+  const en = document.createElement("div");
+  en.className = "sent-en hidden";
+  en.id = "sentAnswer";
+  en.textContent = s.english || s.en || s.translation || "(saknar översättning)";
+  sentBody.appendChild(en);
+
+  sentRevealBtn.textContent = "Visa översättning";
+  sentRevealBtn.disabled = false;
+}
+sentRevealBtn.onclick = () => {
+  const a = document.getElementById("sentAnswer");
+  if (!a) return;
+  a.classList.remove("hidden");
+  sentRevealBtn.textContent = "✓ Visat";
+  sentRevealBtn.disabled = true;
+};
+sentNextBtn.onclick = () => renderSent(pickRandom(sents, currentSent));
+
+// === Grammatik ===
+let grammar = [];
+let currentGram = null;
+
+const gramBody = document.getElementById("gramBody");
+const gramNextBtn = document.getElementById("gramNextBtn");
+
+function renderGram(g) {
+  currentGram = g;
+  gramBody.innerHTML = "";
+  if (!g) {
+    gramBody.innerHTML = '<div class="err">Kunde inte hämta någon regel. Försök igen om en stund.</div>';
+    return;
+  }
+  const t = document.createElement("div");
+  t.className = "gram-title";
+  t.textContent = g.title || g.name || "(utan titel)";
+  gramBody.appendChild(t);
+
+  const cat = g.category || g.topic || g.level;
+  if (cat) {
+    const c = document.createElement("div");
+    c.className = "gram-cat";
+    c.textContent = cat;
+    gramBody.appendChild(c);
+  }
+
+  const explTxt = g.explanation || g.description || g.rule || "";
+  if (explTxt) {
+    const e = document.createElement("div");
+    e.className = "gram-expl";
+    e.textContent = explTxt;
+    gramBody.appendChild(e);
+  }
+
+  const exs = g.examples || g.example || [];
+  const arr = Array.isArray(exs) ? exs : (exs ? [exs] : []);
+  if (arr.length) {
+    const box = document.createElement("div");
+    box.className = "gram-examples";
+    const ul = document.createElement("ul");
+    arr.forEach(x => {
+      const li = document.createElement("li");
+      if (typeof x === "string") li.textContent = x;
+      else li.textContent = (x.de || x.german || "") + (x.en || x.english ? "  →  " + (x.en || x.english) : "");
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+    gramBody.appendChild(box);
+  }
+}
+gramNextBtn.onclick = () => renderGram(pickRandom(grammar, currentGram));
+
+// === Ladda allt ===
+(async function init() {
+  setStatus("Hämtar innehåll…");
+
+  const [v, s, g] = await Promise.all([
+    loadBatch(CK.vocab,   "/vocab?level=" + LEVEL + "&limit=100",              j => j.data || []),
+    loadBatch(CK.sents,   "/sentences/random?level=" + LEVEL + "&limit=50",    j => j.data || j.sentences || []),
+    loadBatch(CK.grammar, "/grammar?limit=200",                                j => j.data || [])
+  ]);
+  vocab = v;
+  sents = s;
+  grammar = g;
+
+  renderWord(pickRandom(vocab));
+  renderSent(pickRandom(sents));
+  renderGram(pickRandom(grammar));
+
+  const bits = [];
+  if (vocab.length)   bits.push(vocab.length + " ord");
+  if (sents.length)   bits.push(sents.length + " meningar");
+  if (grammar.length) bits.push(grammar.length + " regler");
+  setStatus(bits.length ? "Cache: " + bits.join(" · ") : "Kunde inte hämta data — kolla nätet.");
+})();
+</script>
+
+<script src="pwa.js?v=1"></script>
+</body>
+</html>

@@ -96,8 +96,26 @@ const CATEGORIES = [
       { key: "moon",      sub: "Månfaser & cykler" },
       { key: "parkering", sub: "Kom ihåg var bilen står" }
     ]
+  },
+  {
+    name: "Språk",
+    desc: "Dagligt övande.",
+    items: [
+      { key: "tyska",       sub: "C1: ord, meningar, grammatik" },
+      { key: "anki_spanska", sub: "Flashcards via Anki (öppnas i ny flik)" }
+    ]
   }
 ];
+
+// Externa länkar som inte finns i NAV_LINKS men kan visas i "Mer"
+const EXTERNAL_LINKS = {
+  anki_spanska: {
+    href: "https://apps.ankiweb.net/",
+    icon: "🇪🇸",
+    label: "Spanska (Anki)",
+    external: true
+  }
+};
 
 const byKey = new Map(NAV_LINKS.map(l => [l.key, l]));
 const catsEl = document.getElementById("cats");
@@ -121,11 +139,12 @@ CATEGORIES.forEach(cat => {
   const tiles = document.createElement("div");
   tiles.className = "tiles";
   cat.items.forEach(it => {
-    const link = byKey.get(it.key);
+    const link = byKey.get(it.key) || EXTERNAL_LINKS[it.key];
     if (!link) return;
     const a = document.createElement("a");
     a.className = "tile";
     a.href = link.href;
+    if (link.external) { a.target = "_blank"; a.rel = "noopener"; }
     const ico = document.createElement("span");
     ico.className = "tile-ico";
     ico.textContent = link.icon;

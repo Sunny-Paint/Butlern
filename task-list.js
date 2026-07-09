@@ -49,7 +49,10 @@ function initTaskList(opts) {
     enablePrio: false,
     enableDueDate: false,
     enableCalendar: false,
-    calendarLabel: "📅 Spara i kalender (kräver datum)"
+    calendarLabel: "📅 Spara i kalender (kräver datum)",
+    lockedTag: null,        // Om satt: sidan visar bara poster med denna tagg,
+                            // filter-picker göms, nya poster får taggen automatiskt.
+    lockedTagBackHref: null // Href för "← Alla områden"-länken (visas om satt)
   }, opts || {});
   const storePrefix = cfg.storePrefix || cfg.collection;
   const TAGS_STORE = storePrefix + ".customTags";
@@ -64,7 +67,7 @@ function initTaskList(opts) {
   let items = [];
   let db = null;
   let editingId = null;
-  let selectedTags = new Set();
+  let selectedTags = new Set(cfg.lockedTag ? [cfg.lockedTag] : []);
   let customTags = [];
   let removedDefaults = [];
   let activeFilter = null;
@@ -78,7 +81,11 @@ function initTaskList(opts) {
     removedDefaults = JSON.parse(localStorage.getItem(REMOVED_STORE) || "[]");
     if (!Array.isArray(removedDefaults)) removedDefaults = [];
   } catch(e) { removedDefaults = []; }
-  try { activeFilter = localStorage.getItem(FILTER_STORE) || null; } catch(e) {}
+  if (cfg.lockedTag) {
+    activeFilter = cfg.lockedTag;
+  } else {
+    try { activeFilter = localStorage.getItem(FILTER_STORE) || null; } catch(e) {}
+  }
   try {
     const arr = JSON.parse(localStorage.getItem(COLLAPSED_STORE) || "[]");
     if (Array.isArray(arr)) collapsedIds = new Set(arr);
@@ -189,6 +196,23 @@ function initTaskList(opts) {
     const root = document.getElementById("filterPicker");
     if (!root) return;
     root.innerHTML = "";
+    if (cfg.lockedTag) {
+      // Låst läge: visa bara en återgå-länk och etikett för nuvarande område
+      root.classList.add("tag-row-locked");
+      if (cfg.lockedTagBackHref) {
+        const back = document.createElement("a");
+        back.className = "tag-pill tag-back";
+        back.href = cfg.lockedTagBackHref;
+        back.textContent = "← Alla områden";
+        root.appendChild(back);
+      }
+      const label = document.createElement("span");
+      label.className = "tag-pill selected";
+      label.textContent = cfg.lockedTag;
+      label.title = "Filtrerat på detta område";
+      root.appendChild(label);
+      return;
+    }
     const allBtn = document.createElement("span");
     allBtn.className = "tag-pill" + (!activeFilter ? " selected" : "");
     allBtn.textContent = "Alla";
@@ -203,6 +227,7 @@ function initTaskList(opts) {
     });
   }
   function saveFilter() {
+    if (cfg.lockedTag) return; // Sparas inte i låst läge
     try {
       if (activeFilter) localStorage.setItem(FILTER_STORE, activeFilter);
       else localStorage.removeItem(FILTER_STORE);
@@ -215,7 +240,7 @@ function initTaskList(opts) {
     document.getElementById("saveBtn").textContent = cfg.saveBtnNew;
     document.getElementById("cancelBtn").style.display = "none";
     document.getElementById("ideaForm").reset();
-    selectedTags = new Set();
+    selectedTags = new Set(cfg.lockedTag ? [cfg.lockedTag] : []);
     if (cfg.enablePrio) {
       const sel = document.getElementById("i_prio");
       if (sel) sel.value = "2";
@@ -316,6 +341,7 @@ function initTaskList(opts) {
       }
     }
     selectedTags = new Set(item.tags || []);
+    if (cfg.lockedTag) selectedTags.add(cfg.lockedTag);
     renderTagPicker();
     document.getElementById("ideaForm").scrollIntoView({ behavior:"smooth", block:"start" });
   }

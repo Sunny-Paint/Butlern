@@ -82,6 +82,34 @@
 
   .empty{color:var(--muted);font-size:14px;text-align:center;padding:18px}
 
+  /* === Overview: kategori-brickor === */
+  .overview-tiles{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:12px;
+  }
+  .overview-tile{
+    display:flex;flex-direction:column;gap:6px;
+    padding:18px 16px;background:#fff;border:1px solid var(--line);border-radius:14px;
+    color:var(--ink);text-decoration:none;cursor:pointer;
+    transition:border-color .15s, box-shadow .15s, transform .05s;
+    box-shadow:0 1px 2px rgba(20,20,20,.03);
+  }
+  .overview-tile:hover{
+    border-color:var(--accent);
+    box-shadow:0 4px 14px color-mix(in srgb, var(--accent) 15%, transparent);
+    transform:translateY(-1px);
+  }
+  .overview-tile .tile-name{font-size:16px;font-weight:700;color:var(--ink)}
+  .overview-tile .tile-count{font-size:12px;color:var(--muted)}
+  .overview-tile.tile-empty .tile-name{color:var(--muted);font-weight:600}
+  .overview-tile.tile-untag{border-style:dashed}
+  .overview-empty{color:var(--muted);font-size:14px;text-align:center;padding:24px;font-style:italic}
+
+  /* Filter-rad i låst läge */
+  .tag-row-locked .tag-back{background:#fff;color:var(--muted);border-style:dashed}
+  .tag-row-locked .tag-back:hover{color:var(--accent);border-color:var(--accent)}
+
   @media (max-width:720px){
     .idea{padding:12px 14px}
   }
@@ -92,12 +120,27 @@
 <div class="wrap">
 
 <h1>💡 Roliga idéer</h1>
-<p class="subtitle">Spara idéer, bryt ner i delmål, bocka av.</p>
+<p class="subtitle" id="pageSubtitle">Välj område nedan — eller lägg till ett nytt.</p>
 <nav data-nav-pills></nav>
 
-<div class="card">
-  <h3 id="formTitle">Ny idé</h3>
-  <form class="add" id="ideaForm" autocomplete="off">
+<!-- Översikt (visas när ingen ?tag= finns) -->
+<div id="overviewMode" style="display:none">
+  <div class="card">
+    <h3>Områden</h3>
+    <div class="overview-tiles" id="overviewTiles"></div>
+    <div class="overview-empty" id="overviewEmpty" style="display:none">Inga idéer än. Klicka nedan för att lägga till din första.</div>
+    <div style="margin-top:14px">
+      <a class="btn btn-primary" href="ideer.html?tag=" style="display:inline-block;text-decoration:none">+ Ny idé (välj område själv)</a>
+    </div>
+  </div>
+  <div class="status" id="statusOverview">Ansluter...</div>
+</div>
+
+<!-- Detaljvy (visas när ?tag=X finns eller ?tag= tomt) -->
+<div id="detailMode" style="display:none">
+  <div class="card">
+    <h3 id="formTitle">Ny idé</h3>
+    <form class="add" id="ideaForm" autocomplete="off">
     <div class="field">
       <label>Titel</label>
       <input type="text" id="i_title" placeholder="T.ex. Lära mig surfa" required>
@@ -128,7 +171,9 @@
   <div id="emptyMsg" class="empty" style="display:none">Inga idéer än — lägg till en ovan!</div>
 </div>
 
-</div>
+</div><!-- /#detailMode -->
+
+</div><!-- /.wrap -->
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
@@ -137,22 +182,110 @@
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
 <script src="auth-gate.js?v=9"></script>
 <script src="app.js?v=6"></script>
-<script src="task-list.js?v=9"></script>
+<script src="task-list.js?v=10"></script>
 <script>
-initTaskList({
-  collection: "ideer",
-  navKey: "ideer",
-  defaultTags: ["Roligt","Arbete","Bra för framtiden","Familj","Resa","Lärande","Hus","Hälsa"],
-  storePrefix: "ideer",
-  formTitleNew: "Ny idé",
-  formTitleEdit: "Redigera idé",
-  saveBtnNew: "Spara idé",
-  saveBtnEdit: "Spara ändringar",
-  addPlaceholder: "Nytt delmål...",
-  confirmRemoveItem: "Ta bort idén?",
-  emptyText: "Inga idéer än — lägg till en ovan!",
-  itemsLabel: "idéer"
-});
+// Idéer: översikt (kategori-brickor) om ingen ?tag=, annars låst detaljvy per område.
+const DEFAULT_TAGS = ["Roligt","Arbete","Bra för framtiden","Familj","Resa","Lärande","Hus","Hälsa"];
+const UNTAG_KEY = "__utan_omrade__";
+const UNTAG_LABEL = "Utan område";
+
+const url = new URL(window.location.href);
+const hasTagParam = url.searchParams.has("tag");
+const tagParam = url.searchParams.get("tag") || "";
+
+if (hasTagParam) {
+  // Detaljläge: initTaskList med (eventuellt) låst tagg
+  document.getElementById("detailMode").style.display = "";
+  document.getElementById("pageSubtitle").innerHTML =
+    tagParam
+      ? '<a href="ideer.html" style="color:var(--accent);text-decoration:none">← Alla områden</a> · ' + tagParam
+      : '<a href="ideer.html" style="color:var(--accent);text-decoration:none">← Alla områden</a> · Alla idéer';
+  initTaskList({
+    collection: "ideer",
+    navKey: "ideer",
+    defaultTags: DEFAULT_TAGS,
+    storePrefix: "ideer",
+    formTitleNew: "Ny idé",
+    formTitleEdit: "Redigera idé",
+    saveBtnNew: "Spara idé",
+    saveBtnEdit: "Spara ändringar",
+    addPlaceholder: "Nytt delmål...",
+    confirmRemoveItem: "Ta bort idén?",
+    emptyText: "Inga idéer i detta område än — lägg till en ovan!",
+    itemsLabel: "idéer",
+    lockedTag: tagParam || null,
+    lockedTagBackHref: "ideer.html"
+  });
+} else {
+  // Översiktsläge: rendera kategori-brickor med antal
+  document.getElementById("overviewMode").style.display = "";
+  renderNav("ideer");
+  const statusEl = document.getElementById("statusOverview");
+  const tilesEl = document.getElementById("overviewTiles");
+  const emptyEl = document.getElementById("overviewEmpty");
+
+  initApp(db => {
+    db.collection("ideer").onSnapshot(snap => {
+      const items = [];
+      snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+      statusEl.textContent = items.length + " idéer";
+
+      // Räkna per tagg
+      const counts = new Map();
+      let untagged = 0;
+      items.forEach(it => {
+        const tags = Array.isArray(it.tags) ? it.tags.filter(t => t && t.trim()) : [];
+        if (!tags.length) untagged++;
+        tags.forEach(t => counts.set(t, (counts.get(t) || 0) + 1));
+      });
+
+      // Sortera: default-taggar först (i deras egen ordning), sen övriga alfabetiskt.
+      const seen = new Set();
+      const orderedTags = [];
+      DEFAULT_TAGS.forEach(t => { orderedTags.push(t); seen.add(t); });
+      [...counts.keys()]
+        .filter(t => !seen.has(t))
+        .sort((a,b) => a.localeCompare(b, "sv"))
+        .forEach(t => orderedTags.push(t));
+
+      tilesEl.innerHTML = "";
+      orderedTags.forEach(tag => {
+        const n = counts.get(tag) || 0;
+        const a = document.createElement("a");
+        a.className = "overview-tile" + (n === 0 ? " tile-empty" : "");
+        a.href = "ideer.html?tag=" + encodeURIComponent(tag);
+        const name = document.createElement("span");
+        name.className = "tile-name";
+        name.textContent = tag;
+        a.appendChild(name);
+        const cnt = document.createElement("span");
+        cnt.className = "tile-count";
+        cnt.textContent = n === 0 ? "Tom" : n + (n === 1 ? " idé" : " idéer");
+        a.appendChild(cnt);
+        tilesEl.appendChild(a);
+      });
+
+      if (untagged > 0) {
+        const a = document.createElement("a");
+        a.className = "overview-tile tile-untag";
+        a.href = "ideer.html?tag=";
+        const name = document.createElement("span");
+        name.className = "tile-name";
+        name.textContent = UNTAG_LABEL;
+        a.appendChild(name);
+        const cnt = document.createElement("span");
+        cnt.className = "tile-count";
+        cnt.textContent = untagged + (untagged === 1 ? " idé utan tagg" : " idéer utan taggar");
+        a.appendChild(cnt);
+        tilesEl.appendChild(a);
+      }
+
+      emptyEl.style.display = orderedTags.length ? "none" : "";
+    }, err => {
+      statusEl.textContent = "Firestore-fel: " + err.message;
+    });
+  }, { onError: e => { statusEl.textContent = e.message; } });
+}
 </script>
 
 <script src="pwa.js?v=1"></script>
