@@ -38,7 +38,7 @@ const NAV_LINKS = [
 // Sidor som visas som pills i toppnavigationen (resten n\u00e5s via mer.html)
 const PRIMARY_NAV_KEYS = ["butlern", "todo", "ideer", "inkop", "vader", "lankar"];
 
-const MER_LINK = { key: "mer", href: "mer.html", icon: "\u2026", label: "Tidsf\u00f6rdriv" };
+const MER_LINK = { key: "mer", href: "mer.html", icon: "\ud83c\udfb2", label: "Tidsf\u00f6rdriv" };
 
 function renderNav(activeKey) {
   const navs = document.querySelectorAll("[data-nav-pills]");
@@ -50,9 +50,10 @@ function renderNav(activeKey) {
 
   const pillHtml = (l, active, extraClass) => {
     const cls = "nav-pill" + (extraClass ? " " + extraClass : "") + (active ? " active" : "");
+    const ico = l.icon ? `<span class="ico">${l.icon}</span>` : "";
     return active
-      ? `<span class="${cls}"><span class="ico">${l.icon}</span>${l.label}</span>`
-      : `<a class="${cls}" href="${l.href}"><span class="ico">${l.icon}</span>${l.label}</a>`;
+      ? `<span class="${cls}">${ico}${l.label}</span>`
+      : `<a class="${cls}" href="${l.href}">${ico}${l.label}</a>`;
   };
 
   navs.forEach(nav => {
