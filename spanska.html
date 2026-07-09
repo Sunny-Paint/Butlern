@@ -33,6 +33,24 @@
   }
   .cats button.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 
+  .dir-toggle{
+    display:flex;gap:6px;margin:8px 0 14px;
+  }
+  .dir-toggle button{
+    flex:1;
+    font-size:13px;padding:9px 12px;border-radius:10px;
+    background:#fff;border:1px solid var(--line);color:var(--muted);cursor:pointer;
+    font-weight:600;
+  }
+  .dir-toggle button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .flip-notice{
+    background:var(--accent-soft);color:var(--accent-dark);
+    border:1px solid var(--accent);border-radius:10px;
+    padding:10px 14px;font-size:13px;text-align:center;font-weight:600;
+    margin-bottom:12px;
+  }
+
   .card{
     background:#fff;border:1px solid var(--line);border-radius:18px;
     box-shadow:var(--shadow);
@@ -75,11 +93,14 @@
 <div class="wrap">
 
 <h1>🇪🇸 Spanska <span class="lvl-badge">A2 · B1</span></h1>
-<p class="subtitle">Flashcards med vanliga ord och fraser. Klicka för att vända kortet.</p>
+<p class="subtitle">Flashcards med vanliga ord och fraser. Välj riktning och klicka för att vända kortet.</p>
 <nav data-nav-pills></nav>
+
+<div class="dir-toggle" id="dirToggle"></div>
 
 <div class="cats" id="cats"></div>
 
+<div id="flipNotice"></div>
 <div id="cardWrap"></div>
 
 <div class="actions">
@@ -272,7 +293,9 @@ const CARDS = [
 
 // UI-state
 const catsEl = document.getElementById("cats");
+const dirEl = document.getElementById("dirToggle");
 const cardWrap = document.getElementById("cardWrap");
+const flipEl = document.getElementById("flipNotice");
 const revealBtn = document.getElementById("revealBtn");
 const nextBtn = document.getElementById("nextBtn");
 const progressEl = document.getElementById("progress");
@@ -285,9 +308,34 @@ const CAT_LABEL = {
 };
 
 const LS_CAT = "spanska.category";
+const LS_DIR = "spanska.direction";
 let activeCat = localStorage.getItem(LS_CAT) || "alla";
+let direction = localStorage.getItem(LS_DIR) || "es-sv"; // "es-sv" eller "sv-es"
 let deck = [];
 let idx = -1;
+
+function renderDirToggle() {
+  dirEl.innerHTML = "";
+  [
+    { key:"es-sv", label:"🇪🇸 Spanska → Svenska" },
+    { key:"sv-es", label:"🇸🇪 Svenska → Spanska" }
+  ].forEach(d => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = d.label;
+    if (d.key === direction) btn.classList.add("active");
+    btn.onclick = () => {
+      if (direction === d.key) return;
+      direction = d.key;
+      localStorage.setItem(LS_DIR, direction);
+      renderDirToggle();
+      showFlipNotice("");
+      // Vi behåller samma deck och index, bara byter sidor.
+      if (deck.length && deck[idx]) renderCard(deck[idx]);
+    };
+    dirEl.appendChild(btn);
+  });
+}
 
 function renderCats() {
   catsEl.innerHTML = "";
@@ -303,6 +351,7 @@ function renderCats() {
       localStorage.setItem(LS_CAT, cat);
       renderCats();
       buildDeck();
+      showFlipNotice("");
       showNext();
     };
     catsEl.appendChild(btn);
@@ -324,6 +373,15 @@ function buildDeck() {
   idx = -1;
 }
 
+function showFlipNotice(msg) {
+  flipEl.innerHTML = "";
+  if (!msg) return;
+  const div = document.createElement("div");
+  div.className = "flip-notice";
+  div.textContent = msg;
+  flipEl.appendChild(div);
+}
+
 function renderCard(card) {
   cardWrap.innerHTML = "";
   if (!card) {
@@ -341,26 +399,32 @@ function renderCard(card) {
   cat.textContent = CAT_LABEL[card.c] || card.c;
   box.appendChild(cat);
 
-  const es = document.createElement("div");
-  es.className = "es";
-  es.textContent = card.es;
-  box.appendChild(es);
+  // Front/back baserat på riktning
+  const frontTxt = direction === "es-sv" ? card.es : card.sv;
+  const backTxt  = direction === "es-sv" ? card.sv : card.es;
 
-  const sv = document.createElement("div");
-  sv.className = "sv hidden";
-  sv.id = "svAnswer";
-  sv.textContent = card.sv;
-  box.appendChild(sv);
+  const front = document.createElement("div");
+  front.className = "es";
+  front.textContent = frontTxt;
+  box.appendChild(front);
+
+  const back = document.createElement("div");
+  back.className = "sv hidden";
+  back.id = "svAnswer";
+  back.textContent = backTxt;
+  box.appendChild(back);
 
   if (card.ex_es) {
     const ex = document.createElement("div");
     ex.className = "ex hidden";
     ex.id = "exAnswer";
-    ex.textContent = "„" + card.ex_es + "”";
-    if (card.ex_sv) {
+    const exFront = direction === "es-sv" ? card.ex_es : card.ex_sv;
+    const exBack  = direction === "es-sv" ? card.ex_sv : card.ex_es;
+    ex.textContent = "„" + exFront + "”";
+    if (exBack) {
       const sub = document.createElement("span");
       sub.className = "ex-sv";
-      sub.textContent = card.ex_sv;
+      sub.textContent = exBack;
       ex.appendChild(sub);
     }
     box.appendChild(ex);
@@ -380,9 +444,18 @@ function showNext() {
   }
   idx++;
   if (idx >= deck.length) {
-    // Blanda om när kortleken är slut
-    deck = shuffle(deck);
+    // Kortleken slut: vänd riktning automatiskt och blanda om.
+    direction = direction === "es-sv" ? "sv-es" : "es-sv";
+    localStorage.setItem(LS_DIR, direction);
+    renderDirToggle();
+    showFlipNotice(direction === "sv-es"
+      ? "Bra! Nu kör vi samma ord från Svenska → Spanska."
+      : "Bra! Nu kör vi samma ord från Spanska → Svenska.");
+    buildDeck();
     idx = 0;
+  } else {
+    // rensa notice när man går vidare från första kortet efter vridning
+    if (idx > 0) showFlipNotice("");
   }
   renderCard(deck[idx]);
   progressEl.textContent = "Kort " + (idx + 1) + " / " + deck.length;
@@ -398,6 +471,7 @@ revealBtn.onclick = () => {
 };
 nextBtn.onclick = showNext;
 
+renderDirToggle();
 renderCats();
 buildDeck();
 showNext();

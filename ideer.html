@@ -106,6 +106,28 @@
   .overview-tile.tile-untag{border-style:dashed}
   .overview-empty{color:var(--muted);font-size:14px;text-align:center;padding:24px;font-style:italic}
 
+  /* Redigeringsläge för områden */
+  .overview-tile{position:relative}
+  .tile-actions{
+    position:absolute;top:8px;right:8px;display:flex;gap:4px;
+  }
+  .tile-actions button{
+    padding:4px 8px;font-size:14px;line-height:1;
+    background:#fff;border:1px solid var(--line);border-radius:6px;cursor:pointer;
+  }
+  .tile-actions button:hover{border-color:var(--accent)}
+  .overview-tile.editing{cursor:default}
+  .overview-tile.editing:hover{transform:none}
+  .tile-add-new{
+    justify-content:center;align-items:center;text-align:center;
+    border-style:dashed;
+  }
+  .tile-add-new .tile-name{color:var(--accent);font-size:15px}
+  .edit-toolbar{
+    display:flex;justify-content:flex-end;align-items:center;
+    margin-top:14px;flex-wrap:wrap;gap:10px;
+  }
+
   /* Filter-rad i låst läge */
   .tag-row-locked .tag-back{background:#fff;color:var(--muted);border-style:dashed}
   .tag-row-locked .tag-back:hover{color:var(--accent);border-color:var(--accent)}
@@ -129,8 +151,9 @@
     <h3>Områden</h3>
     <div class="overview-tiles" id="overviewTiles"></div>
     <div class="overview-empty" id="overviewEmpty" style="display:none">Inga idéer än. Klicka nedan för att lägga till din första.</div>
-    <div style="margin-top:14px">
+    <div class="edit-toolbar">
       <a class="btn btn-primary" href="ideer.html?tag=" style="display:inline-block;text-decoration:none">+ Ny idé (välj område själv)</a>
+      <button type="button" class="btn btn-ghost btn-sm" id="editModeBtn">⚙️ Redigera områden</button>
     </div>
   </div>
   <div class="status" id="statusOverview">Ansluter...</div>
@@ -223,64 +246,200 @@ if (hasTagParam) {
   const statusEl = document.getElementById("statusOverview");
   const tilesEl = document.getElementById("overviewTiles");
   const emptyEl = document.getElementById("overviewEmpty");
+  const editBtn = document.getElementById("editModeBtn");
+
+  // Kategori-lista sparas i Firestore: settings/ideerCategories { list: string[] }
+  // Om dokumentet inte finns används DEFAULT_TAGS.
+  let effectiveCats = DEFAULT_TAGS.slice();
+  let currentItems = [];
+  let editMode = false;
+  let dbRef = null;
+
+  function saveCategoryList(list) {
+    return dbRef.collection("settings").doc("ideerCategories").set({
+      list,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  async function addCategory() {
+    const name = (prompt("Namn på nytt område:") || "").trim();
+    if (!name) return;
+    if (effectiveCats.some(t => t.toLowerCase() === name.toLowerCase())) {
+      alert("Området finns redan.");
+      return;
+    }
+    try {
+      await saveCategoryList([...effectiveCats, name]);
+    } catch (e) {
+      alert("Kunde inte spara: " + e.message);
+    }
+  }
+
+  async function renameCategory(oldName) {
+    const newName = (prompt("Nytt namn för \"" + oldName + "\":", oldName) || "").trim();
+    if (!newName || newName === oldName) return;
+    if (effectiveCats.some(t => t.toLowerCase() === newName.toLowerCase())) {
+      alert("Ett område med det namnet finns redan.");
+      return;
+    }
+    try {
+      // Uppdatera kategori-listan
+      const newList = effectiveCats.map(t => t === oldName ? newName : t);
+      if (!newList.includes(newName)) newList.push(newName);
+      await saveCategoryList(newList);
+
+      // Byt taggen i alla idéer som använder oldName
+      const snap = await dbRef.collection("ideer").where("tags", "array-contains", oldName).get();
+      if (!snap.empty) {
+        const batch = dbRef.batch();
+        snap.forEach(doc => {
+          const tags = (doc.data().tags || []).map(t => t === oldName ? newName : t);
+          const unique = [...new Set(tags)];
+          batch.update(doc.ref, { tags: unique });
+        });
+        await batch.commit();
+      }
+    } catch (e) {
+      alert("Kunde inte byta namn: " + e.message);
+    }
+  }
+
+  async function deleteCategory(name) {
+    const inUse = currentItems.filter(it => Array.isArray(it.tags) && it.tags.includes(name)).length;
+    const warn = inUse > 0
+      ? "Ta bort området \"" + name + "\"? " + inUse + " idé(er) förlorar taggen (men behålls)."
+      : "Ta bort området \"" + name + "\"?";
+    if (!confirm(warn)) return;
+    try {
+      const newList = effectiveCats.filter(t => t !== name);
+      await saveCategoryList(newList);
+
+      if (inUse > 0) {
+        const snap = await dbRef.collection("ideer").where("tags", "array-contains", name).get();
+        const batch = dbRef.batch();
+        snap.forEach(doc => {
+          batch.update(doc.ref, { tags: firebase.firestore.FieldValue.arrayRemove(name) });
+        });
+        await batch.commit();
+      }
+    } catch (e) {
+      alert("Kunde inte ta bort: " + e.message);
+    }
+  }
+
+  editBtn.onclick = () => {
+    editMode = !editMode;
+    editBtn.textContent = editMode ? "✓ Klar" : "⚙️ Redigera områden";
+    editBtn.classList.toggle("btn-primary", editMode);
+    editBtn.classList.toggle("btn-ghost", !editMode);
+    render();
+  };
+
+  function render() {
+    // Räkna per tagg
+    const counts = new Map();
+    let untagged = 0;
+    currentItems.forEach(it => {
+      const tags = Array.isArray(it.tags) ? it.tags.filter(t => t && t.trim()) : [];
+      if (!tags.length) untagged++;
+      tags.forEach(t => counts.set(t, (counts.get(t) || 0) + 1));
+    });
+    statusEl.textContent = currentItems.length + " idéer";
+
+    // Sortera: effektiv lista först i sin ordning, sen okatalogade taggar som finns i data.
+    const seen = new Set();
+    const orderedTags = [];
+    effectiveCats.forEach(t => { orderedTags.push(t); seen.add(t); });
+    [...counts.keys()]
+      .filter(t => !seen.has(t))
+      .sort((a,b) => a.localeCompare(b, "sv"))
+      .forEach(t => orderedTags.push(t));
+
+    tilesEl.innerHTML = "";
+
+    orderedTags.forEach(tag => {
+      const n = counts.get(tag) || 0;
+      const el = document.createElement(editMode ? "div" : "a");
+      el.className = "overview-tile" + (n === 0 ? " tile-empty" : "") + (editMode ? " editing" : "");
+      if (!editMode) el.href = "ideer.html?tag=" + encodeURIComponent(tag);
+
+      const name = document.createElement("span");
+      name.className = "tile-name";
+      name.textContent = tag;
+      el.appendChild(name);
+
+      const cnt = document.createElement("span");
+      cnt.className = "tile-count";
+      cnt.textContent = n === 0 ? "Tom" : n + (n === 1 ? " idé" : " idéer");
+      el.appendChild(cnt);
+
+      if (editMode) {
+        const acts = document.createElement("div");
+        acts.className = "tile-actions";
+        const rn = document.createElement("button");
+        rn.type = "button";
+        rn.title = "Byt namn";
+        rn.textContent = "✏️";
+        rn.onclick = (e) => { e.stopPropagation(); renameCategory(tag); };
+        acts.appendChild(rn);
+        const del = document.createElement("button");
+        del.type = "button";
+        del.title = "Ta bort";
+        del.textContent = "🗑";
+        del.onclick = (e) => { e.stopPropagation(); deleteCategory(tag); };
+        acts.appendChild(del);
+        el.appendChild(acts);
+      }
+      tilesEl.appendChild(el);
+    });
+
+    // "Utan område"-kachel (bara i normalt läge)
+    if (!editMode && untagged > 0) {
+      const a = document.createElement("a");
+      a.className = "overview-tile tile-untag";
+      a.href = "ideer.html?tag=";
+      const name = document.createElement("span");
+      name.className = "tile-name";
+      name.textContent = UNTAG_LABEL;
+      a.appendChild(name);
+      const cnt = document.createElement("span");
+      cnt.className = "tile-count";
+      cnt.textContent = untagged + (untagged === 1 ? " idé utan tagg" : " idéer utan taggar");
+      a.appendChild(cnt);
+      tilesEl.appendChild(a);
+    }
+
+    // "+ Nytt område"-kachel i redigeringsläge
+    if (editMode) {
+      const add = document.createElement("div");
+      add.className = "overview-tile tile-add-new editing";
+      const name = document.createElement("span");
+      name.className = "tile-name";
+      name.textContent = "+ Nytt område";
+      add.appendChild(name);
+      add.onclick = addCategory;
+      tilesEl.appendChild(add);
+    }
+
+    emptyEl.style.display = (orderedTags.length || editMode) ? "none" : "";
+  }
 
   initApp(db => {
-    db.collection("ideer").onSnapshot(snap => {
-      const items = [];
-      snap.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
-      statusEl.textContent = items.length + " idéer";
-
-      // Räkna per tagg
-      const counts = new Map();
-      let untagged = 0;
-      items.forEach(it => {
-        const tags = Array.isArray(it.tags) ? it.tags.filter(t => t && t.trim()) : [];
-        if (!tags.length) untagged++;
-        tags.forEach(t => counts.set(t, (counts.get(t) || 0) + 1));
-      });
-
-      // Sortera: default-taggar först (i deras egen ordning), sen övriga alfabetiskt.
-      const seen = new Set();
-      const orderedTags = [];
-      DEFAULT_TAGS.forEach(t => { orderedTags.push(t); seen.add(t); });
-      [...counts.keys()]
-        .filter(t => !seen.has(t))
-        .sort((a,b) => a.localeCompare(b, "sv"))
-        .forEach(t => orderedTags.push(t));
-
-      tilesEl.innerHTML = "";
-      orderedTags.forEach(tag => {
-        const n = counts.get(tag) || 0;
-        const a = document.createElement("a");
-        a.className = "overview-tile" + (n === 0 ? " tile-empty" : "");
-        a.href = "ideer.html?tag=" + encodeURIComponent(tag);
-        const name = document.createElement("span");
-        name.className = "tile-name";
-        name.textContent = tag;
-        a.appendChild(name);
-        const cnt = document.createElement("span");
-        cnt.className = "tile-count";
-        cnt.textContent = n === 0 ? "Tom" : n + (n === 1 ? " idé" : " idéer");
-        a.appendChild(cnt);
-        tilesEl.appendChild(a);
-      });
-
-      if (untagged > 0) {
-        const a = document.createElement("a");
-        a.className = "overview-tile tile-untag";
-        a.href = "ideer.html?tag=";
-        const name = document.createElement("span");
-        name.className = "tile-name";
-        name.textContent = UNTAG_LABEL;
-        a.appendChild(name);
-        const cnt = document.createElement("span");
-        cnt.className = "tile-count";
-        cnt.textContent = untagged + (untagged === 1 ? " idé utan tagg" : " idéer utan taggar");
-        a.appendChild(cnt);
-        tilesEl.appendChild(a);
+    dbRef = db;
+    db.collection("settings").doc("ideerCategories").onSnapshot(doc => {
+      if (doc.exists && Array.isArray(doc.data().list)) {
+        effectiveCats = doc.data().list;
+      } else {
+        effectiveCats = DEFAULT_TAGS.slice();
       }
+      render();
+    }, err => console.warn("[ideer] settings-fel:", err));
 
-      emptyEl.style.display = orderedTags.length ? "none" : "";
+    db.collection("ideer").onSnapshot(snap => {
+      currentItems = [];
+      snap.forEach(doc => currentItems.push({ id: doc.id, ...doc.data() }));
+      render();
     }, err => {
       statusEl.textContent = "Firestore-fel: " + err.message;
     });

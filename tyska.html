@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Tyska">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#a6612a">
-<title>Tyska – C1</title>
+<title>Tyska – C1 flashcards</title>
 <link rel="manifest" href="/manifest.json">
 
 <meta name="mobile-web-app-capable" content="yes">
@@ -26,37 +26,66 @@
   .lvl-badge{display:inline-block;background:var(--accent-soft);color:var(--accent-dark);
     font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:.05em;margin-left:8px}
 
-  .de-card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:18px 20px;box-shadow:var(--shadow);margin-bottom:18px}
-  .de-card h2{margin:0 0 12px;font-size:18px;color:var(--accent-dark);display:flex;align-items:center;flex-wrap:wrap}
-  .de-card .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-  .de-card .actions button{font-size:13px;padding:7px 14px}
-  .de-card .loading{color:var(--muted);font-style:italic;font-size:14px}
-  .de-card .err{color:#a02020;font-size:13px;background:#fdecea;border:1px solid #f5c2c0;padding:8px 10px;border-radius:8px}
+  .cats{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 18px}
+  .cats button{
+    font-size:12px;padding:6px 12px;border-radius:999px;
+    background:#fff;border:1px solid var(--line);color:var(--muted);cursor:pointer;
+  }
+  .cats button.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 
-  /* Ord */
-  .word-main{font-size:26px;font-weight:700;color:var(--ink);margin-bottom:4px}
-  .word-main .art{color:var(--accent);margin-right:6px;font-weight:600}
-  .word-pos{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px}
-  .word-answer{margin-top:10px;padding:10px 12px;background:#faf6ec;border-radius:8px;border:1px dashed var(--line)}
-  .word-answer .en{font-size:16px;font-weight:600;color:var(--ink)}
-  .word-answer .ex-de{margin-top:8px;font-size:14px;color:#2a2a2a;font-style:italic}
-  .word-answer .ex-en{font-size:13px;color:var(--muted)}
+  .dir-toggle{
+    display:flex;gap:6px;margin:8px 0 14px;
+  }
+  .dir-toggle button{
+    flex:1;
+    font-size:13px;padding:9px 12px;border-radius:10px;
+    background:#fff;border:1px solid var(--line);color:var(--muted);cursor:pointer;
+    font-weight:600;
+  }
+  .dir-toggle button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .flip-notice{
+    background:var(--accent-soft);color:var(--accent-dark);
+    border:1px solid var(--accent);border-radius:10px;
+    padding:10px 14px;font-size:13px;text-align:center;font-weight:600;
+    margin-bottom:12px;
+  }
+
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:18px;
+    box-shadow:var(--shadow);
+    padding:32px 24px;margin-bottom:16px;min-height:180px;
+    display:flex;flex-direction:column;justify-content:center;text-align:center;
+  }
+  .card .cat{
+    font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+    font-weight:600;margin-bottom:12px;
+  }
+  .card .de{
+    font-size:28px;font-weight:700;color:var(--ink);line-height:1.25;word-break:break-word;
+  }
+  .card .de .art{color:var(--accent);margin-right:6px;font-weight:600}
+  .card .sv{
+    margin-top:16px;padding:12px 14px;background:#fef7f0;border-radius:10px;
+    border:1px dashed var(--line);font-size:20px;font-weight:600;color:var(--ink);
+  }
+  .card .ex{
+    margin-top:10px;font-size:14px;color:#2a2a2a;font-style:italic;
+    padding:8px 12px;background:#faf6ec;border-radius:8px;border:1px dashed var(--line);
+  }
+  .card .ex .ex-sv{display:block;margin-top:4px;font-style:normal;color:var(--muted);font-size:13px}
   .hidden{display:none}
 
-  /* Mening */
-  .sent-de{font-size:18px;font-weight:600;color:var(--ink);line-height:1.5;word-break:break-word}
-  .sent-en{margin-top:10px;padding:10px 12px;background:#faf6ec;border-radius:8px;border:1px dashed var(--line);font-size:15px;color:#2a2a2a}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+  .actions button{font-size:14px;padding:9px 18px}
+  .actions .btn-primary{min-width:130px}
 
-  /* Grammatik */
-  .gram-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:6px}
-  .gram-cat{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px}
-  .gram-expl{font-size:14px;color:#2a2a2a;line-height:1.55;white-space:pre-wrap}
-  .gram-examples{margin-top:10px;padding:10px 12px;background:#faf6ec;border-radius:8px;border:1px dashed var(--line)}
-  .gram-examples ul{margin:0;padding-left:18px}
-  .gram-examples li{font-size:13px;margin:3px 0}
-
-  .status-line{font-size:12px;color:var(--muted);margin-top:10px}
-  .cache-note{font-size:11px;color:var(--muted);margin-top:6px}
+  .progress{
+    text-align:center;font-size:12px;color:var(--muted);margin-top:14px;
+  }
+  .empty{
+    text-align:center;color:var(--muted);font-style:italic;padding:40px 20px;
+  }
 </style>
 </head>
 <body>
@@ -64,43 +93,22 @@
 <div class="wrap">
 
 <h1>🇩🇪 Tyska <span class="lvl-badge">C1</span></h1>
-<p class="subtitle">Ord, meningar och grammatikregler på avancerad nivå. Data från <a href="https://rep12.com" target="_blank" rel="noopener" style="color:var(--accent)">rep12</a>.</p>
+<p class="subtitle">Flashcards på avancerad nivå. Välj riktning och klicka för att vända kortet.</p>
 <nav data-nav-pills></nav>
 
-<div class="de-card" id="wordCard">
-  <h2>📚 Dagens ord</h2>
-  <div id="wordBody">
-    <div class="loading">Laddar ord…</div>
-  </div>
-  <div class="actions">
-    <button type="button" class="btn btn-ghost" id="wordRevealBtn">Visa översättning &amp; exempel</button>
-    <button type="button" class="btn btn-primary" id="wordNextBtn">Nytt ord →</button>
-  </div>
+<div class="dir-toggle" id="dirToggle"></div>
+
+<div class="cats" id="cats"></div>
+
+<div id="flipNotice"></div>
+<div id="cardWrap"></div>
+
+<div class="actions">
+  <button type="button" class="btn btn-ghost" id="revealBtn">Visa svar</button>
+  <button type="button" class="btn btn-primary" id="nextBtn">Nästa kort →</button>
 </div>
 
-<div class="de-card" id="sentCard">
-  <h2>💬 Mening att översätta</h2>
-  <div id="sentBody">
-    <div class="loading">Laddar mening…</div>
-  </div>
-  <div class="actions">
-    <button type="button" class="btn btn-ghost" id="sentRevealBtn">Visa översättning</button>
-    <button type="button" class="btn btn-primary" id="sentNextBtn">Ny mening →</button>
-  </div>
-</div>
-
-<div class="de-card" id="gramCard">
-  <h2>📖 Grammatikregel</h2>
-  <div id="gramBody">
-    <div class="loading">Laddar regel…</div>
-  </div>
-  <div class="actions">
-    <button type="button" class="btn btn-primary" id="gramNextBtn">Ny regel →</button>
-  </div>
-</div>
-
-<div class="status-line" id="status"></div>
-<div class="cache-note">API:et hostas gratis på Render — första anrop efter inaktivitet kan ta 30–60 sek (cold start). Data cachas lokalt så sidan fungerar offline.</div>
+<div class="progress" id="progress"></div>
 
 </div>
 
@@ -108,252 +116,329 @@
 <script>
 renderNav("tyska");
 
-const API_BASE = "https://german-language.onrender.com";
-const API_KEY  = "demo-key-12345";
-const LEVEL    = "c1";
+// Bundlade C1-flashcards.
+// Fält: c=kategori, de=tyska (m. artikel för substantiv), sv=svenska,
+// ex_de/ex_sv=valfri exempelmening.
+const CARDS = [
+  // ===== Substantiv (der/die/das) =====
+  { c:"substantiv", de:"die Auseinandersetzung", sv:"diskussion, meningsutbyte, konflikt", ex_de:"Wir hatten eine hitzige Auseinandersetzung.", ex_sv:"Vi hade en het diskussion." },
+  { c:"substantiv", de:"die Nachhaltigkeit", sv:"hållbarhet" },
+  { c:"substantiv", de:"die Voraussetzung", sv:"förutsättning" },
+  { c:"substantiv", de:"die Erkenntnis", sv:"insikt, kunskap" },
+  { c:"substantiv", de:"die Bedenken (pl.)", sv:"betänkligheter, tvivel" },
+  { c:"substantiv", de:"die Anspielung", sv:"anspelning" },
+  { c:"substantiv", de:"die Zurückhaltung", sv:"återhållsamhet, försiktighet" },
+  { c:"substantiv", de:"die Gelassenheit", sv:"lugn, sinnesro" },
+  { c:"substantiv", de:"die Willkür", sv:"godtycklighet" },
+  { c:"substantiv", de:"die Ehrfurcht", sv:"vördnad" },
+  { c:"substantiv", de:"die Zumutung", sv:"orimlighet, oförskämdhet" },
+  { c:"substantiv", de:"die Selbstverständlichkeit", sv:"självklarhet" },
+  { c:"substantiv", de:"die Rücksichtnahme", sv:"hänsyn" },
+  { c:"substantiv", de:"der Anspruch", sv:"anspråk, krav" },
+  { c:"substantiv", de:"der Aufschwung", sv:"uppsving" },
+  { c:"substantiv", de:"der Rückschlag", sv:"bakslag" },
+  { c:"substantiv", de:"der Ausgleich", sv:"utjämning, kompensation" },
+  { c:"substantiv", de:"der Vorwand", sv:"förevändning, svepskäl" },
+  { c:"substantiv", de:"der Missstand", sv:"missförhållande" },
+  { c:"substantiv", de:"der Beistand", sv:"stöd, bistånd" },
+  { c:"substantiv", de:"das Ausmaß", sv:"omfattning" },
+  { c:"substantiv", de:"das Anliegen", sv:"ärende, angelägenhet" },
+  { c:"substantiv", de:"das Vorhaben", sv:"planerat projekt, avsikt" },
+  { c:"substantiv", de:"das Vermögen", sv:"förmögenhet; förmåga" },
+  { c:"substantiv", de:"das Missverständnis", sv:"missförstånd" },
+  { c:"substantiv", de:"das Entgegenkommen", sv:"tillmötesgående" },
+  { c:"substantiv", de:"das Zusammenspiel", sv:"samspel" },
+  { c:"substantiv", de:"das Übermaß", sv:"övermått, överflöd" },
+  { c:"substantiv", de:"das Wesentliche", sv:"det väsentliga" },
 
-// LocalStorage-cache: håll batchar och rotera lokalt så vi spar API-anrop
-// och funkar offline när Render-instansen sover.
-const CACHE_TTL_MS = 24 * 3600 * 1000;
-const CK = {
-  vocab:    "tyska.cache.vocab.c1",
-  sents:    "tyska.cache.sents.c1",
-  grammar:  "tyska.cache.grammar"
+  // ===== Starka verb =====
+  { c:"verb", de:"erwägen", sv:"överväga, betänka", ex_de:"Wir erwägen alle Optionen.", ex_sv:"Vi överväger alla alternativ." },
+  { c:"verb", de:"gedeihen", sv:"trivas, blomstra" },
+  { c:"verb", de:"unterlassen", sv:"underlåta, avstå från" },
+  { c:"verb", de:"verzichten (auf)", sv:"avstå (från)" },
+  { c:"verb", de:"scheitern (an)", sv:"misslyckas (med)" },
+  { c:"verb", de:"gelingen", sv:"lyckas", ex_de:"Es ist mir gelungen.", ex_sv:"Det lyckades för mig." },
+  { c:"verb", de:"bewältigen", sv:"bemästra, klara av" },
+  { c:"verb", de:"vermeiden", sv:"undvika" },
+  { c:"verb", de:"berücksichtigen", sv:"ta hänsyn till" },
+  { c:"verb", de:"veranlassen", sv:"föranleda, se till" },
+  { c:"verb", de:"beharren (auf)", sv:"envisas (med)" },
+  { c:"verb", de:"schildern", sv:"skildra, beskriva" },
+  { c:"verb", de:"beanspruchen", sv:"ta i anspråk, göra anspråk på" },
+  { c:"verb", de:"bestreiten", sv:"bestrida, förneka" },
+  { c:"verb", de:"erweisen (sich als)", sv:"visa sig (vara)" },
+  { c:"verb", de:"ergreifen", sv:"gripa; vidta (åtgärd)" },
+  { c:"verb", de:"unterbinden", sv:"förhindra, stoppa" },
+  { c:"verb", de:"aussetzen", sv:"utsätta; suspendera" },
+  { c:"verb", de:"verkörpern", sv:"förkroppsliga" },
+  { c:"verb", de:"empfinden", sv:"känna, uppleva" },
+
+  // ===== Prefixverb med nyans =====
+  { c:"prefix", de:"nachvollziehen", sv:"förstå, kunna sätta sig in i", ex_de:"Ich kann deine Reaktion nachvollziehen.", ex_sv:"Jag förstår din reaktion." },
+  { c:"prefix", de:"vorbeugen", sv:"förebygga" },
+  { c:"prefix", de:"ausweichen", sv:"väja undan, undvika" },
+  { c:"prefix", de:"einlenken", sv:"lenka in; ge efter, kompromissa" },
+  { c:"prefix", de:"aufgeben", sv:"ge upp" },
+  { c:"prefix", de:"beibehalten", sv:"behålla, bibehålla" },
+  { c:"prefix", de:"hinnehmen", sv:"acceptera (motvilligt)" },
+  { c:"prefix", de:"anberaumen", sv:"utsätta (tidpunkt för möte)" },
+  { c:"prefix", de:"anmuten", sv:"verka, ge intryck (av)" },
+  { c:"prefix", de:"unterlaufen", sv:"begå (fel); undermina" },
+  { c:"prefix", de:"vorwerfen", sv:"förebrå, anklaga" },
+  { c:"prefix", de:"anregen", sv:"stimulera, inspirera" },
+  { c:"prefix", de:"absegnen", sv:"godkänna (formellt)" },
+  { c:"prefix", de:"beibringen", sv:"lära ut, komma på" },
+  { c:"prefix", de:"vorenthalten", sv:"undanhålla" },
+
+  // ===== Adjektiv & adverb =====
+  { c:"adjektiv", de:"nachdrücklich", sv:"eftertryckligt, med kraft" },
+  { c:"adjektiv", de:"bedenklich", sv:"betänklig, oroande" },
+  { c:"adjektiv", de:"unmissverständlich", sv:"otvetydig" },
+  { c:"adjektiv", de:"vermeintlich", sv:"förmodad, s.k." },
+  { c:"adjektiv", de:"maßgeblich", sv:"avgörande, bestämmande" },
+  { c:"adjektiv", de:"schlichtweg", sv:"rätt och slätt, helt enkelt" },
+  { c:"adjektiv", de:"unabdingbar", sv:"oundgänglig" },
+  { c:"adjektiv", de:"weitreichend", sv:"långtgående" },
+  { c:"adjektiv", de:"kläglich", sv:"beklaglig, ynklig" },
+  { c:"adjektiv", de:"beharrlich", sv:"envis, ihärdig" },
+  { c:"adjektiv", de:"unauffällig", sv:"diskret, oansenlig" },
+  { c:"adjektiv", de:"verheerend", sv:"förödande" },
+  { c:"adjektiv", de:"nachhaltig", sv:"hållbar; långvarig" },
+  { c:"adjektiv", de:"gebührend", sv:"tillbörlig, passande" },
+  { c:"adjektiv", de:"treffend", sv:"träffande" },
+  { c:"adjektiv", de:"vielschichtig", sv:"mångfacetterad" },
+  { c:"adjektiv", de:"reibungslos", sv:"friktionsfri" },
+  { c:"adjektiv", de:"anmaßend", sv:"anspråksfull, förmäten" },
+  { c:"adjektiv", de:"überheblich", sv:"överlägsen (nedsätt.), arrogant" },
+  { c:"adjektiv", de:"beiläufig", sv:"i förbigående, tillfällig" },
+
+  // ===== Konnektorer & partiklar =====
+  { c:"konnektor", de:"nichtsdestotrotz", sv:"trots det, ändå" },
+  { c:"konnektor", de:"dessen ungeachtet", sv:"oaktat detta" },
+  { c:"konnektor", de:"insofern", sv:"i den mån, såtillvida" },
+  { c:"konnektor", de:"sofern", sv:"under förutsättning att" },
+  { c:"konnektor", de:"soweit", sv:"i den mån (som)" },
+  { c:"konnektor", de:"gleichwohl", sv:"likväl" },
+  { c:"konnektor", de:"mithin", sv:"följaktligen" },
+  { c:"konnektor", de:"überdies", sv:"dessutom, för övrigt" },
+  { c:"konnektor", de:"folglich", sv:"följaktligen" },
+  { c:"konnektor", de:"demzufolge", sv:"enligt detta, följaktligen" },
+  { c:"konnektor", de:"zumal", sv:"i synnerhet som" },
+  { c:"konnektor", de:"ohnehin", sv:"ändå, hursomhelst" },
+  { c:"konnektor", de:"vielmehr", sv:"snarare, tvärtom" },
+  { c:"konnektor", de:"hingegen", sv:"däremot" },
+  { c:"konnektor", de:"beziehungsweise (bzw.)", sv:"respektive, eller" },
+
+  // ===== Idiom & uttryck =====
+  { c:"uttryck", de:"jemandem etwas übel nehmen", sv:"ta illa upp av något", ex_de:"Nimm es mir nicht übel.", ex_sv:"Ta inte illa upp." },
+  { c:"uttryck", de:"aus dem Ruder laufen", sv:"gå överstyr" },
+  { c:"uttryck", de:"ins Auge fassen", sv:"överväga, sikta på" },
+  { c:"uttryck", de:"auf dem Spiel stehen", sv:"stå på spel" },
+  { c:"uttryck", de:"unter die Arme greifen", sv:"hjälpa på traven" },
+  { c:"uttryck", de:"das Zünglein an der Waage sein", sv:"vara den avgörande faktorn" },
+  { c:"uttryck", de:"mit gemischten Gefühlen", sv:"med blandade känslor" },
+  { c:"uttryck", de:"aus heiterem Himmel", sv:"som en blixt från klar himmel" },
+  { c:"uttryck", de:"in Frage kommen", sv:"vara ett alternativ" },
+  { c:"uttryck", de:"eine Rolle spielen", sv:"spela en roll" },
+  { c:"uttryck", de:"zur Sprache bringen", sv:"ta upp (till diskussion)" },
+  { c:"uttryck", de:"jemandem entgegenkommen", sv:"möta någon halvvägs" },
+  { c:"uttryck", de:"etwas in Kauf nehmen", sv:"acceptera (som pris)" },
+  { c:"uttryck", de:"den Ton angeben", sv:"sätta tonen, styra" },
+  { c:"uttryck", de:"aus dem Rahmen fallen", sv:"stå ut, avvika" },
+
+  // ===== Formellt / akademiskt =====
+  { c:"formellt", de:"gemäß", sv:"enligt (formellt)" },
+  { c:"formellt", de:"hinsichtlich", sv:"med avseende på" },
+  { c:"formellt", de:"bezüglich", sv:"angående" },
+  { c:"formellt", de:"anhand von", sv:"utifrån, med hjälp av" },
+  { c:"formellt", de:"im Rahmen von", sv:"inom ramen för" },
+  { c:"formellt", de:"in Anbetracht", sv:"med hänsyn till" },
+  { c:"formellt", de:"vor dem Hintergrund", sv:"mot bakgrund av" },
+  { c:"formellt", de:"eine These vertreten", sv:"driva en tes" },
+  { c:"formellt", de:"zur Folge haben", sv:"medföra, resultera i" },
+  { c:"formellt", de:"in Erwägung ziehen", sv:"ta i övervägande" }
+];
+
+// UI-state
+const catsEl = document.getElementById("cats");
+const dirEl = document.getElementById("dirToggle");
+const cardWrap = document.getElementById("cardWrap");
+const flipEl = document.getElementById("flipNotice");
+const revealBtn = document.getElementById("revealBtn");
+const nextBtn = document.getElementById("nextBtn");
+const progressEl = document.getElementById("progress");
+
+const CAT_ORDER = ["alla","substantiv","verb","prefix","adjektiv","konnektor","uttryck","formellt"];
+const CAT_LABEL = {
+  alla:"Alla", substantiv:"Substantiv", verb:"Verb", prefix:"Prefixverb",
+  adjektiv:"Adjektiv", konnektor:"Konnektorer", uttryck:"Uttryck", formellt:"Formellt"
 };
 
-function readCache(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const obj = JSON.parse(raw);
-    if (!obj || !Array.isArray(obj.data)) return null;
-    if (Date.now() - (obj.ts || 0) > CACHE_TTL_MS) return { data: obj.data, stale: true };
-    return { data: obj.data, stale: false };
-  } catch(e) { return null; }
-}
-function writeCache(key, data) {
-  try { localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data })); } catch(e) {}
-}
+const LS_CAT = "tyska.category";
+const LS_DIR = "tyska.direction";
+let activeCat = localStorage.getItem(LS_CAT) || "alla";
+let direction = localStorage.getItem(LS_DIR) || "de-sv"; // "de-sv" eller "sv-de"
+let deck = [];
+let idx = -1;
 
-async function apiGet(path) {
-  const res = await fetch(API_BASE + path, {
-    headers: { "X-API-Key": API_KEY }
+function renderDirToggle() {
+  dirEl.innerHTML = "";
+  [
+    { key:"de-sv", label:"🇩🇪 Tyska → Svenska" },
+    { key:"sv-de", label:"🇸🇪 Svenska → Tyska" }
+  ].forEach(d => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = d.label;
+    if (d.key === direction) btn.classList.add("active");
+    btn.onclick = () => {
+      if (direction === d.key) return;
+      direction = d.key;
+      localStorage.setItem(LS_DIR, direction);
+      renderDirToggle();
+      showFlipNotice("");
+      if (deck.length && deck[idx]) renderCard(deck[idx]);
+    };
+    dirEl.appendChild(btn);
   });
-  if (!res.ok) throw new Error("API " + res.status);
-  return res.json();
 }
 
-async function loadBatch(cacheKey, path, extract) {
-  const cached = readCache(cacheKey);
-  if (cached && !cached.stale) return cached.data;
-  try {
-    const json = await apiGet(path);
-    const data = extract(json);
-    if (Array.isArray(data) && data.length) {
-      writeCache(cacheKey, data);
-      return data;
+function renderCats() {
+  catsEl.innerHTML = "";
+  CAT_ORDER.forEach(cat => {
+    const count = cat === "alla" ? CARDS.length : CARDS.filter(c => c.c === cat).length;
+    if (count === 0 && cat !== "alla") return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = CAT_LABEL[cat] + " (" + count + ")";
+    if (cat === activeCat) btn.classList.add("active");
+    btn.onclick = () => {
+      activeCat = cat;
+      localStorage.setItem(LS_CAT, cat);
+      renderCats();
+      buildDeck();
+      showFlipNotice("");
+      showNext();
+    };
+    catsEl.appendChild(btn);
+  });
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildDeck() {
+  const filtered = activeCat === "alla" ? CARDS : CARDS.filter(c => c.c === activeCat);
+  deck = shuffle(filtered);
+  idx = -1;
+}
+
+function showFlipNotice(msg) {
+  flipEl.innerHTML = "";
+  if (!msg) return;
+  const div = document.createElement("div");
+  div.className = "flip-notice";
+  div.textContent = msg;
+  flipEl.appendChild(div);
+}
+
+function renderCard(card) {
+  cardWrap.innerHTML = "";
+  if (!card) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "Inga kort i denna kategori.";
+    cardWrap.appendChild(empty);
+    return;
+  }
+  const box = document.createElement("div");
+  box.className = "card";
+
+  const cat = document.createElement("div");
+  cat.className = "cat";
+  cat.textContent = CAT_LABEL[card.c] || card.c;
+  box.appendChild(cat);
+
+  const frontTxt = direction === "de-sv" ? card.de : card.sv;
+  const backTxt  = direction === "de-sv" ? card.sv : card.de;
+
+  const front = document.createElement("div");
+  front.className = "de";
+  front.textContent = frontTxt;
+  box.appendChild(front);
+
+  const back = document.createElement("div");
+  back.className = "sv hidden";
+  back.id = "svAnswer";
+  back.textContent = backTxt;
+  box.appendChild(back);
+
+  if (card.ex_de) {
+    const ex = document.createElement("div");
+    ex.className = "ex hidden";
+    ex.id = "exAnswer";
+    const exFront = direction === "de-sv" ? card.ex_de : card.ex_sv;
+    const exBack  = direction === "de-sv" ? card.ex_sv : card.ex_de;
+    ex.textContent = "„" + exFront + "”";
+    if (exBack) {
+      const sub = document.createElement("span");
+      sub.className = "ex-sv";
+      sub.textContent = exBack;
+      ex.appendChild(sub);
     }
-  } catch (e) {
-    console.warn("[tyska] API-fel för " + path + ":", e);
+    box.appendChild(ex);
   }
-  // Fall tillbaka till stale cache om det finns
-  if (cached) return cached.data;
-  return [];
+
+  cardWrap.appendChild(box);
+
+  revealBtn.textContent = "Visa svar";
+  revealBtn.disabled = false;
 }
 
-function pickRandom(arr, notEqualTo) {
-  if (!arr.length) return null;
-  if (arr.length === 1) return arr[0];
-  let x;
-  let tries = 0;
-  do { x = arr[Math.floor(Math.random() * arr.length)]; tries++; }
-  while (x === notEqualTo && tries < 10);
-  return x;
-}
-
-const statusEl = document.getElementById("status");
-function setStatus(msg) { statusEl.textContent = msg || ""; }
-
-// === Ord ===
-let vocab = [];
-let currentWord = null;
-
-const wordBody = document.getElementById("wordBody");
-const wordRevealBtn = document.getElementById("wordRevealBtn");
-const wordNextBtn = document.getElementById("wordNextBtn");
-
-function renderWord(w) {
-  currentWord = w;
-  wordBody.innerHTML = "";
-  if (!w) {
-    wordBody.innerHTML = '<div class="err">Kunde inte hämta något ord. Försök igen om en stund.</div>';
+function showNext() {
+  if (!deck.length) {
+    renderCard(null);
+    progressEl.textContent = "";
     return;
   }
-  const main = document.createElement("div");
-  main.className = "word-main";
-  if (w.gender) {
-    const art = document.createElement("span");
-    art.className = "art";
-    art.textContent = w.gender;
-    main.appendChild(art);
+  idx++;
+  if (idx >= deck.length) {
+    // Kortleken slut: vänd riktning automatiskt och blanda om.
+    direction = direction === "de-sv" ? "sv-de" : "de-sv";
+    localStorage.setItem(LS_DIR, direction);
+    renderDirToggle();
+    showFlipNotice(direction === "sv-de"
+      ? "Bra! Nu kör vi samma ord från Svenska → Tyska."
+      : "Bra! Nu kör vi samma ord från Tyska → Svenska.");
+    buildDeck();
+    idx = 0;
+  } else {
+    if (idx > 0) showFlipNotice("");
   }
-  main.appendChild(document.createTextNode(w.german || "?"));
-  wordBody.appendChild(main);
-
-  if (w.pos) {
-    const pos = document.createElement("div");
-    pos.className = "word-pos";
-    pos.textContent = w.pos;
-    wordBody.appendChild(pos);
-  }
-
-  const answer = document.createElement("div");
-  answer.className = "word-answer hidden";
-  answer.id = "wordAnswer";
-  const en = document.createElement("div");
-  en.className = "en";
-  en.textContent = w.english || "(saknar översättning)";
-  answer.appendChild(en);
-  if (w.example_de) {
-    const ex = document.createElement("div");
-    ex.className = "ex-de";
-    ex.textContent = "„" + w.example_de + "”";
-    answer.appendChild(ex);
-  }
-  if (w.example_en) {
-    const ex = document.createElement("div");
-    ex.className = "ex-en";
-    ex.textContent = w.example_en;
-    answer.appendChild(ex);
-  }
-  wordBody.appendChild(answer);
-
-  wordRevealBtn.textContent = "Visa översättning & exempel";
-  wordRevealBtn.disabled = false;
+  renderCard(deck[idx]);
+  progressEl.textContent = "Kort " + (idx + 1) + " / " + deck.length;
 }
-wordRevealBtn.onclick = () => {
-  const a = document.getElementById("wordAnswer");
-  if (!a) return;
-  a.classList.remove("hidden");
-  wordRevealBtn.textContent = "✓ Visat";
-  wordRevealBtn.disabled = true;
+
+revealBtn.onclick = () => {
+  const sv = document.getElementById("svAnswer");
+  const ex = document.getElementById("exAnswer");
+  if (sv) sv.classList.remove("hidden");
+  if (ex) ex.classList.remove("hidden");
+  revealBtn.textContent = "✓ Visat";
+  revealBtn.disabled = true;
 };
-wordNextBtn.onclick = () => renderWord(pickRandom(vocab, currentWord));
+nextBtn.onclick = showNext;
 
-// === Meningar ===
-let sents = [];
-let currentSent = null;
-
-const sentBody = document.getElementById("sentBody");
-const sentRevealBtn = document.getElementById("sentRevealBtn");
-const sentNextBtn = document.getElementById("sentNextBtn");
-
-function renderSent(s) {
-  currentSent = s;
-  sentBody.innerHTML = "";
-  if (!s) {
-    sentBody.innerHTML = '<div class="err">Kunde inte hämta någon mening. Försök igen om en stund.</div>';
-    return;
-  }
-  const de = document.createElement("div");
-  de.className = "sent-de";
-  de.textContent = s.german || s.de || s.text || "?";
-  sentBody.appendChild(de);
-
-  const en = document.createElement("div");
-  en.className = "sent-en hidden";
-  en.id = "sentAnswer";
-  en.textContent = s.english || s.en || s.translation || "(saknar översättning)";
-  sentBody.appendChild(en);
-
-  sentRevealBtn.textContent = "Visa översättning";
-  sentRevealBtn.disabled = false;
-}
-sentRevealBtn.onclick = () => {
-  const a = document.getElementById("sentAnswer");
-  if (!a) return;
-  a.classList.remove("hidden");
-  sentRevealBtn.textContent = "✓ Visat";
-  sentRevealBtn.disabled = true;
-};
-sentNextBtn.onclick = () => renderSent(pickRandom(sents, currentSent));
-
-// === Grammatik ===
-let grammar = [];
-let currentGram = null;
-
-const gramBody = document.getElementById("gramBody");
-const gramNextBtn = document.getElementById("gramNextBtn");
-
-function renderGram(g) {
-  currentGram = g;
-  gramBody.innerHTML = "";
-  if (!g) {
-    gramBody.innerHTML = '<div class="err">Kunde inte hämta någon regel. Försök igen om en stund.</div>';
-    return;
-  }
-  const t = document.createElement("div");
-  t.className = "gram-title";
-  t.textContent = g.title || g.name || "(utan titel)";
-  gramBody.appendChild(t);
-
-  const cat = g.category || g.topic || g.level;
-  if (cat) {
-    const c = document.createElement("div");
-    c.className = "gram-cat";
-    c.textContent = cat;
-    gramBody.appendChild(c);
-  }
-
-  const explTxt = g.explanation || g.description || g.rule || "";
-  if (explTxt) {
-    const e = document.createElement("div");
-    e.className = "gram-expl";
-    e.textContent = explTxt;
-    gramBody.appendChild(e);
-  }
-
-  const exs = g.examples || g.example || [];
-  const arr = Array.isArray(exs) ? exs : (exs ? [exs] : []);
-  if (arr.length) {
-    const box = document.createElement("div");
-    box.className = "gram-examples";
-    const ul = document.createElement("ul");
-    arr.forEach(x => {
-      const li = document.createElement("li");
-      if (typeof x === "string") li.textContent = x;
-      else li.textContent = (x.de || x.german || "") + (x.en || x.english ? "  →  " + (x.en || x.english) : "");
-      ul.appendChild(li);
-    });
-    box.appendChild(ul);
-    gramBody.appendChild(box);
-  }
-}
-gramNextBtn.onclick = () => renderGram(pickRandom(grammar, currentGram));
-
-// === Ladda allt ===
-(async function init() {
-  setStatus("Hämtar innehåll…");
-
-  const [v, s, g] = await Promise.all([
-    loadBatch(CK.vocab,   "/vocab?level=" + LEVEL + "&limit=100",              j => j.data || []),
-    loadBatch(CK.sents,   "/sentences/random?level=" + LEVEL + "&limit=50",    j => j.data || j.sentences || []),
-    loadBatch(CK.grammar, "/grammar?limit=200",                                j => j.data || [])
-  ]);
-  vocab = v;
-  sents = s;
-  grammar = g;
-
-  renderWord(pickRandom(vocab));
-  renderSent(pickRandom(sents));
-  renderGram(pickRandom(grammar));
-
-  const bits = [];
-  if (vocab.length)   bits.push(vocab.length + " ord");
-  if (sents.length)   bits.push(sents.length + " meningar");
-  if (grammar.length) bits.push(grammar.length + " regler");
-  setStatus(bits.length ? "Cache: " + bits.join(" · ") : "Kunde inte hämta data — kolla nätet.");
-})();
+renderDirToggle();
+renderCats();
+buildDeck();
+showNext();
 </script>
 
 <script src="pwa.js?v=1"></script>
