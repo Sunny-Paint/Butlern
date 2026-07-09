@@ -924,9 +924,11 @@ function startTodoEdit(li, t) {
 const PRIO_NUM_TO_KEY = { 1: "hog", 2: "mellan", 3: "lag" };
 function linkedMonthOf(t) {
   if (!t.dueDate || !t.inCalendar) return null;
-  const m = /^2026-(\d{2})-/.exec(t.dueDate);
+  // dueDate är "YYYY-MM-DD". Kalendern täcker hela 2026 – ta månaden om året matchar.
+  const m = /^(\d{4})-(\d{2})-\d{2}$/.exec(t.dueDate);
   if (!m) return null;
-  const mon = parseInt(m[1], 10);
+  if (m[1] !== "2026") return null;
+  const mon = parseInt(m[2], 10);
   return (mon >= 1 && mon <= 12) ? mon : null;
 }
 function toggleLinkedTodo(id, done) {
@@ -1207,6 +1209,7 @@ function buildMonthCard(month, all, todayStr) {
       .forEach(t => {
         const li = document.createElement("li");
         if (t.done) li.className = "done";
+
         const cb = document.createElement("input");
         cb.type = "checkbox";
         cb.checked = !!t.done;
@@ -1221,21 +1224,21 @@ function buildMonthCard(month, all, todayStr) {
           li.appendChild(badge);
         }
 
-        const dayBadge = document.createElement("span");
-        dayBadge.className = "todo-assignee";
-        dayBadge.title = "Klart senast " + t.dueDate;
-        const dd = /^2026-\d{2}-(\d{2})$/.exec(t.dueDate);
-        dayBadge.innerText = (dd ? dd[1] + "/" + month : t.dueDate);
-        li.appendChild(dayBadge);
+        // Dagbadge i samma stil som assignee/symbol – visar dag/månad från dueDate
+        const dd = /^\d{4}-(\d{2})-(\d{2})$/.exec(t.dueDate || "");
+        if (dd) {
+          const dayBadge = document.createElement("span");
+          dayBadge.className = "todo-symbol-display";
+          dayBadge.title = "Klart senast " + t.dueDate;
+          dayBadge.innerText = "📅 " + parseInt(dd[2],10) + "/" + parseInt(dd[1],10);
+          li.appendChild(dayBadge);
+        }
 
         const main = document.createElement("div");
         main.className = "todo-main";
         const title = document.createElement("span");
         title.className = "todo-title";
-        title.innerText = "📝 " + (t.title || "");
-        title.title = "Från todo-sidan (klicka för att öppna)";
-        title.style.cursor = "pointer";
-        title.onclick = () => { window.location.href = "todo.html"; };
+        title.innerText = t.title || "(utan titel)";
         main.appendChild(title);
         if (t.desc) {
           const c = document.createElement("span");
@@ -1244,6 +1247,12 @@ function buildMonthCard(month, all, todayStr) {
           main.appendChild(c);
         }
         li.appendChild(main);
+
+        const editBtn = document.createElement("button");
+        editBtn.innerText = "✎";
+        editBtn.title = "Redigera på todo-sidan";
+        editBtn.onclick = () => { window.location.href = "todo.html"; };
+        li.appendChild(editBtn);
 
         const x = document.createElement("button");
         x.innerText = "✕";
