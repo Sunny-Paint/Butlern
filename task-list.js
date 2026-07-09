@@ -55,6 +55,7 @@ function initTaskList(opts) {
   const TAGS_STORE = storePrefix + ".customTags";
   const REMOVED_STORE = storePrefix + ".removedDefaults";
   const FILTER_STORE = storePrefix + ".filter";
+  const COLLAPSED_STORE = storePrefix + ".collapsed";
 
   const statusEl   = document.getElementById("status");
   const emptyMsgEl = document.getElementById("emptyMsg");
@@ -67,6 +68,7 @@ function initTaskList(opts) {
   let customTags = [];
   let removedDefaults = [];
   let activeFilter = null;
+  let collapsedIds = new Set();
 
   try {
     customTags = JSON.parse(localStorage.getItem(TAGS_STORE) || "[]");
@@ -77,6 +79,13 @@ function initTaskList(opts) {
     if (!Array.isArray(removedDefaults)) removedDefaults = [];
   } catch(e) { removedDefaults = []; }
   try { activeFilter = localStorage.getItem(FILTER_STORE) || null; } catch(e) {}
+  try {
+    const arr = JSON.parse(localStorage.getItem(COLLAPSED_STORE) || "[]");
+    if (Array.isArray(arr)) collapsedIds = new Set(arr);
+  } catch(e) { collapsedIds = new Set(); }
+  function saveCollapsed() {
+    try { localStorage.setItem(COLLAPSED_STORE, JSON.stringify([...collapsedIds])); } catch(e) {}
+  }
 
   if (!document.getElementById("task-list-arkiv-css")) {
     const css = document.createElement("style");
@@ -92,6 +101,19 @@ function initTaskList(opts) {
       details.todos-arkiv > summary::before{content:"▸";display:inline-block;transition:transform .15s;font-size:11px}
       details.todos-arkiv[open] > summary::before{transform:rotate(90deg)}
       .todos-arkiv-list{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+      .idea-collapse-btn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;color:var(--muted);font-size:12px;line-height:1;padding:0;transition:transform .15s,background .15s,color .15s}
+      .idea-collapse-btn:hover{background:var(--accent-soft,#f5f0e6);color:var(--accent,#3a7c87)}
+      .idea-collapse-btn .chev{display:inline-block;transition:transform .15s}
+      .idea.collapsed .idea-collapse-btn .chev{transform:rotate(-90deg)}
+      .idea.collapsed .idea-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .idea-body{display:flex;flex-direction:column;gap:0}
+      .idea.collapsed .idea-body{display:none}
+      .idea-head{display:flex;flex-direction:column;gap:6px}
+      .idea-top{display:flex;align-items:flex-start;gap:8px;width:100%}
+      .idea-top .idea-title{flex:1 1 auto;min-width:0;word-break:break-word;margin:0}
+      .idea-top .idea-actions{flex:0 0 auto;margin-left:auto;display:flex;gap:4px}
+      .idea-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+      .idea-meta:empty{display:none}
     `;
     document.head.appendChild(css);
   }
@@ -342,17 +364,31 @@ function initTaskList(opts) {
   }
 
   function beginInlineEdit(row, txt, item, task) {
-    const input = document.createElement("input");
-    input.type = "text";
+    const input = document.createElement("textarea");
     input.value = task.text;
     input.className = "task-edit";
+    input.rows = 1;
     input.style.flex = "1";
     input.style.minWidth = "0";
-    input.style.padding = "4px 8px";
+    input.style.padding = "6px 8px";
     input.style.fontSize = "14px";
+    input.style.fontFamily = "inherit";
+    input.style.lineHeight = "1.4";
+    input.style.border = "1px solid var(--line)";
+    input.style.borderRadius = "6px";
+    input.style.resize = "vertical";
+    input.style.overflow = "hidden";
+    input.style.minHeight = "60px";
     row.replaceChild(input, txt);
+    const autosize = () => {
+      input.style.height = "auto";
+      input.style.height = Math.max(60, input.scrollHeight) + "px";
+    };
+    input.addEventListener("input", autosize);
     input.focus();
     input.select();
+    // Kör autosize efter att elementet är i DOM så scrollHeight är korrekt.
+    setTimeout(autosize, 0);
     let done = false;
     const commit = () => {
       if (done) return; done = true;
@@ -366,8 +402,14 @@ function initTaskList(opts) {
     };
     input.onblur = commit;
     input.onkeydown = e => {
-      if (e.key === "Enter") { e.preventDefault(); input.blur(); }
-      else if (e.key === "Escape") { e.preventDefault(); cancel(); }
+      // Enter sparar, Shift+Enter (eller Ctrl/Cmd+Enter) skapar radbrytning.
+      if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        input.blur();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        cancel();
+      }
     };
   }
 
@@ -412,14 +454,42 @@ function initTaskList(opts) {
 
   function buildCard(item) {
       const card = document.createElement("div");
-      card.className = "idea" + (item.done ? " done" : "");
+      const isCollapsed = collapsedIds.has(item.id);
+      card.className = "idea" + (item.done ? " done" : "") + (isCollapsed ? " collapsed" : "");
 
       const head = document.createElement("div");
       head.className = "idea-head";
+
+      const topRow = document.createElement("div");
+      topRow.className = "idea-top";
+      const metaRow = document.createElement("div");
+      metaRow.className = "idea-meta";
+
+      const collapseBtn = document.createElement("button");
+      collapseBtn.type = "button";
+      collapseBtn.className = "idea-collapse-btn";
+      collapseBtn.title = isCollapsed ? "Visa innehåll" : "Dölj innehåll";
+      collapseBtn.setAttribute("aria-expanded", isCollapsed ? "false" : "true");
+      collapseBtn.innerHTML = '<span class="chev">▾</span>';
+      collapseBtn.onclick = (ev) => {
+        ev.stopPropagation();
+        if (collapsedIds.has(item.id)) collapsedIds.delete(item.id);
+        else collapsedIds.add(item.id);
+        saveCollapsed();
+        const nowCollapsed = collapsedIds.has(item.id);
+        card.classList.toggle("collapsed", nowCollapsed);
+        collapseBtn.title = nowCollapsed ? "Visa innehåll" : "Dölj innehåll";
+        collapseBtn.setAttribute("aria-expanded", nowCollapsed ? "false" : "true");
+      };
+      topRow.appendChild(collapseBtn);
+
       const title = document.createElement("h3");
       title.className = "idea-title";
       title.textContent = item.title;
-      head.appendChild(title);
+      title.style.cursor = "pointer";
+      title.title = "Klicka för att fälla ihop/expandera";
+      title.onclick = () => collapseBtn.click();
+      topRow.appendChild(title);
 
       const doneLbl = document.createElement("label");
       doneLbl.className = "idea-done-toggle";
@@ -430,7 +500,7 @@ function initTaskList(opts) {
       doneCb.onchange = () => toggleItemDone(item.id, doneCb.checked);
       doneLbl.appendChild(doneCb);
       doneLbl.appendChild(document.createTextNode(item.done ? "Klar" : "Klar?"));
-      head.appendChild(doneLbl);
+      metaRow.appendChild(doneLbl);
 
       if (cfg.enablePrio) {
         const info = PRIO_INFO[parseInt(item.prio, 10) || 2];
@@ -438,7 +508,7 @@ function initTaskList(opts) {
           const badge = document.createElement("span");
           badge.className = "prio-badge " + info.cls;
           badge.textContent = info.emoji + " " + info.label;
-          head.appendChild(badge);
+          metaRow.appendChild(badge);
         }
       }
       if (cfg.enableDueDate && item.dueDate) {
@@ -452,14 +522,14 @@ function initTaskList(opts) {
         const badge = document.createElement("span");
         badge.className = "due-badge" + extra;
         badge.textContent = "📅 " + formatDueDateSv(item.dueDate);
-        head.appendChild(badge);
+        metaRow.appendChild(badge);
       }
       if (cfg.enableCalendar && item.inCalendar && item.dueDate) {
         const calBadge = document.createElement("span");
         calBadge.className = "cal-badge";
         calBadge.textContent = "📆 I kalender";
         calBadge.title = "Visas under månad i sommarkalendern";
-        head.appendChild(calBadge);
+        metaRow.appendChild(calBadge);
       }
 
       const actions = document.createElement("div");
@@ -471,7 +541,10 @@ function initTaskList(opts) {
       del.className = "icon-btn"; del.textContent = "✕"; del.title = "Ta bort";
       del.onclick = () => removeItem(item.id);
       actions.appendChild(edit); actions.appendChild(del);
-      head.appendChild(actions);
+      topRow.appendChild(actions);
+
+      head.appendChild(topRow);
+      head.appendChild(metaRow);
       card.appendChild(head);
 
       if (item.desc) {

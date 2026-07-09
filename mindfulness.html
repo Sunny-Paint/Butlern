@@ -45,6 +45,20 @@
   .add-entry textarea:focus{outline:none;border-color:var(--accent)}
   .add-entry button{align-self:flex-start;padding:8px 14px;font-size:13px}
 
+  /* Underanteckningar */
+  .entry-subnotes{margin-top:8px;display:flex;flex-direction:column;gap:4px;border-top:1px dashed var(--line);padding-top:8px}
+  .subnote-row{display:flex;align-items:flex-start;gap:6px;font-size:13px;color:#3a2f4a;padding:4px 6px;border-radius:6px;background:#fafaf8;border:1px solid #efebe5}
+  .subnote-text{flex:1;min-width:0;word-break:break-word;white-space:pre-wrap;cursor:text}
+  .subnote-row .icon-btn{padding:2px 6px;font-size:11px}
+  .subnote-add{display:flex;gap:6px;margin-top:2px}
+  .subnote-add input{flex:1;padding:6px 8px;font-size:12px;border:1px solid var(--line);border-radius:6px}
+  .subnote-add button{padding:6px 10px;font-size:12px}
+
+  /* Datum-badge för services */
+  .entry-date{display:inline-block;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent-dark);margin-right:6px;white-space:nowrap}
+  .entry-date.past{background:#eee;color:var(--muted)}
+  .entry-date.today{background:#fef3c7;color:#92400e}
+
   .empty{color:var(--muted);font-size:13px;text-align:center;padding:14px;font-style:italic}
 </style>
 </head>
@@ -55,6 +69,18 @@
 <h1>🧘 Mindfulness</h1>
 <p class="subtitle">Meditationer, andningsövningar, tekniker och länkar — fyll på själv.</p>
 <nav data-nav-pills></nav>
+
+<div class="card section" data-cat="service">
+  <h3>⛪ Kommande services</h3>
+  <div class="entry-list" id="list-service"></div>
+  <form class="add-entry">
+    <input type="text" name="title" placeholder="Titel (t.ex. Söndagsgudstjänst)" required>
+    <input type="date" name="date">
+    <textarea name="desc" placeholder="Anteckningar (valfri)" rows="2"></textarea>
+    <input type="url" name="url" placeholder="Länk (valfri, https://...)">
+    <button type="submit" class="btn btn-primary">+ Lägg till</button>
+  </form>
+</div>
 
 <div class="card section" data-cat="meditation">
   <h3>🧘‍♀️ Meditationer</h3>
@@ -100,6 +126,17 @@
   </form>
 </div>
 
+<div class="card section" data-cat="thought">
+  <h3>💭 Tankar</h3>
+  <div class="entry-list" id="list-thought"></div>
+  <form class="add-entry">
+    <input type="text" name="title" placeholder="Tanken kort" required>
+    <textarea name="desc" placeholder="Utveckla (valfri) – använd radbrytningar och blankrader om du vill" rows="3"></textarea>
+    <input type="url" name="url" placeholder="Länk (valfri, https://...)">
+    <button type="submit" class="btn btn-primary">+ Lägg till</button>
+  </form>
+</div>
+
 <div class="status" id="status">Ansluter...</div>
 
 </div>
@@ -109,27 +146,23 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
-<script src="auth-gate.js?v=8"></script>
-<script src="app.js?v=4"></script>
+<script src="auth-gate.js?v=9"></script>
+<script src="app.js?v=6"></script>
 <script>
 renderNav("mindfulness");
 
 const CATEGORIES = [
+  { key: "service",    emptyText: "Inga kommande services än." },
   { key: "meditation", emptyText: "Inga meditationer än." },
   { key: "breathing",  emptyText: "Inga andningsövningar än." },
   { key: "technique",  emptyText: "Inga tekniker än." },
-  { key: "link",       emptyText: "Inga länkar än." }
+  { key: "link",       emptyText: "Inga länkar än." },
+  { key: "thought",    emptyText: "Inga tankar än." }
 ];
 const statusEl = document.getElementById("status");
 let db = null;
 let entries = [];
 let editingId = null;
-
-function escapeHtml(s) {
-  return String(s || "").replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  }[c]));
-}
 
 function startEditEntry(item) {
   const form = document.querySelector('.section[data-cat="' + item.category + '"] form.add-entry');
@@ -138,9 +171,54 @@ function startEditEntry(item) {
   form.querySelector('[name="title"]').value = item.title || "";
   form.querySelector('[name="desc"]').value = item.desc || "";
   form.querySelector('[name="url"]').value = item.url || "";
+  const dateInp = form.querySelector('[name="date"]');
+  if (dateInp) dateInp.value = item.date || "";
   form.querySelector('button[type="submit"]').textContent = "Spara ändringar";
   form.scrollIntoView({ behavior: "smooth", block: "center" });
   form.querySelector('[name="title"]').focus();
+}
+
+function formatServiceDate(d) {
+  if (!d) return "";
+  const dt = new Date(d + "T00:00:00");
+  if (isNaN(dt.getTime())) return d;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.round((dt - today) / 86400000);
+  const months = ["jan","feb","mar","apr","maj","jun","jul","aug","sep","okt","nov","dec"];
+  const days   = ["sön","mån","tis","ons","tor","fre","lör"];
+  const dm = dt.getDate() + " " + months[dt.getMonth()];
+  let label;
+  if (diff === 0) label = "Idag";
+  else if (diff === 1) label = "Imorgon";
+  else if (diff > 1 && diff <= 7) label = days[dt.getDay()] + " " + dm;
+  else label = dm + (dt.getFullYear() !== today.getFullYear() ? " " + dt.getFullYear() : "");
+  let cls = "";
+  if (diff < 0) cls = "past";
+  else if (diff === 0) cls = "today";
+  return { text: label, cls };
+}
+
+function addSubnote(item, text) {
+  const t = (text || "").trim();
+  if (!t) return;
+  const notes = [...(item.notes || []), {
+    id: "n_" + Date.now() + "_" + Math.floor(Math.random()*1000),
+    text: t
+  }];
+  db.collection("mindfulness").doc(item.id).update({ notes, updatedAt: Date.now() })
+    .catch(err => alert("Fel: " + err.message));
+}
+function removeSubnote(item, noteId) {
+  const notes = (item.notes || []).filter(n => n.id !== noteId);
+  db.collection("mindfulness").doc(item.id).update({ notes, updatedAt: Date.now() })
+    .catch(err => alert("Fel: " + err.message));
+}
+function editSubnote(item, noteId, newText) {
+  const t = (newText || "").trim();
+  if (!t) return;
+  const notes = (item.notes || []).map(n => n.id === noteId ? { ...n, text: t } : n);
+  db.collection("mindfulness").doc(item.id).update({ notes, updatedAt: Date.now() })
+    .catch(err => alert("Fel: " + err.message));
 }
 
 function renderAll() {
@@ -148,9 +226,21 @@ function renderAll() {
     const root = document.getElementById("list-" + cat.key);
     if (!root) return;
     root.innerHTML = "";
-    const filtered = entries
-      .filter(e => e.category === cat.key)
-      .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    let filtered = entries.filter(e => e.category === cat.key);
+    if (cat.key === "service") {
+      // Kommande först (kronologiskt), sedan poster utan datum, sedan passerade (omvänd)
+      const today = new Date(); today.setHours(0,0,0,0);
+      const withDate = filtered.filter(e => e.date);
+      const noDate   = filtered.filter(e => !e.date)
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const upcoming = withDate.filter(e => new Date(e.date + "T00:00:00") >= today)
+        .sort((a, b) => a.date.localeCompare(b.date));
+      const past = withDate.filter(e => new Date(e.date + "T00:00:00") < today)
+        .sort((a, b) => b.date.localeCompare(a.date));
+      filtered = [...upcoming, ...noDate, ...past];
+    } else {
+      filtered = filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    }
     if (!filtered.length) {
       const empty = document.createElement("div");
       empty.className = "empty";
@@ -166,13 +256,22 @@ function renderAll() {
       main.className = "entry-main";
       const title = document.createElement("div");
       title.className = "entry-title";
+      if (item.category === "service" && item.date) {
+        const d = formatServiceDate(item.date);
+        if (d) {
+          const b = document.createElement("span");
+          b.className = "entry-date" + (d.cls ? " " + d.cls : "");
+          b.textContent = d.text;
+          title.appendChild(b);
+        }
+      }
       if (item.url) {
         const a = document.createElement("a");
         a.href = item.url; a.target = "_blank"; a.rel = "noopener";
         a.textContent = item.title || item.url;
         title.appendChild(a);
       } else {
-        title.textContent = item.title || "(utan titel)";
+        title.appendChild(document.createTextNode(item.title || "(utan titel)"));
       }
       main.appendChild(title);
       if (item.desc) {
@@ -196,6 +295,40 @@ function renderAll() {
           main.appendChild(desc);
         }
       }
+
+      // Underanteckningar
+      const sub = document.createElement("div");
+      sub.className = "entry-subnotes";
+      const notes = item.notes || [];
+      notes.forEach(n => {
+        const nRow = document.createElement("div");
+        nRow.className = "subnote-row";
+        const nTxt = document.createElement("span");
+        nTxt.className = "subnote-text";
+        nTxt.textContent = n.text;
+        nTxt.title = "Klicka för att redigera";
+        nTxt.onclick = () => {
+          const v = prompt("Redigera underanteckning:", n.text);
+          if (v != null) editSubnote(item, n.id, v);
+        };
+        nRow.appendChild(nTxt);
+        const nDel = document.createElement("button");
+        nDel.className = "icon-btn"; nDel.textContent = "✕"; nDel.title = "Ta bort";
+        nDel.onclick = () => { if (confirm("Ta bort anteckningen?")) removeSubnote(item, n.id); };
+        nRow.appendChild(nDel);
+        sub.appendChild(nRow);
+      });
+      const addNote = document.createElement("form");
+      addNote.className = "subnote-add";
+      const ni = document.createElement("input");
+      ni.type = "text"; ni.placeholder = "Ny underanteckning...";
+      const nb = document.createElement("button");
+      nb.type = "submit"; nb.className = "btn btn-ghost"; nb.textContent = "+";
+      addNote.appendChild(ni); addNote.appendChild(nb);
+      addNote.onsubmit = ev => { ev.preventDefault(); addSubnote(item, ni.value); ni.value = ""; };
+      sub.appendChild(addNote);
+      main.appendChild(sub);
+
       row.appendChild(main);
 
       const ed = document.createElement("button");
@@ -226,8 +359,11 @@ document.querySelectorAll(".section form.add-entry").forEach(form => {
     const title = form.querySelector('[name="title"]').value.trim();
     const desc  = form.querySelector('[name="desc"]').value.trim();
     const url   = form.querySelector('[name="url"]').value.trim();
+    const dateInp = form.querySelector('[name="date"]');
+    const date  = dateInp ? (dateInp.value || "") : "";
     if (!title && !url) return;
     const data = { category: cat, title, desc, url, updatedAt: Date.now() };
+    if (dateInp) data.date = date;
     const onDone = () => {
       form.reset();
       form.querySelector('button[type="submit"]').textContent = "+ Lägg till";

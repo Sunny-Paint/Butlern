@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Oraklet">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1238">
+<title>Oraklet – Rider-Waite (öppen API)</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<style>
+:root{
+  --bg-grad:linear-gradient(180deg,#0f0a24 0%,#1a1238 50%,#2a1a4a 100%);
+  --card:#1f1640;
+  --card-soft:#2a1f55;
+  --ink:#f0eaff;
+  --muted:#a89cd0;
+  --line:#3d2e6e;
+  --gold:#e8c674;
+  --gold-dark:#c9a850;
+  --accent-soft:#3d2e6e;
+  --shadow:0 4px 20px rgba(0,0,0,.35);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:var(--bg-grad);background-attachment:fixed;
+  color:var(--ink);line-height:1.5;
+  padding:24px 16px 60px;min-height:100vh;
+}
+.wrap{max-width:720px;margin:0 auto}
+h1{margin:0 0 4px;font-size:30px;font-weight:600;letter-spacing:0.02em;text-align:center}
+.subtitle{margin:0 0 22px;color:var(--muted);font-size:13px;text-align:center}
+.subtitle a{color:var(--gold);text-decoration:none}
+.subtitle a:hover{text-decoration:underline}
+.nav-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0 22px}
+.nav-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;background:var(--card);border:1px solid var(--line);border-radius:999px;color:var(--ink);font-size:13px;font-weight:500;text-decoration:none;transition:all .15s ease}
+.nav-pill:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-1px);box-shadow:0 2px 12px rgba(232,198,116,.2)}
+.nav-pill.active{background:var(--gold);border-color:var(--gold);color:#1a1238;box-shadow:0 2px 12px rgba(232,198,116,.3);cursor:default}
+.nav-pill.active:hover{transform:none}
+.nav-pill .ico{font-size:15px;line-height:1}
+@media (max-width:520px){.nav-pills{gap:6px}.nav-pill{padding:6px 10px;font-size:12px}}
+
+.section{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  margin-bottom:18px;
+  box-shadow:var(--shadow);
+}
+.section h2{margin:0 0 12px;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);text-align:center}
+
+.spreads{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.spread-btn{
+  background:var(--card-soft);color:var(--ink);
+  border:1px solid var(--line);border-radius:10px;
+  padding:10px 14px;font-family:inherit;font-size:13px;cursor:pointer;
+  transition:all .15s;
+}
+.spread-btn:hover{border-color:var(--gold);color:var(--gold)}
+.spread-btn.active{background:var(--gold);color:#1a1238;border-color:var(--gold);font-weight:600}
+
+.draw-area{text-align:center}
+.draw-btn{
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark));
+  color:#1a1238;border:none;border-radius:14px;
+  padding:16px 36px;font-family:inherit;font-size:16px;font-weight:600;
+  letter-spacing:0.05em;cursor:pointer;
+  box-shadow:0 4px 16px rgba(232,198,116,.25);
+  transition:transform .15s, box-shadow .15s;
+}
+.draw-btn:hover{transform:translateY(-2px);box-shadow:0 6px 22px rgba(232,198,116,.4)}
+.draw-btn:active{transform:translateY(0)}
+.draw-btn:disabled{opacity:.5;cursor:not-allowed}
+
+.spread-info{font-size:13px;color:var(--muted);margin:10px 0 0;font-style:italic}
+.load-info{font-size:12px;color:var(--muted);margin:8px 0 0;text-align:center}
+.load-info.err{color:#f0b0b0}
+
+.cards-grid{
+  display:grid;gap:14px;margin-top:18px;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+}
+.cards-grid:has(> .tcard:only-child){
+  grid-template-columns:minmax(0,220px);
+  justify-content:center;
+}
+.cards-grid.celtic{
+  grid-template-columns:repeat(4,1fr);
+  max-width:640px;margin-left:auto;margin-right:auto;
+}
+.tcard{
+  background:linear-gradient(135deg,#2a1f55,#1a1238);
+  border:1px solid var(--gold);border-radius:12px;
+  padding:12px 10px;text-align:center;
+  display:flex;flex-direction:column;gap:8px;
+  position:relative;
+  opacity:0;transform:translateY(10px);
+  animation:cardIn .5s ease-out forwards;
+  box-shadow:0 4px 14px rgba(0,0,0,.35), inset 0 0 20px rgba(232,198,116,.08);
+}
+@keyframes cardIn{to{opacity:1;transform:translateY(0)}}
+.tcard .pos{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--gold)}
+.tcard .img-wrap{aspect-ratio:2/3;overflow:hidden;border-radius:8px;background:#0f0a24;display:flex;align-items:center;justify-content:center}
+.tcard img{width:100%;height:100%;object-fit:cover;display:block}
+.tcard .name{font-size:13px;font-weight:600;color:var(--ink);line-height:1.25}
+
+.reading{
+  background:linear-gradient(180deg,rgba(232,198,116,.05),transparent);
+  border:1px solid var(--gold);border-radius:12px;
+  padding:18px 20px;margin-top:18px;
+  font-size:14px;line-height:1.7;
+}
+.reading p{margin:0 0 12px}
+.reading p:last-child{margin-bottom:0}
+.reading b{color:var(--gold);font-weight:600}
+.reading em{color:var(--muted);font-style:italic}
+.reading .opener{font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;text-align:center}
+.reading .closer{font-size:13px;color:var(--muted);font-style:italic;text-align:center;margin-top:14px}
+
+.empty{text-align:center;color:var(--muted);font-style:italic;padding:30px 10px}
+
+@media (max-width:720px){
+  body{padding:14px 10px 60px}
+  h1{font-size:24px}
+  .section{padding:14px}
+  .cards-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .cards-grid.celtic{grid-template-columns:repeat(2,1fr)}
+  .tcard{padding:10px 6px}
+  .tcard .name{font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>🔮 Oraklet</h1>
+<p class="subtitle">Kort från <a href="https://github.com/krates98/tarotcardapi" target="_blank" rel="noopener">tarotcardapi</a> (open api)</p>
+<nav data-nav-pills></nav>
+
+<div class="section">
+  <h2>Välj läggning</h2>
+  <div class="spreads" id="spreads"></div>
+  <p class="spread-info" id="spreadInfo"></p>
+</div>
+
+<div class="section draw-area">
+  <button class="draw-btn" id="drawBtn" disabled>✨ Dra kort ✨</button>
+  <p class="load-info" id="loadInfo">Hämtar kortlek från API…</p>
+</div>
+
+<div id="result"></div>
+
+</div>
+
+<script src="app.js?v=6"></script>
+<script>
+renderNav("oracle2");
+
+/* ============================================================
+   Hämta kortleken (78 kort) från tarotcardapi:s källkod på GitHub.
+   API:t är byggt för lokal körning; det finns ingen publik host.
+   Vi läser råkoden och plockar ut kort-arrayen. Cachas i localStorage.
+   ============================================================ */
+const REPO_RAW = "https://raw.githubusercontent.com/krates98/tarotcardapi/main";
+const CARDS_SRC_URL = REPO_RAW + "/routes/cardRoutes.js";
+const CACHE_KEY = "oracle2.deck.v1";
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 dagar
+
+const spreadsEl   = document.getElementById("spreads");
+const spreadInfoEl= document.getElementById("spreadInfo");
+const drawBtn     = document.getElementById("drawBtn");
+const resultEl    = document.getElementById("result");
+const loadInfoEl  = document.getElementById("loadInfo");
+
+let DECK = [];
+
+function normaliseImg(imgPath) {
+  // API-svar: "/tarotdeck/thefool.jpeg" → filnamn i images-katalogen.
+  const file = String(imgPath || "").split("/").pop();
+  if (!file) return "";
+  return REPO_RAW + "/images/" + file;
+}
+
+function parseDeckFromSource(src) {
+  // Plocka ut "tarotCards = [...]"-arrayen ur JS-källfilen.
+  const m = src.match(/tarotCards\s*=\s*(\[[\s\S]*?\])\s*;\s*\n\s*router\.get/);
+  if (!m) throw new Error("Hittade inte kort-arrayen i källkoden.");
+  const arrText = m[1];
+  // Trusted källa (låst till en specifik GitHub-repo). Function() ger tillgång
+  // till strängar/nummer/objekt-literaler i JS-källkoden.
+  const raw = new Function("return " + arrText)();
+  if (!Array.isArray(raw) || !raw.length) throw new Error("Tom kort-array.");
+  return raw.map(c => ({
+    name: String(c.name || "").replace(/\s+/g, " ").trim(),
+    description: String(c.description || "").trim(),
+    image: normaliseImg(c.image)
+  }));
+}
+
+function readCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || !Array.isArray(obj.cards) || !obj.cards.length) return null;
+    if ((Date.now() - (obj.savedAt || 0)) > CACHE_TTL_MS) return null;
+    return obj.cards;
+  } catch (e) { return null; }
+}
+function writeCache(cards) {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), cards })); } catch (e) {}
+}
+
+async function loadDeck() {
+  const cached = readCache();
+  if (cached) {
+    DECK = cached;
+    loadInfoEl.textContent = "Kortlek: " + DECK.length + " kort (från cache · uppdateras i bakgrunden).";
+    drawBtn.disabled = false;
+    // Uppdatera i bakgrunden
+    refreshDeck(true);
+    return;
+  }
+  await refreshDeck(false);
+}
+async function refreshDeck(silent) {
+  try {
+    const res = await fetch(CARDS_SRC_URL, { cache: "no-cache" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const src = await res.text();
+    const cards = parseDeckFromSource(src);
+    DECK = cards;
+    writeCache(cards);
+    loadInfoEl.textContent = "Kortlek: " + DECK.length + " kort · källa: tarotcardapi/main.";
+    loadInfoEl.classList.remove("err");
+    drawBtn.disabled = false;
+  } catch (e) {
+    if (silent) return;
+    loadInfoEl.textContent = "Kunde inte hämta kortleken: " + e.message + ". Försök igen senare.";
+    loadInfoEl.classList.add("err");
+  }
+}
+
+/* ============================================================
+   SPREADS – samma upplägg som Oracle-sidan
+   ============================================================ */
+const SPREADS = [
+  { id:"daily", name:"Ett kort", info:"Vägledning",
+    positions:["Svar"] },
+  { id:"yesno", name:"Ja / Nej", info:"Ett kort för ja eller nej.",
+    positions:["Svaret"], yesno:true },
+  { id:"past", name:"Dåtid · Nutid · Framtid", info:"Tre kort — Dåtid · Nutid · Framtid.",
+    positions:["Dåtid","Nutid","Framtid"] },
+  { id:"mind", name:"Sinne · Kropp · Själ", info:"Tre kort.",
+    positions:["Sinne","Kropp","Själ"] },
+  { id:"sit", name:"Situation · Utmaning · Råd", info:"Tre kort — för en specifik fråga.",
+    positions:["Situation","Utmaning","Råd"] },
+  { id:"celtic", name:"Keltiskt kors", info:"Tio kort.",
+    positions:["Nuet","Utmaning","Grunden","Det förflutna","Mål","Nära framtid","Du","Omgivning","Hopp och rädsla","Resultat"],
+    celtic:true }
+];
+
+const OPENERS = [
+  "Känn efter vad korten betyder för dig.",
+  "Detta vill korten säga.",
+  "Hur tolkar du detta?",
+
+];
+const CLOSERS = [
+
+  "Detta ville korten säga."
+];
+const POS_PHRASES = {
+  "Svar":            ["Korten visar", "Det som vill möta dig är", "Det som kommer upp är"],
+  "Svaret":          ["Svaret är", "Svaret kan vara", "Det jag hör är"],
+  "Dåtid":           ["I dåtid fins", "Bakom dig finns", "Det förflutna bär"],
+  "Nutid":           ["I nuet finns", "Just nu står", "I detta ögonblick rör sig"],
+  "Framtid":         ["Framåt kan se ut så här", "Det som kommer är", "I framtiden formar sig"],
+  "Sinne":           ["I ditt sinne är det fullt av", "Tankarna bär", "Mentalt rör sig"],
+  "Kropp":           ["Fysisk situation är", "Det fysiska säger", "Det fysiska är just nu"],
+  "Själ":            ["Ditt inre ropar på", "Själen vill", "Ditt inre vill säga"],
+  "Situation":       ["Situationen bärNuets situation har", "Utmaningen som korsar är", "Det som testar dig är", "Hindret är"],
+  "Råd":             ["Korten råder", "Vägen framåt kan vara är", "Tänk på detta framåt"],
+  "Nuet":            ["I nuet finns", "Just nu står", "Här och nu finns"],
+  "Korsande utmaning":["En utmaning som korsar dig nu är", "Utmaning ligger i", "Motkraften är"],
+  "Grunden":         ["Grunden är", "Basen är", "Roten är"],
+  "Det förflutna":   ["Bakom dig finns", "Det som varit är","Det förflutna som påverkar nuet"],
+  "Mål":             ["Det möjliga målet är", "Potential ligger i", "Framtiden pekar just nu mot"],
+  "Framtid nära":    ["I den närmaste framtiden kommer", "Strax framöver visar sig", "Det nära kommande är"],
+  "Du själv":        ["Du själv just nu är", "I dig just nu finns", "Ditt nu är"],
+  "Omgivning":       ["Omkring dig finns", "Människor runt dig påverkar just nu genom att", "Världen runt dig just nu är"],
+  "Hopp & rädsla":   ["Ditt hopp och din rädsla finns här", "Inom dig finns hopp/rädslan att", "Hopp och rädsla visar sig i att"],
+  "Resultat":        ["Slutresultatet har potential att bli", "Detta blir resultatet om du fortsätter denna väg", "Det som blir är"]
+};
+
+let currentSpread = SPREADS[0];
+
+SPREADS.forEach((s, i) => {
+  const b = document.createElement("button");
+  b.className = "spread-btn" + (i===0 ? " active" : "");
+  b.textContent = s.name;
+  b.dataset.id = s.id;
+  b.addEventListener("click", () => {
+    currentSpread = s;
+    document.querySelectorAll(".spread-btn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    spreadInfoEl.textContent = s.info;
+  });
+  spreadsEl.appendChild(b);
+});
+spreadInfoEl.textContent = currentSpread.info;
+
+function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+function drawCards(n) {
+  const idx = new Set();
+  const cap = Math.min(n, DECK.length);
+  while (idx.size < cap) idx.add(Math.floor(Math.random()*DECK.length));
+  return [...idx].map(i => DECK[i]);
+}
+
+function makeYesNo(card) {
+  const name = (card.name || "").toLowerCase();
+  const positives = ["sun","star","world","empress","lovers","strength","temperance","magician","judgement","ace of cups","ace of wands","ace of pentacles","nine of cups","ten of cups","ten of pentacles","six of wands","four of wands","three of cups"];
+  const negatives = ["tower","death","devil","moon","hanged","hermit","five of cups","five of pentacles","three of swords","five of swords","seven of swords","eight of swords","nine of swords","ten of swords","five of wands"];
+  if (positives.some(p => name.includes(p))) return "✨ Ja";
+  if (negatives.some(p => name.includes(p))) return "⚠️ Nej — eller inte just nu";
+  return Math.random() < 0.55 ? "🌒 Kanske — lyssna inåt" : "🌓 Tveksamt";
+}
+
+function paragraphize(text) {
+  // API:t levererar text med \n\n mellan stycken. Bygg <p>...</p>.
+  return String(text || "")
+    .split(/\n\s*\n/)
+    .map(p => p.trim())
+    .filter(Boolean)
+    .map(p => "<p>" + escapeHtml(p).replace(/\n/g, "<br>") + "</p>")
+    .join("");
+}
+
+function buildReading(spread, cards) {
+  const lines = [];
+  lines.push('<p class="opener">' + escapeHtml(pick(OPENERS)) + '</p>');
+  spread.positions.forEach((pos, i) => {
+    const c = cards[i];
+    if (!c) return;
+    const phrase = pick(POS_PHRASES[pos] || ["Här lägger sig"]);
+    lines.push('<p>' + escapeHtml(phrase) + ' <b>' + escapeHtml(c.name) + '</b>.</p>');
+    lines.push(paragraphize(c.description));
+  });
+  if (spread.yesno && cards[0]) {
+    lines.push('<p style="text-align:center;font-size:18px;margin-top:14px"><b>' + escapeHtml(makeYesNo(cards[0])) + '</b></p>');
+  }
+  lines.push('<p class="closer">' + escapeHtml(pick(CLOSERS)) + '</p>');
+  return lines.join("");
+}
+
+function renderCards(spread, cards) {
+  const gridClass = spread.celtic ? "cards-grid celtic" : "cards-grid";
+  let html = '<div class="section"><h2>' + escapeHtml(spread.name) + '</h2><div class="' + gridClass + '">';
+  spread.positions.forEach((pos, i) => {
+    const c = cards[i];
+    if (!c) return;
+    html += ''
+      + '<div class="tcard" style="animation-delay:' + (i*120) + 'ms">'
+      +   '<div class="pos">' + escapeHtml(pos) + '</div>'
+      +   '<div class="img-wrap">'
+      +     (c.image
+              ? '<img src="' + escapeHtml(c.image) + '" alt="' + escapeHtml(c.name) + '" loading="lazy" onerror="this.style.display=\'none\'">'
+              : '')
+      +   '</div>'
+      +   '<div class="name">' + escapeHtml(c.name) + '</div>'
+      + '</div>';
+  });
+  html += '</div></div>';
+  html += '<div class="section"><h2>Tolkning</h2><div class="reading">' + buildReading(spread, cards) + '</div></div>';
+  resultEl.innerHTML = html;
+  resultEl.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+drawBtn.addEventListener("click", () => {
+  if (!DECK.length) return;
+  const cards = drawCards(currentSpread.positions.length);
+  renderCards(currentSpread, cards);
+});
+
+loadDeck();
+</script>
+<script src="pwa.js?v=1"></script>
+</body>
+</html>

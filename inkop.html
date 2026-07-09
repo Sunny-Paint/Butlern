@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Inköp">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#b5763a">
+<title>Inköpslistor</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="styles.css?v=1">
+<style>
+  :root{
+    --accent:#b5763a;
+    --accent-soft:#f5e7d3;
+    --accent-dark:#8a5727;
+  }
+  .add-list-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .add-list-row input{flex:1;min-width:180px;padding:8px 10px;font-size:14px;border:1px solid var(--line);border-radius:8px}
+  .add-list-row button{padding:8px 14px;font-size:13px}
+
+  .lists{display:flex;flex-direction:column;gap:16px}
+  .list-card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:14px 16px}
+  .list-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+  .list-title{font-size:18px;font-weight:700;color:var(--accent-dark);margin:0;flex:1;min-width:0;word-break:break-word;cursor:pointer}
+  .list-meta{font-size:12px;color:var(--muted)}
+  .list-actions{display:flex;gap:4px;flex-wrap:wrap}
+
+  .item-add{display:flex;gap:6px;margin-bottom:10px}
+  .item-add input{flex:1;padding:8px 10px;font-size:14px;border:1px solid var(--line);border-radius:8px}
+  .item-add button{padding:8px 12px;font-size:13px}
+
+  .items{display:flex;flex-direction:column;gap:4px}
+  .item{
+    display:flex;align-items:center;gap:8px;
+    padding:7px 10px;background:#fafaf6;border:1px solid #efe9d8;border-radius:8px;
+    font-size:14px;
+  }
+  .item.done{opacity:.55;text-decoration:line-through;background:#f5f5f0}
+  .item input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px;cursor:pointer;flex:0 0 auto}
+  .item .txt{flex:1;min-width:0;word-break:break-word;cursor:text}
+  .item .icon-btn{padding:2px 8px;font-size:13px}
+
+  .items-empty{color:var(--muted);font-size:13px;font-style:italic;padding:8px 4px}
+
+  .arkiv-toggle{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);font-size:12px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none}
+  .arkiv-toggle:hover{color:var(--accent)}
+
+  .list-card.archived{background:#faf7f0;opacity:.85}
+  .list-card.archived .list-title{color:var(--muted)}
+
+  .arkiv-section{margin-top:8px}
+  .arkiv-section-head{
+    display:flex;align-items:center;gap:8px;padding:10px 4px;cursor:pointer;user-select:none;
+    font-size:14px;color:var(--muted);font-weight:600;
+    border-top:1px dashed var(--line);
+  }
+  .arkiv-section-head:hover{color:var(--accent)}
+
+  @media (max-width:520px){
+    .list-card{padding:12px 12px}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>🛒 Inköpslistor</h1>
+<p class="subtitle">Skapa flera listor — bocka av medan du handlar.</p>
+<nav data-nav-pills></nav>
+
+<div class="card">
+  <h3>Ny lista</h3>
+  <form class="add-list-row" id="addListForm" autocomplete="off">
+    <input type="text" id="newListName" placeholder="T.ex. Veckohandling, ICA, Apotek..." required>
+    <button type="submit" class="btn btn-primary">+ Skapa lista</button>
+  </form>
+</div>
+
+<div class="lists" id="lists"></div>
+<div class="empty" id="emptyMsg" style="display:none;color:var(--muted);font-size:14px;text-align:center;padding:18px">Inga listor än — skapa en ovan.</div>
+
+<div class="arkiv-section" id="arkivSection" style="display:none">
+  <div class="arkiv-section-head" id="arkivHead">
+    <span id="arkivToggleIcon">▸</span>
+    <span id="arkivHeadLabel">Arkiverade listor</span>
+  </div>
+  <div class="lists" id="archivedLists" style="display:none;margin-top:10px"></div>
+</div>
+
+<div class="status" id="status">Ansluter...</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
+<script src="auth-gate.js?v=9"></script>
+<script src="app.js?v=6"></script>
+<script>
+renderNav("inkop");
+
+const statusEl = document.getElementById("status");
+const listsEl  = document.getElementById("lists");
+const emptyEl  = document.getElementById("emptyMsg");
+const arkivSectionEl = document.getElementById("arkivSection");
+const arkivHeadEl = document.getElementById("arkivHead");
+const arkivHeadLabelEl = document.getElementById("arkivHeadLabel");
+const arkivToggleIconEl = document.getElementById("arkivToggleIcon");
+const archivedListsEl = document.getElementById("archivedLists");
+
+let db = null;
+let lists = []; // { id, name, items:[{id,text,done}], createdAt, archived }
+const showArkiv = new Set(); // listIds where archive (done items) visible
+let showArchivedSection = false;
+
+arkivHeadEl.onclick = () => {
+  showArchivedSection = !showArchivedSection;
+  renderAll();
+};
+
+document.getElementById("addListForm").addEventListener("submit", e => {
+  e.preventDefault();
+  if (!db) { alert("Ansluter, vänta..."); return; }
+  const name = document.getElementById("newListName").value.trim();
+  if (!name) return;
+  db.collection("inkop").add({
+    name, items: [], createdAt: Date.now(), updatedAt: Date.now()
+  }).then(() => { document.getElementById("newListName").value = ""; })
+    .catch(err => alert("Fel: " + err.message));
+});
+
+function updateList(listId, data) {
+  return db.collection("inkop").doc(listId).update({ ...data, updatedAt: Date.now() });
+}
+
+function addItem(list, text) {
+  const t = (text || "").trim();
+  if (!t) return;
+  const items = [...(list.items || []), {
+    id: "i_" + Date.now() + "_" + Math.floor(Math.random()*1000),
+    text: t, done: false
+  }];
+  updateList(list.id, { items }).catch(err => alert("Fel: " + err.message));
+}
+function toggleItem(list, itemId, done) {
+  const items = (list.items || []).map(i => i.id === itemId ? { ...i, done } : i);
+  updateList(list.id, { items }).catch(err => console.error(err));
+}
+function removeItem(list, itemId) {
+  const items = (list.items || []).filter(i => i.id !== itemId);
+  updateList(list.id, { items }).catch(err => console.error(err));
+}
+function editItemText(list, itemId, newText) {
+  const t = (newText || "").trim();
+  if (!t) return;
+  const items = (list.items || []).map(i => i.id === itemId ? { ...i, text: t } : i);
+  updateList(list.id, { items }).catch(err => alert("Fel: " + err.message));
+}
+function clearDone(list) {
+  if (!confirm("Ta bort alla avbockade rader i \"" + list.name + "\"?")) return;
+  const items = (list.items || []).filter(i => !i.done);
+  updateList(list.id, { items }).catch(err => alert("Fel: " + err.message));
+}
+function renameList(list) {
+  const v = prompt("Nytt namn:", list.name);
+  if (v == null) return;
+  const t = v.trim();
+  if (!t) return;
+  updateList(list.id, { name: t }).catch(err => alert("Fel: " + err.message));
+}
+function deleteList(list) {
+  if (!confirm("Ta bort hela listan \"" + list.name + "\"?")) return;
+  db.collection("inkop").doc(list.id).delete().catch(err => alert("Fel: " + err.message));
+}
+function archiveList(list) {
+  updateList(list.id, { archived: true }).catch(err => alert("Fel: " + err.message));
+}
+function unarchiveList(list) {
+  updateList(list.id, { archived: false }).catch(err => alert("Fel: " + err.message));
+}
+
+function beginInlineEdit(row, txtSpan, list, item) {
+  const input = document.createElement("input");
+  input.type = "text"; input.value = item.text;
+  input.style.flex = "1"; input.style.minWidth = "0";
+  input.style.padding = "4px 8px"; input.style.fontSize = "14px";
+  input.style.border = "1px solid var(--line)"; input.style.borderRadius = "6px";
+  row.replaceChild(input, txtSpan);
+  input.focus(); input.select();
+  let done = false;
+  const commit = () => {
+    if (done) return; done = true;
+    const v = input.value.trim();
+    if (v && v !== item.text) editItemText(list, item.id, v);
+    else row.replaceChild(txtSpan, input);
+  };
+  const cancel = () => { if (done) return; done = true; row.replaceChild(txtSpan, input); };
+  input.onblur = commit;
+  input.onkeydown = e => {
+    if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+    else if (e.key === "Escape") { e.preventDefault(); cancel(); }
+  };
+}
+
+function buildItemRow(list, item) {
+  const row = document.createElement("div");
+  row.className = "item" + (item.done ? " done" : "");
+  const cb = document.createElement("input");
+  cb.type = "checkbox"; cb.checked = !!item.done;
+  cb.onchange = () => toggleItem(list, item.id, cb.checked);
+  row.appendChild(cb);
+  const txt = document.createElement("span");
+  txt.className = "txt";
+  txt.textContent = item.text;
+  txt.title = "Klicka för att redigera";
+  txt.onclick = () => beginInlineEdit(row, txt, list, item);
+  row.appendChild(txt);
+  const del = document.createElement("button");
+  del.className = "icon-btn"; del.textContent = "✕"; del.title = "Ta bort";
+  del.onclick = () => removeItem(list, item.id);
+  row.appendChild(del);
+  return row;
+}
+
+function buildListCard(list) {
+  const card = document.createElement("div");
+  card.className = "list-card" + (list.archived ? " archived" : "");
+
+  const head = document.createElement("div");
+  head.className = "list-head";
+  const title = document.createElement("h3");
+  title.className = "list-title";
+  title.textContent = list.name || "(utan namn)";
+  title.title = "Klicka för att byta namn";
+  title.onclick = () => renameList(list);
+  head.appendChild(title);
+
+  const items = list.items || [];
+  const totalActive = items.filter(i => !i.done).length;
+  const totalDone   = items.filter(i =>  i.done).length;
+  const meta = document.createElement("span");
+  meta.className = "list-meta";
+  meta.textContent = totalActive + " kvar · " + totalDone + " klara";
+  head.appendChild(meta);
+
+  const actions = document.createElement("div");
+  actions.className = "list-actions";
+  if (totalDone > 0) {
+    const clr = document.createElement("button");
+    clr.className = "icon-btn"; clr.textContent = "🧹"; clr.title = "Rensa avbockade";
+    clr.onclick = () => clearDone(list);
+    actions.appendChild(clr);
+  }
+  const arch = document.createElement("button");
+  arch.className = "icon-btn";
+  if (list.archived) {
+    arch.textContent = "↺"; arch.title = "Återställ från arkiv";
+    arch.onclick = () => unarchiveList(list);
+  } else {
+    arch.textContent = "📦"; arch.title = "Arkivera lista";
+    arch.onclick = () => archiveList(list);
+  }
+  actions.appendChild(arch);
+  const del = document.createElement("button");
+  del.className = "icon-btn"; del.textContent = "✕"; del.title = "Ta bort listan";
+  del.onclick = () => deleteList(list);
+  actions.appendChild(del);
+  head.appendChild(actions);
+  card.appendChild(head);
+
+  // Snabb-input
+  const addForm = document.createElement("form");
+  addForm.className = "item-add";
+  const input = document.createElement("input");
+  input.type = "text"; input.placeholder = "Lägg till vara... (Enter)";
+  const addBtn = document.createElement("button");
+  addBtn.type = "submit"; addBtn.className = "btn btn-primary"; addBtn.textContent = "+";
+  addForm.appendChild(input); addForm.appendChild(addBtn);
+  addForm.onsubmit = ev => {
+    ev.preventDefault();
+    addItem(list, input.value);
+    input.value = ""; input.focus();
+  };
+  card.appendChild(addForm);
+
+  // Aktiva
+  const active = items.filter(i => !i.done);
+  const done   = items.filter(i =>  i.done);
+
+  const itemsEl = document.createElement("div");
+  itemsEl.className = "items";
+  if (!active.length && !done.length) {
+    const e = document.createElement("div");
+    e.className = "items-empty";
+    e.textContent = "Tom lista — lägg till första varan ovan.";
+    itemsEl.appendChild(e);
+  }
+  active.forEach(i => itemsEl.appendChild(buildItemRow(list, i)));
+  card.appendChild(itemsEl);
+
+  // Arkiv (klara)
+  if (done.length) {
+    const toggle = document.createElement("div");
+    toggle.className = "arkiv-toggle";
+    const open = showArkiv.has(list.id);
+    toggle.textContent = (open ? "▾" : "▸") + " Avbockade (" + done.length + ")";
+    toggle.onclick = () => {
+      if (showArkiv.has(list.id)) showArkiv.delete(list.id);
+      else showArkiv.add(list.id);
+      renderAll();
+    };
+    card.appendChild(toggle);
+    if (open) {
+      const dEl = document.createElement("div");
+      dEl.className = "items";
+      dEl.style.marginTop = "8px";
+      done.forEach(i => dEl.appendChild(buildItemRow(list, i)));
+      card.appendChild(dEl);
+    }
+  }
+
+  return card;
+}
+
+function renderAll() {
+  listsEl.innerHTML = "";
+  archivedListsEl.innerHTML = "";
+
+  const sortNewestFirst = (a, b) => {
+    const ca = a.createdAt || 0, cb = b.createdAt || 0;
+    if (ca !== cb) return cb - ca;
+    return (b.id || "").localeCompare(a.id || "");
+  };
+
+  const active = lists.filter(l => !l.archived).sort(sortNewestFirst);
+  const archived = lists.filter(l =>  l.archived).sort(sortNewestFirst);
+
+  emptyEl.style.display = active.length ? "none" : "";
+  active.forEach(l => listsEl.appendChild(buildListCard(l)));
+
+  if (archived.length) {
+    arkivSectionEl.style.display = "";
+    arkivHeadLabelEl.textContent = "Arkiverade listor (" + archived.length + ")";
+    arkivToggleIconEl.textContent = showArchivedSection ? "▾" : "▸";
+    archivedListsEl.style.display = showArchivedSection ? "" : "none";
+    if (showArchivedSection) {
+      archived.forEach(l => archivedListsEl.appendChild(buildListCard(l)));
+    }
+  } else {
+    arkivSectionEl.style.display = "none";
+  }
+}
+
+initApp(d => {
+  db = d;
+  db.collection("inkop").onSnapshot(snap => {
+    lists = [];
+    snap.forEach(doc => {
+      const data = doc.data();
+      lists.push({ id: doc.id, ...data });
+      // Fyll p\u00e5 saknad createdAt p\u00e5 gamla listor s\u00e5 sorteringen blir stabil
+      if (!data.createdAt) {
+        doc.ref.update({ createdAt: Date.now() }).catch(() => {});
+      }
+    });
+    const activeCount = lists.filter(l => !l.archived).length;
+    const archivedCount = lists.length - activeCount;
+    statusEl.textContent = activeCount + " listor" + (archivedCount ? " (" + archivedCount + " arkiverade)" : "");
+    renderAll();
+  }, err => {
+    statusEl.textContent = "Firestore-fel: " + err.message;
+  });
+}, { onError: e => { statusEl.textContent = e.message; } });
+</script>
+
+<script src="pwa.js?v=1"></script>
+</body>
+</html>

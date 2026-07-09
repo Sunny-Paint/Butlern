@@ -175,8 +175,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script src="auth-gate.js?v=8"></script>
-<script src="app.js?v=4"></script>
+<script src="auth-gate.js?v=9"></script>
+<script src="app.js?v=6"></script>
 <script>
 renderNav("parkering");
 
@@ -350,9 +350,13 @@ document.getElementById("searchForm").addEventListener("submit", async e => {
     const { features, fromCache } = await getServiceDays(area);
     const boendeOnly = features.filter(f => {
       const t = (featureInfo(f).desc || "").toLowerCase();
-      return t.includes("boende");
+      if (!t.includes("boende")) return false;
+      // Endast personbil — exkludera MC/motorcykel-städdagar
+      if (t.includes("motorcyk")) return false;
+      if (/\bmc\b/.test(t)) return false;
+      return true;
     });
-    statusEl.textContent = boendeOnly.length + " boende-föreskrifter"
+    statusEl.textContent = boendeOnly.length + " boende-föreskrifter (personbil)"
       + (fromCache ? " (cache)" : "") + " · filtrerar...";
     const filtered = boendeOnly.filter(f => {
       const info = featureInfo(f);
@@ -465,10 +469,6 @@ function renderResults(features, area, dayLabel, all) {
     resultsEl.appendChild(note);
   }
   resultsTitle.textContent += " · " + sorted.length + " gator, " + totalRules + " städdag" + (totalRules === 1 ? "" : "ar");
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
 }
 
 function buildRuleDetails(r, grp) {

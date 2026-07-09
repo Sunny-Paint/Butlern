@@ -452,8 +452,8 @@ form.add input[type=text]:focus{
       <label><input type="checkbox" name="person" value="Alla"> Alla</label>
     </fieldset>
     <div class="form-row">
-      <input type="date" id="start" min="2026-06-01" max="2026-08-31" required>
-      <input type="date" id="end"   min="2026-06-01" max="2026-08-31" required>
+      <input type="date" id="start" min="2026-01-01" max="2026-12-31" required>
+      <input type="date" id="end"   min="2026-01-01" max="2026-12-31" required>
       <select id="symbol" class="symbol-select shrink" title="Symbol">
         <option value="">—</option>
         <option value="☀️">☀️ Sol</option>
@@ -535,12 +535,30 @@ statusEl.textContent = entries.length
   ? "Visar " + entries.length + " poster (cache) — synkar med molnet..."
   : "Laddar...";
 
-/* Helgdagar */
+/* Helgdagar 2026 */
 const holidays = {
+  "2026-01-01":"Nyårsdagen",
+  "2026-01-06":"Trettondedag jul",
+  "2026-04-03":"Långfredagen",
+  "2026-04-05":"Påskdagen",
+  "2026-04-06":"Annandag påsk",
+  "2026-05-01":"Första maj",
+  "2026-05-14":"Kristi himmelsfärds dag",
+  "2026-05-24":"Pingstdagen",
   "2026-06-06":"Nationaldagen",
   "2026-06-19":"Midsommarafton",
-  "2026-06-20":"Midsommardagen"
+  "2026-06-20":"Midsommardagen",
+  "2026-10-31":"Alla helgons dag",
+  "2026-12-24":"Julafton",
+  "2026-12-25":"Juldagen",
+  "2026-12-26":"Annandag jul",
+  "2026-12-31":"Nyårsafton"
 };
+
+const MONTH_NAMES = [
+  "Januari","Februari","Mars","April","Maj","Juni",
+  "Juli","Augusti","September","Oktober","November","December"
+];
 
 /* Startposter — seedas till Firestore första gången (sedan raderbara) */
 const seedEntries = [
@@ -685,7 +703,7 @@ function linkedMonthOf(t) {
   const m = /^2026-(\d{2})-/.exec(t.dueDate);
   if (!m) return null;
   const mon = parseInt(m[1], 10);
-  return (mon >= 6 && mon <= 8) ? mon : null;
+  return (mon >= 1 && mon <= 12) ? mon : null;
 }
 function toggleLinkedTodo(id, done) {
   if (!db) return;
@@ -725,10 +743,43 @@ function render() {
   const todayStr = today.getFullYear() + "-" +
     String(today.getMonth()+1).padStart(2,'0') + "-" +
     String(today.getDate()).padStart(2,'0');
+  // Kolla om senaste dagen i månaden ligger före idag
+  function isPastMonth(month) {
+    const lastDay = new Date(2026, month, 0);
+    const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return lastDay < t;
+  }
 
-  [6,7,8].forEach(month => {
-    const mDiv = document.createElement("div");
-    mDiv.className = "card";
+  const activeMonths = [];
+  const archivedMonths = [];
+
+  for (let month = 1; month <= 12; month++) {
+    const mDiv = buildMonthCard(month, all, todayStr);
+    if (isPastMonth(month)) archivedMonths.push(mDiv);
+    else activeMonths.push(mDiv);
+  }
+
+  activeMonths.forEach(el => container.appendChild(el));
+
+  if (archivedMonths.length) {
+    const arkiv = document.createElement("details");
+    arkiv.className = "card months-arkiv";
+    arkiv.style.padding = "14px 16px";
+    const sum = document.createElement("summary");
+    sum.textContent = "📁 Arkiv – tidigare månader (" + archivedMonths.length + ")";
+    sum.style.cssText = "cursor:pointer;font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:6px 0;user-select:none;list-style:none";
+    arkiv.appendChild(sum);
+    const inner = document.createElement("div");
+    inner.style.marginTop = "12px";
+    archivedMonths.forEach(el => inner.appendChild(el));
+    arkiv.appendChild(inner);
+    container.appendChild(arkiv);
+  }
+}
+
+function buildMonthCard(month, all, todayStr) {
+  const mDiv = document.createElement("div");
+  mDiv.className = "card";
 
     const monthEntries = entries.filter(en =>
       en.start && en.start.startsWith(`2026-${String(month).padStart(2,'0')}`) ||
@@ -738,7 +789,7 @@ function render() {
     const monthTodoCount = todos.filter(t => t.month === month).length + monthLinked.length;
 
     const title = document.createElement("h2");
-    const monthName = ["Juni","Juli","Augusti"][month-6];
+    const monthName = MONTH_NAMES[month-1];
     title.innerHTML = monthName +
       `<span class="count">${monthEntries.length} händelser · ${monthTodoCount} att göra</span>`;
     mDiv.appendChild(title);
@@ -829,7 +880,7 @@ function render() {
     const todoBox = document.createElement("div");
     todoBox.className = "todos";
     const tTitle = document.createElement("h3");
-    tTitle.innerText = "Att göra – " + ["Juni","Juli","Augusti"][month-6];
+    tTitle.innerText = "Att göra – " + MONTH_NAMES[month-1];
     todoBox.appendChild(tTitle);
 
     const ul = document.createElement("ul");
@@ -1013,8 +1064,7 @@ function render() {
     todoBox.appendChild(tForm);
 
     mDiv.appendChild(todoBox);
-    container.appendChild(mDiv);
-  });
+    return mDiv;
 }
 
 render();
@@ -1037,7 +1087,7 @@ window.firebaseConfig = {
   appId: "1:261517602417:web:11b754c758c92cc33735d0"
 };
 </script>
-<script src="auth-gate.js?v=8"></script>
+<script src="auth-gate.js?v=9"></script>
 <script>
 function initFirebase(attempt) {
   attempt = attempt || 0;
@@ -1095,7 +1145,6 @@ function initFirebase(attempt) {
       const m = /^2026-(\d{2})-/.exec(t.dueDate);
       return m && +m[1] >= 6 && +m[1] <= 8;
     }).length;
-    console.log("[sommarplanering] todo-koll:", { total, inCalendar: linkedInCal, summer2026: inSummer, items: linkedTodos });
     if (statusEl) {
       const base = statusEl.textContent.split(" · todo:")[0];
       statusEl.textContent = base + " · todo: " + total + " total, " + linkedInCal + " i kalender, " + inSummer + " i sommar 2026";

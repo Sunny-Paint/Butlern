@@ -112,8 +112,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
-<script src="auth-gate.js?v=8"></script>
-<script src="app.js?v=4"></script>
+<script src="auth-gate.js?v=9"></script>
+<script src="app.js?v=6"></script>
 <script>
 renderNav("lankar");
 
@@ -302,11 +302,12 @@ document.getElementById("addForm").addEventListener("submit", e => {
     db.collection("lankar").doc(editingId).update({ title, url, group })
       .then(resetForm).catch(err => alert("Fel: " + err.message));
   } else {
-    const maxOrder = links.reduce((m, l) => {
-      const o = (typeof l.order === "number") ? l.order : 0;
-      return o > m ? o : m;
+    // Ny länk hamnar överst: ge den ett order som är mindre än alla befintliga.
+    const minOrder = links.reduce((m, l) => {
+      const o = (typeof l.order === "number") ? l.order : (l.createdAt || 0);
+      return o < m ? o : m;
     }, 0);
-    db.collection("lankar").add({ title, url, group, createdAt: Date.now(), order: maxOrder + 1 })
+    db.collection("lankar").add({ title, url, group, createdAt: Date.now(), order: minOrder - 1 })
       .then(resetForm).catch(err => alert("Fel: " + err.message));
   }
 });

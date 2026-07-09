@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Väder">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#3a7c87">
+<title>Väder</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="styles.css?v=1">
+<style>
+  :root{
+    --accent:#3a7c87;
+    --accent-soft:#d6eaee;
+    --accent-dark:#285a64;
+  }
+  .add-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .add-row input{flex:1;min-width:160px;padding:8px 10px;font-size:14px;border:1px solid var(--line);border-radius:8px}
+  .add-row button{padding:8px 14px;font-size:13px}
+
+  .suggest{position:relative;flex:1;min-width:160px}
+  .suggest-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:8px;margin-top:4px;max-height:240px;overflow-y:auto;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+  .suggest-item{padding:8px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid #f3f3f3}
+  .suggest-item:hover{background:var(--accent-soft)}
+  .suggest-item .small{color:var(--muted);font-size:11px;margin-left:6px}
+
+  .city-card{border:1px solid var(--line);border-radius:14px;background:#fff;padding:16px;margin-bottom:14px}
+  .city-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .city-name{font-size:20px;font-weight:700;color:var(--ink);margin:0}
+  .city-name .country{font-size:12px;color:var(--muted);font-weight:500;margin-left:6px}
+  .city-actions{display:flex;gap:4px}
+
+  .today-box{display:flex;align-items:center;gap:14px;padding:12px 14px;background:linear-gradient(135deg,var(--accent-soft),#eef6f8);border-radius:12px;margin-bottom:12px}
+  .today-icon{font-size:48px;line-height:1}
+  .today-main{flex:1;min-width:0}
+  .today-temp{font-size:32px;font-weight:700;color:var(--accent-dark);line-height:1.1}
+  .today-desc{font-size:14px;color:#2a4448;margin-top:2px}
+  .today-meta{font-size:12px;color:var(--muted);margin-top:4px}
+
+  .forecast{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .day-cell{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:1px solid var(--line);border-radius:10px;background:#fafdfd;font-size:12px;text-align:center;cursor:pointer;transition:background .15s,border-color .15s}
+  .day-cell:hover{background:var(--accent-soft);border-color:var(--accent)}
+  .day-cell.selected{background:var(--accent-soft);border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft) inset}
+  .day-cell .dow{font-weight:600;color:var(--accent-dark);text-transform:lowercase}
+  .day-cell .ico{font-size:22px;line-height:1}
+  .day-cell .hi{font-weight:600;color:var(--ink)}
+  .day-cell .lo{color:var(--muted)}
+  .day-cell .precip{font-size:10px;color:#3a6a90}
+
+  .hourly-wrap{margin-top:12px;padding:12px;background:#f6fafb;border:1px solid var(--line);border-radius:12px}
+  .hourly-title{font-size:13px;font-weight:700;color:var(--accent-dark);margin:0 0 8px}
+  .hourly-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+  .hour-cell{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:11px;min-width:54px;text-align:center}
+  .hour-cell .h{font-weight:600;color:var(--accent-dark)}
+  .hour-cell .hi-ico{font-size:18px;line-height:1}
+  .hour-cell .t{font-weight:600;color:var(--ink);font-size:13px}
+  .hour-cell .pp{color:#3a6a90;font-size:10px}
+  .hour-cell .w{color:var(--muted);font-size:10px}
+
+  .lake-row{margin-top:6px;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:10px;font-size:13px;color:#2a4448}
+  .lake-row.from{background:#e6f4ea;border-color:#9bc7a8;color:#1f5232}
+  .lake-row.not{background:#fdecea;border-color:#e8b0a5;color:#7a2a1d}
+
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:18px;font-style:italic}
+  .err{color:var(--warn);font-size:13px;padding:6px 0}
+
+  @media (max-width:520px){
+    .forecast{grid-template-columns:repeat(4,1fr)}
+    .today-temp{font-size:26px}
+    .today-icon{font-size:38px}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>⛅ Väder</h1>
+<p class="subtitle">Dagens väder och 7-dagars prognos för dina orter.</p>
+<nav data-nav-pills></nav>
+
+<div class="card">
+  <h3>Lägg till ort</h3>
+  <form class="add-row" id="addForm" autocomplete="off">
+    <div class="suggest">
+      <input type="text" id="cityInput" placeholder="Sök ort (t.ex. Stockholm, Visby, Paris)" required>
+      <div class="suggest-list" id="suggestList" style="display:none"></div>
+    </div>
+    <button type="submit" class="btn btn-primary">+ Lägg till</button>
+  </form>
+  <div class="err" id="searchErr" style="display:none"></div>
+</div>
+
+<div id="cityList"></div>
+<div class="empty" id="emptyMsg" style="display:none">Inga orter än — sök och lägg till ovan.</div>
+
+<div class="status" id="status">Ansluter...</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-app'"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
+        onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
+<script src="auth-gate.js?v=9"></script>
+<script src="app.js?v=6"></script>
+<script>
+renderNav("vader");
+
+const statusEl = document.getElementById("status");
+const cityListEl = document.getElementById("cityList");
+const emptyMsgEl = document.getElementById("emptyMsg");
+const cityInput  = document.getElementById("cityInput");
+const suggestList= document.getElementById("suggestList");
+const searchErr  = document.getElementById("searchErr");
+
+let db = null;
+let cities = []; // { id, name, country, latitude, longitude, createdAt }
+const weatherCache = new Map(); // id -> { fetchedAt, data }
+const SV_DAYS = ["sön","mån","tis","ons","tor","fre","lör"];
+
+// WMO weather code -> emoji + svensk text
+function wmoInfo(code) {
+  const c = Number(code);
+  if (c === 0)  return { icon: "☀️", txt: "Klart" };
+  if (c === 1)  return { icon: "🌤️", txt: "Mest klart" };
+  if (c === 2)  return { icon: "⛅", txt: "Halvklart" };
+  if (c === 3)  return { icon: "☁️", txt: "Mulet" };
+  if (c === 45 || c === 48) return { icon: "🌫️", txt: "Dimma" };
+  if (c >= 51 && c <= 57) return { icon: "🌦️", txt: "Duggregn" };
+  if (c >= 61 && c <= 65) return { icon: "🌧️", txt: "Regn" };
+  if (c >= 66 && c <= 67) return { icon: "🌧️", txt: "Underkylt regn" };
+  if (c >= 71 && c <= 77) return { icon: "🌨️", txt: "Snö" };
+  if (c >= 80 && c <= 82) return { icon: "🌦️", txt: "Regnskurar" };
+  if (c >= 85 && c <= 86) return { icon: "🌨️", txt: "Snöbyar" };
+  if (c >= 95 && c <= 99) return { icon: "⛈️", txt: "Åska" };
+  return { icon: "🌡️", txt: "Okänt" };
+}
+
+// === Geocoding (Open-Meteo) ===
+let searchTimer = null;
+cityInput.addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  const q = cityInput.value.trim();
+  if (q.length < 2) { suggestList.style.display = "none"; return; }
+  searchTimer = setTimeout(() => doSearch(q), 300);
+});
+cityInput.addEventListener("blur", () => {
+  setTimeout(() => suggestList.style.display = "none", 200);
+});
+
+async function doSearch(q) {
+  searchErr.style.display = "none";
+  try {
+    const url = "https://geocoding-api.open-meteo.com/v1/search?count=8&language=sv&format=json&name=" + encodeURIComponent(q);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Sökning misslyckades (" + res.status + ")");
+    const data = await res.json();
+    const results = data.results || [];
+    suggestList.innerHTML = "";
+    if (!results.length) {
+      suggestList.innerHTML = '<div class="suggest-item">Inga träffar</div>';
+    } else {
+      results.forEach(r => {
+        const item = document.createElement("div");
+        item.className = "suggest-item";
+        const label = [r.admin1, r.country].filter(Boolean).join(", ");
+        item.innerHTML = '<strong>' + escapeHtml(r.name) + '</strong>'
+          + (label ? '<span class="small">' + escapeHtml(label) + '</span>' : '');
+        item.onmousedown = (ev) => {
+          ev.preventDefault();
+          addCity(r);
+        };
+        suggestList.appendChild(item);
+      });
+    }
+    suggestList.style.display = "";
+  } catch (e) {
+    searchErr.textContent = "Fel: " + e.message;
+    searchErr.style.display = "";
+  }
+}
+
+document.getElementById("addForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const q = cityInput.value.trim();
+  if (q) doSearch(q);
+});
+
+async function addCity(r) {
+  if (!db) { alert("Ansluter, vänta..."); return; }
+  // Undvik dubletter (samma koordinat ~)
+  const dup = cities.find(c => Math.abs(c.latitude - r.latitude) < 0.01 && Math.abs(c.longitude - r.longitude) < 0.01);
+  if (dup) { cityInput.value = ""; suggestList.style.display = "none"; return; }
+  const data = {
+    name: r.name,
+    country: r.country || "",
+    admin1: r.admin1 || "",
+    latitude: r.latitude,
+    longitude: r.longitude,
+    timezone: r.timezone || "auto",
+    createdAt: Date.now()
+  };
+  try {
+    await db.collection("vader_orter").add(data);
+    cityInput.value = "";
+    suggestList.style.display = "none";
+  } catch (e) {
+    alert("Fel: " + e.message);
+  }
+}
+
+// === Vindriktning & sjö-detektering ===
+// Skagern (sjö i Värmland/Västra Götaland) – ungefärligt geografiskt centrum
+const SKAGERN = { lat: 59.00, lon: 14.07, name: "Skagern" };
+// Kronkärrs badplats vid Skagern – referenspunkt för vindriktning
+const KRONKARR_SHORE = { lat: 59.037207, lon: 14.165708, name: "Kronkärr" };
+const KRONKARR_RE = /kronkärr|södra råda|gullspång/i;
+function isKronkarrCity(city) {
+  if (!city) return false;
+  return KRONKARR_RE.test((city.name||"") + " " + (city.admin1||""));
+}
+function compass(deg) {
+  if (deg == null || isNaN(deg)) return "";
+  const names = ["N","NNO","NO","ONO","O","OSO","SO","SSO","S","SSV","SV","VSV","V","VNV","NV","NNV"];
+  return names[Math.round(((deg % 360) / 22.5)) % 16];
+}
+function bearingTo(fromLat, fromLon, toLat, toLon) {
+  const φ1 = fromLat * Math.PI/180, φ2 = toLat * Math.PI/180;
+  const Δλ = (toLon - fromLon) * Math.PI/180;
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1)*Math.sin(φ2) - Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
+  return (Math.atan2(y, x) * 180/Math.PI + 360) % 360;
+}
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const φ1 = lat1*Math.PI/180, φ2 = lat2*Math.PI/180;
+  const Δφ = (lat2-lat1)*Math.PI/180, Δλ = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+// Vektor-medelvärde av vindriktningar (grader). Korrekt vid 0°/360°-wraparound.
+function avgDirection(degs) {
+  let sx = 0, sy = 0, n = 0;
+  for (const d of degs) {
+    if (d == null || isNaN(d)) continue;
+    sx += Math.sin(d * Math.PI/180);
+    sy += Math.cos(d * Math.PI/180);
+    n++;
+  }
+  if (!n) return null;
+  return (Math.atan2(sx, sy) * 180/Math.PI + 360) % 360;
+}
+// Avgör om vinden kommer från Skagern för en given ort (Kronkärr / Södra Råda m fl).
+// Använder badplatsens koordinater när orten är Kronkärr/Södra Råda; annars stadens.
+function lakeWind(city, windDirDeg) {
+  if (windDirDeg == null) return null;
+  const nameMatch = isKronkarrCity(city);
+  const distKm = haversineKm(city.latitude, city.longitude, SKAGERN.lat, SKAGERN.lon);
+  if (!nameMatch && distKm > 20) return null;
+  const ref = nameMatch ? KRONKARR_SHORE : { lat: city.latitude, lon: city.longitude };
+  const bearing = bearingTo(ref.lat, ref.lon, SKAGERN.lat, SKAGERN.lon);
+  // Vinkelskillnad mellan vindriktning (varifrån vinden kommer) och bäring till sjön.
+  // Liten skillnad => vinden kommer från sjön (blåser inåt land). Stor skillnad => blåser utåt.
+  const diff = Math.abs(((windDirDeg - bearing + 540) % 360) - 180);
+  const fromLake = diff <= 70;
+  return {
+    applies: true,
+    fromLake,
+    lakeBearing: bearing,
+    deg: windDirDeg,
+    name: SKAGERN.name,
+    place: nameMatch ? KRONKARR_SHORE.name : (city.name || "orten")
+  };
+}
+// Bygg en lake-row-DOM-nod från ett lakeWind-resultat. "label" är prefix (t.ex. "Nu:" eller "Snitt idag:").
+function buildLakeRow(lake, label) {
+  const row = document.createElement("div");
+  row.className = "lake-row " + (lake.fromLake ? "from" : "not");
+  const headline = lake.fromLake
+    ? '🌊 Vind in från sjön <strong>' + lake.name + '</strong> mot ' + lake.place
+    : '🌾 Det blåser utåt från <strong>' + lake.place + '</strong>';
+  row.innerHTML = (label ? '<span style="color:var(--muted);font-size:12px;margin-right:6px">' + label + '</span>' : '') +
+    headline +
+    ' <span style="color:var(--muted);font-size:12px">(vind från ' +
+    compass(lake.deg) + ' ' + Math.round(lake.deg) + '° · sjön ligger åt ' + compass(lake.lakeBearing) + ')</span>';
+  return row;
+}
+
+async function fetchWeather(city) {
+  const cached = weatherCache.get(city.id);
+  if (cached && (Date.now() - cached.fetchedAt) < 15 * 60 * 1000) {
+    return cached.data;
+  }
+  const tz = city.timezone || "auto";
+  const url = "https://api.open-meteo.com/v1/forecast"
+    + "?latitude=" + city.latitude
+    + "&longitude=" + city.longitude
+    + "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m"
+    + "&hourly=temperature_2m,weather_code,precipitation,precipitation_probability,wind_speed_10m,wind_direction_10m"
+    + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max"
+    + "&forecast_days=7"
+    + "&timezone=" + encodeURIComponent(tz);
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Väder-API fel " + res.status);
+  const data = await res.json();
+  weatherCache.set(city.id, { fetchedAt: Date.now(), data });
+  return data;
+}
+
+function renderCity(city) {
+  const card = document.createElement("div");
+  card.className = "city-card";
+  card.dataset.id = city.id;
+
+  const head = document.createElement("div");
+  head.className = "city-head";
+  const name = document.createElement("h3");
+  name.className = "city-name";
+  name.textContent = city.name;
+  if (city.country) {
+    const c = document.createElement("span");
+    c.className = "country";
+    c.textContent = [city.admin1, city.country].filter(Boolean).join(", ");
+    name.appendChild(c);
+  }
+  head.appendChild(name);
+
+  const actions = document.createElement("div");
+  actions.className = "city-actions";
+  const refresh = document.createElement("button");
+  refresh.className = "icon-btn"; refresh.textContent = "↻"; refresh.title = "Uppdatera";
+  refresh.onclick = () => { weatherCache.delete(city.id); loadInto(card, city); };
+  const del = document.createElement("button");
+  del.className = "icon-btn"; del.textContent = "✕"; del.title = "Ta bort orten";
+  del.onclick = () => {
+    if (!db) return;
+    if (!confirm("Ta bort " + city.name + "?")) return;
+    db.collection("vader_orter").doc(city.id).delete().catch(e => alert("Fel: " + e.message));
+  };
+  actions.appendChild(refresh); actions.appendChild(del);
+  head.appendChild(actions);
+  card.appendChild(head);
+
+  const body = document.createElement("div");
+  body.className = "city-body";
+  body.innerHTML = '<div class="empty">Hämtar väder…</div>';
+  card.appendChild(body);
+
+  loadInto(card, city);
+  return card;
+}
+
+async function loadInto(card, city) {
+  const body = card.querySelector(".city-body");
+  body.innerHTML = '<div class="empty">Hämtar väder…</div>';
+  try {
+    const d = await fetchWeather(city);
+    body.innerHTML = "";
+
+    // Nu
+    const cur = d.current || {};
+    const curInfo = wmoInfo(cur.weather_code);
+    const windDir = cur.wind_direction_10m;
+    const windCompass = compass(windDir);
+    const lake = lakeWind(city, windDir);
+    const today = document.createElement("div");
+    today.className = "today-box";
+    today.innerHTML =
+      '<div class="today-icon">' + curInfo.icon + '</div>'
+      + '<div class="today-main">'
+      + '  <div class="today-temp">' + Math.round(cur.temperature_2m) + '°C</div>'
+      + '  <div class="today-desc">' + curInfo.txt
+      +   (cur.apparent_temperature != null ? ' · känns som ' + Math.round(cur.apparent_temperature) + '°C' : '')
+      + '  </div>'
+      + '  <div class="today-meta">'
+      +    (cur.wind_speed_10m != null
+            ? '💨 ' + Math.round(cur.wind_speed_10m) + ' km/h'
+              + (windCompass ? ' från ' + windCompass + ' (' + Math.round(windDir) + '°)' : '')
+            : '')
+      +    (cur.relative_humidity_2m != null ? ' · 💧 ' + cur.relative_humidity_2m + '%' : '')
+      + '  </div>'
+      + '</div>';
+    body.appendChild(today);
+
+    if (lake && lake.applies) {
+      body.appendChild(buildLakeRow(lake, "Nu:"));
+    }
+
+    // 7 dagars prognos
+    const daily = d.daily || {};
+    const times = daily.time || [];
+    const fc = document.createElement("div");
+    fc.className = "forecast";
+    const hourlyWrap = document.createElement("div");
+    hourlyWrap.style.display = "none";
+    let selectedDay = null;
+
+    times.forEach((t, i) => {
+      const dt = new Date(t + "T00:00:00");
+      const info = wmoInfo(daily.weather_code ? daily.weather_code[i] : 0);
+      const cell = document.createElement("div");
+      cell.className = "day-cell";
+      const dow = (i === 0) ? "idag" : SV_DAYS[dt.getDay()];
+      const hi = Math.round(daily.temperature_2m_max[i]);
+      const lo = Math.round(daily.temperature_2m_min[i]);
+      const pp = daily.precipitation_probability_max ? daily.precipitation_probability_max[i] : null;
+      const ps = daily.precipitation_sum ? daily.precipitation_sum[i] : 0;
+      cell.innerHTML =
+        '<div class="dow">' + dow + '</div>'
+        + '<div class="ico">' + info.icon + '</div>'
+        + '<div class="hi">' + hi + '°</div>'
+        + '<div class="lo">' + lo + '°</div>'
+        + (pp != null && pp > 0 ? '<div class="precip">' + pp + '% / ' + ps.toFixed(1) + ' mm</div>' : '');
+      cell.title = info.txt + " – klicka för timme för timme";
+      cell.onclick = () => {
+        if (selectedDay === t) {
+          selectedDay = null;
+          hourlyWrap.style.display = "none";
+          fc.querySelectorAll(".day-cell.selected").forEach(n => n.classList.remove("selected"));
+          return;
+        }
+        selectedDay = t;
+        fc.querySelectorAll(".day-cell.selected").forEach(n => n.classList.remove("selected"));
+        cell.classList.add("selected");
+        renderHourly(hourlyWrap, d, t, dow, city);
+      };
+      fc.appendChild(cell);
+    });
+    body.appendChild(fc);
+    body.appendChild(hourlyWrap);
+  } catch (e) {
+    body.innerHTML = '<div class="err">Fel: ' + escapeHtml(e.message) + '</div>';
+  }
+}
+
+function renderAll() {
+  cityListEl.innerHTML = "";
+  emptyMsgEl.style.display = cities.length ? "none" : "";
+  cities
+    .slice()
+    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
+    .forEach(c => cityListEl.appendChild(renderCity(c)));
+}
+
+function renderHourly(container, data, dateStr, dowLabel, city) {
+  container.innerHTML = "";
+  container.style.display = "";
+  const hourly = data.hourly || {};
+  const times = hourly.time || [];
+  if (!times.length) {
+    container.textContent = "Ingen timdata tillgänglig.";
+    return;
+  }
+  const wrap = document.createElement("div");
+  wrap.className = "hourly-wrap";
+  const ttl = document.createElement("p");
+  ttl.className = "hourly-title";
+  ttl.textContent = "Timme för timme – " + dowLabel + " " + dateStr;
+  wrap.appendChild(ttl);
+
+  // Vindriktning för vald dag: vektor-medel av dagtid (06–22) om möjligt, annars hela dygnet
+  const dayDirs = [], dayDirsDaytime = [];
+  for (let i = 0; i < times.length; i++) {
+    if (!times[i].startsWith(dateStr)) continue;
+    const d = hourly.wind_direction_10m ? hourly.wind_direction_10m[i] : null;
+    if (d == null) continue;
+    dayDirs.push(d);
+    const hr = new Date(times[i]).getHours();
+    if (hr >= 6 && hr <= 22) dayDirsDaytime.push(d);
+  }
+  const avgDeg = avgDirection(dayDirsDaytime.length ? dayDirsDaytime : dayDirs);
+  if (avgDeg != null) {
+    const dirRow = document.createElement("div");
+    dirRow.style.cssText = "font-size:13px;color:var(--ink);margin:0 0 8px";
+    dirRow.innerHTML = '<strong>Vindriktning:</strong> från ' + compass(avgDeg) +
+      ' (' + Math.round(avgDeg) + '°) <span style="color:var(--muted);font-size:12px">· dagsmedel</span>';
+    wrap.appendChild(dirRow);
+    const dayLake = lakeWind(city, avgDeg);
+    if (dayLake && dayLake.applies) {
+      wrap.appendChild(buildLakeRow(dayLake, dowLabel + ":"));
+    }
+  }
+
+  const scroll = document.createElement("div");
+  scroll.className = "hourly-scroll";
+  for (let i = 0; i < times.length; i++) {
+    if (!times[i].startsWith(dateStr)) continue;
+    const dt = new Date(times[i]);
+    const h = String(dt.getHours()).padStart(2, "0");
+    const info = wmoInfo(hourly.weather_code ? hourly.weather_code[i] : 0);
+    const t = hourly.temperature_2m ? Math.round(hourly.temperature_2m[i]) : null;
+    const pp = hourly.precipitation_probability ? hourly.precipitation_probability[i] : null;
+    const ws = hourly.wind_speed_10m ? Math.round(hourly.wind_speed_10m[i]) : null;
+    const wd = hourly.wind_direction_10m ? hourly.wind_direction_10m[i] : null;
+    const cell = document.createElement("div");
+    cell.className = "hour-cell";
+    cell.title = info.txt;
+    cell.innerHTML =
+      '<div class="h">' + h + ':00</div>'
+      + '<div class="hi-ico">' + info.icon + '</div>'
+      + (t != null ? '<div class="t">' + t + '°</div>' : '')
+      + (pp != null && pp > 0 ? '<div class="pp">' + pp + '%</div>' : '')
+      + (ws != null ? '<div class="w">💨 ' + ws + (wd != null ? ' ' + compass(wd) : '') + '</div>' : '');
+    scroll.appendChild(cell);
+  }
+  wrap.appendChild(scroll);
+  container.appendChild(wrap);
+}
+
+initApp(d => {
+  db = d;
+  db.collection("vader_orter").onSnapshot(snap => {
+    cities = [];
+    snap.forEach(doc => cities.push({ id: doc.id, ...doc.data() }));
+    statusEl.textContent = cities.length + " orter";
+    renderAll();
+  }, err => {
+    statusEl.textContent = "Firestore-fel: " + err.message;
+  });
+}, { onError: e => { statusEl.textContent = e.message; } });
+</script>
+
+<script src="pwa.js?v=1"></script>
+</body>
+</html>

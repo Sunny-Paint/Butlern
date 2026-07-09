@@ -21,26 +21,48 @@ const NAV_LINKS = [
   { key: "butlern",     href: "butlern.html",     icon: "\ud83d\udcc5",     label: "Planering" },
   { key: "todo",        href: "todo.html",        icon: "\ud83d\udcdd",     label: "Todo" },
   { key: "ideer",       href: "ideer.html",       icon: "\ud83d\udca1",     label: "Id\u00e9er" },
+  { key: "inkop",       href: "inkop.html",       icon: "\ud83d\uded2",     label: "Ink\u00f6p" },
   { key: "loggbok",     href: "loggbok.html",     icon: "\ud83d\udcd3",     label: "Logg" },
   { key: "tacksamhet",  href: "tacksamhet.html",  icon: "\ud83d\ude4f",     label: "Tack" },
   { key: "mindfulness", href: "mindfulness.html", icon: "\ud83e\uddd8",     label: "Mindfulness" },
+  { key: "kalender",    href: "kalender.html",    icon: "\ud83c\udf3f",     label: "Sj\u00e4lslig sp\u00e4nst" },
+  { key: "vader",       href: "vader.html",       icon: "\u26c5",            label: "V\u00e4der" },
   { key: "moon",        href: "moon.html",        icon: "\ud83c\udf19",     label: "The Moon" },
-  { key: "oracle",      href: "oracle.html",      icon: "\ud83d\udd2e",     label: "Oracle" },
+  { key: "oracle2",     href: "oracle2.html",     icon: "\ud83d\udd2e",     label: "Oraklet" },
   { key: "lankar",      href: "lankar.html",      icon: "\ud83d\udd17",     label: "L\u00e4nkar" },
   { key: "parkering",   href: "parkering.html",   icon: "\ud83c\udd7f\ufe0f", label: "Parkering" }
 ];
 
+// Sidor som visas som pills i toppnavigationen (resten n\u00e5s via mer.html)
+const PRIMARY_NAV_KEYS = ["butlern", "todo", "ideer", "inkop", "vader", "lankar"];
+
+const MER_LINK = { key: "mer", href: "mer.html", icon: "\u2026", label: "Mer" };
+
 function renderNav(activeKey) {
   const navs = document.querySelectorAll("[data-nav-pills]");
+  const primary = NAV_LINKS.filter(l => PRIMARY_NAV_KEYS.includes(l.key));
+  const isPrimary = PRIMARY_NAV_KEYS.includes(activeKey);
+  const merActive = activeKey === "mer" || (!isPrimary && activeKey !== undefined);
+  const pills = [...primary, MER_LINK];
+
   navs.forEach(nav => {
     nav.classList.add("nav-pills");
     if (!nav.hasAttribute("aria-label")) nav.setAttribute("aria-label", "Sidor");
-    nav.innerHTML = NAV_LINKS.map(l => l.key === activeKey
-      ? `<span class="nav-pill active"><span class="ico">${l.icon}</span>${l.label}</span>`
-      : `<a class="nav-pill" href="${l.href}"><span class="ico">${l.icon}</span>${l.label}</a>`
-    ).join("");
+    nav.innerHTML = pills.map(l => {
+      const active = l.key === "mer" ? merActive : l.key === activeKey;
+      return active
+        ? `<span class="nav-pill active"><span class="ico">${l.icon}</span>${l.label}</span>`
+        : `<a class="nav-pill" href="${l.href}"><span class="ico">${l.icon}</span>${l.label}</a>`;
+    }).join("");
   });
 }
+
+// Delade hjälpare — exponerade globalt så alla sidor kan använda dem.
+window.escapeHtml = function(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+};
 
 function initApp(onReady, opts) {
   opts = opts || {};

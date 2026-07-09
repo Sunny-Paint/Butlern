@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mer">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#7a4fb0">
+<title>Mer</title>
+<link rel="manifest" href="/manifest.json">
+
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="styles.css?v=1">
+<style>
+  .cat{margin-bottom:22px}
+  .cat-head{
+    display:flex;align-items:baseline;gap:10px;
+    margin:0 0 12px;
+    font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--accent-dark);
+  }
+  .cat-head .cat-desc{
+    font-size:12px;font-weight:400;color:var(--muted);
+    text-transform:none;letter-spacing:0;
+  }
+  .tiles{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+    gap:12px;
+  }
+  .tile{
+    display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+    padding:16px 14px;
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    color:var(--ink);text-decoration:none;
+    transition:border-color .15s, box-shadow .15s, transform .05s;
+    box-shadow:0 1px 2px rgba(20,20,20,.03);
+  }
+  .tile:hover{
+    border-color:var(--accent);
+    box-shadow:0 4px 14px color-mix(in srgb, var(--accent) 15%, transparent);
+    transform:translateY(-1px);
+  }
+  .tile:active{transform:translateY(0)}
+  .tile .tile-ico{font-size:28px;line-height:1}
+  .tile .tile-label{font-size:15px;font-weight:600;color:var(--ink)}
+  .tile .tile-sub{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<h1>… Mer</h1>
+<p class="subtitle">Fler sidor, sorterade efter område.</p>
+<nav data-nav-pills></nav>
+
+<div id="cats"></div>
+
+</div>
+
+<script src="app.js?v=6"></script>
+<script>
+renderNav("mer");
+
+// Kategorier – varje entry innehåller nyckel, ev. kort undertext.
+// Nycklarna motsvarar keys i NAV_LINKS (app.js).
+const CATEGORIES = [
+  {
+    name: "Reflektion & själsligt",
+    desc: "Utrymme för inre arbete.",
+    items: [
+      { key: "loggbok",     sub: "Dagbok & anteckningar" },
+      { key: "tacksamhet",  sub: "Tacksamhet varje dag" },
+      { key: "mindfulness", sub: "Övningar & andning" },
+      { key: "kalender",    sub: "Kalender för själen" }
+    ]
+  },
+  {
+    name: "Inspiration & spå",
+    desc: "Månens rytm och lite magi.",
+    items: [
+      { key: "moon",    sub: "Månfaser & cykler" },
+      { key: "oracle2", sub: "Dra ett kort" }
+    ]
+  },
+  {
+    name: "Vardag",
+    desc: "Praktiska verktyg.",
+    items: [
+      { key: "parkering", sub: "Kom ihåg var bilen står" }
+    ]
+  }
+];
+
+const byKey = new Map(NAV_LINKS.map(l => [l.key, l]));
+const catsEl = document.getElementById("cats");
+
+CATEGORIES.forEach(cat => {
+  const section = document.createElement("section");
+  section.className = "cat";
+  const head = document.createElement("div");
+  head.className = "cat-head";
+  const title = document.createElement("span");
+  title.textContent = cat.name;
+  head.appendChild(title);
+  if (cat.desc) {
+    const d = document.createElement("span");
+    d.className = "cat-desc";
+    d.textContent = cat.desc;
+    head.appendChild(d);
+  }
+  section.appendChild(head);
+
+  const tiles = document.createElement("div");
+  tiles.className = "tiles";
+  cat.items.forEach(it => {
+    const link = byKey.get(it.key);
+    if (!link) return;
+    const a = document.createElement("a");
+    a.className = "tile";
+    a.href = link.href;
+    const ico = document.createElement("span");
+    ico.className = "tile-ico";
+    ico.textContent = link.icon;
+    a.appendChild(ico);
+    const label = document.createElement("span");
+    label.className = "tile-label";
+    label.textContent = link.label;
+    a.appendChild(label);
+    if (it.sub) {
+      const sub = document.createElement("span");
+      sub.className = "tile-sub";
+      sub.textContent = it.sub;
+      a.appendChild(sub);
+    }
+    tiles.appendChild(a);
+  });
+  section.appendChild(tiles);
+  catsEl.appendChild(section);
+});
+</script>
+
+<script src="pwa.js?v=1"></script>
+</body>
+</html>

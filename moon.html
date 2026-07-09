@@ -215,8 +215,8 @@ form textarea{min-height:50px;resize:vertical}
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"
         onerror="document.getElementById('status').textContent='Kunde inte ladda firebase-firestore'"></script>
-<script src="auth-gate.js?v=8"></script>
-<script src="app.js?v=4"></script>
+<script src="auth-gate.js?v=9"></script>
+<script src="app.js?v=6"></script>
 <script>
 renderNav("moon");
 
@@ -448,9 +448,6 @@ function formatDate(s) {
 function formatDateShort(s) {
   const d = new Date(s + "T00:00");
   return d.getDate() + "/" + (d.getMonth()+1);
-}
-function escapeHtml(s) {
-  return String(s).replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
 }
 
 resetForm();
