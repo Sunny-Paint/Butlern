@@ -37,7 +37,7 @@ const NAV_LINKS = [
 ];
 
 // Sidor som visas som pills i toppnavigationen (resten n\u00e5s via mer.html)
-const PRIMARY_NAV_KEYS = ["butlern", "todo", "ideer", "inkop", "vader", "lankar"];
+const PRIMARY_NAV_KEYS = ["butlern", "listor", "todo", "ideer", "inkop", "vader", "lankar"];
 
 const MER_LINK = { key: "mer", href: "mer.html", icon: "\ud83c\udfb2", label: "Tidsf\u00f6rdriv" };
 
