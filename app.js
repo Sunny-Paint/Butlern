@@ -19,6 +19,7 @@ window.firebaseConfig = {
 
 const NAV_LINKS = [
   { key: "butlern",     href: "butlern.html",     icon: "\ud83d\udcc5",     label: "Planering" },
+ { key: "listor",       href: "listor.html",      icon: "\ud83d\udcdd",     label: "Listor" },
   { key: "todo",        href: "todo.html",        icon: "\ud83d\udcdd",     label: "Todo" },
   { key: "ideer",       href: "ideer.html",       icon: "\ud83d\udca1",     label: "Id\u00e9er" },
   { key: "inkop",       href: "inkop.html",       icon: "\ud83d\uded2",     label: "Ink\u00f6p" },
